@@ -1,0 +1,26 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="@android:style/Theme.Holo.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <!--item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item-->
+    </style>
+
+	<style name="keyBar">
+		<item name="android:textViewStyle">@style/keyText</item>
+	</style>
+
+	<style name="keyText">
+		<item name="android:clickable">true</item>
+		<item name="android:paddingLeft">6dp</item>
+		<item name="android:paddingRight">6dp</item>
+		<item name="android:paddingTop">4dp</item>
+		<item name="android:paddingBottom">4dp</item>
+		<item name="android:typeface">monospace</item>
+		<item name="android:textSize">20sp</item>
+		<item name="android:onClick">inputKey</item>
+	</style>
+
+</resources>

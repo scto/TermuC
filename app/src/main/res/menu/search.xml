@@ -1,0 +1,11 @@
+<menu xmlns:ad="http://schemas.android.com/apk/res/android">
+    
+    <item
+        ad:id="@+id/menu_last"
+		ad:showAsAction="always"
+        ad:title="上个"/>
+    <item
+        ad:id="@+id/menu_next"
+		ad:showAsAction="always"
+        ad:title="下个"/>
+</menu>

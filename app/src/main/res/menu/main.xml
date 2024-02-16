@@ -1,0 +1,24 @@
+<menu xmlns:ad="http://schemas.android.com/apk/res/android">
+	<item
+        ad:id="@+id/run"
+        ad:title="运行"
+		ad:showAsAction="always"
+		ad:icon="@drawable/ic_play_24"/>
+	<item
+		ad:id="@+id/undo"
+		ad:title="撤销"
+		ad:showAsAction="always"
+		ad:icon="@drawable/ic_undo_24"/>
+	<item
+		ad:id="@+id/redo"
+		ad:title="重做"/>
+	<item
+		ad:id="@+id/save"
+		ad:title="保存"/>
+	<item
+		ad:id="@+id/search"
+		ad:title="查找"/>
+	<item
+		ad:id="@+id/close"
+		ad:title="关闭"/>
+</menu>
