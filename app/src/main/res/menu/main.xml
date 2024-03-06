@@ -21,4 +21,10 @@
 	<item
 		ad:id="@+id/close"
 		ad:title="关闭"/>
+	<item
+		ad:id="@+id/test"
+		ad:title="测试"/>
+	<item
+		ad:id="@+id/swth"
+		ad:title="开关"/>
 </menu>
