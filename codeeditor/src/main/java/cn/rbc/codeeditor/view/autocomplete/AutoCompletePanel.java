@@ -107,12 +107,6 @@ public class AutoCompletePanel {
 
     public void select(int pos) {
 		Deque<Edit> edits = _adapter.getItem(pos).edits;
-        /*View view = _adapter.getView(pos, null, null);
-        TextView textView = view.findViewById(R.id.auto_panel_text);
-        String text = textView.getText().toString();
-        int it = text.indexOf('(');
-		if (it >= 0)
-			text = text.substring(0, it + 1);*/
 		Document doc = _textField.getText();
 		doc.beginBatchEdit();
 		doc.setTyping(false);

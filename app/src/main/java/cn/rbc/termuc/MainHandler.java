@@ -47,6 +47,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 			JsonReader jr = new JsonReader(new StringReader((String)msg.obj));
 			jr.beginObject();
 			Deque<String> st = new ArrayDeque<>();
+			st = new LinkedList<>();
 			int sl = 0, sc = 0, el = 0, ec = 0;
 			Object tmp1 = null, tmp2 = null, tmp3 = null;
 			boolean _ct = true;
