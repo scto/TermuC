@@ -1,5 +1,7 @@
 # TermuC
 
+[中文 README](./README_zh.md)
+
 TermuC is a simple C/C++ IDE backed on Termux. Based on [MrIkso/CodeEditor](//github.com/MrIkso/CodeEditor)
 
 ## Screenshot
