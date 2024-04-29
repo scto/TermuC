@@ -297,7 +297,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
     private Pair mCaretSpan = new Pair(0, 0);
     private Typeface defTypeface = Typeface.DEFAULT;
     private Typeface boldTypeface = Typeface.DEFAULT_BOLD;
-    //private Typeface italicTypeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC);
     private int mTypeInput = InputType.TYPE_CLASS_TEXT;
     private Context mContext;
 	private SparseIntArray chrAdvs = new SparseIntArray();
@@ -411,7 +410,7 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         mSpaceWidth = (int) mTextPaint.measureText(" ");
         //int idx=coordToCharIndex(getScrollX(), getScrollY());
         //if (!makeCharVisible(idx))
-            invalidate();
+        invalidate();
     }
 
     public void replaceText(int from, int charCount, String text) {
@@ -625,7 +624,8 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
             if (!isLayout)
                 mCtrlr.determineSpans();
             isLayout = right > 0;
-			invalidate();
+			if (!mCtrlr.lexing)
+				invalidate();
            // mAutoCompletePanel.setWidth(getWidth() / 2);
             //mAutoCompletePanel.setHeight(getHeight() / 2);
         }
@@ -726,8 +726,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         mNavMethod.onTextDrawComplete(canvas);
     }
 
-	//public static boolean jj = false;
-
     private void realDraw(Canvas canvas) {
         int currRowNum = getBeginPaintRow(canvas);
         int currIndex = hDoc.getRowOffset(currRowNum);
@@ -763,7 +761,7 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 		int currType = currSpan.second;
         int lastType = currType;
 
-        mTextPaint.setTypeface(currSpan.second==Lexer.KEYWORD ? boldTypeface : defTypeface);
+        mTextPaint.setTypeface(currSpan.second==Tokenizer.KEYWORD ? boldTypeface : defTypeface);
 
         int spanColor = mColorScheme.getTokenColor(currSpan.second);
         mTextPaint.setColor(spanColor);
@@ -825,7 +823,7 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
                     spanColor = mColorScheme.getTokenColor(currSpan.second);
                     mTextPaint.setColor(spanColor);
 					if (lastType != currType) {
-                        Typeface currTypeface = currType==Lexer.KEYWORD ? boldTypeface : defTypeface;
+                        Typeface currTypeface = currType==Tokenizer.KEYWORD ? boldTypeface : defTypeface;
 
                         if (mTextPaint.getTypeface() != currTypeface)
                             mTextPaint.setTypeface(currTypeface);
@@ -852,15 +850,20 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 					else if (currIndex + 1 == mCaretPosition)
 						mCaretSpan = currSpan;
 					// draw err line
-					if (idx <= dgl && p.stl == currLineNum) {
-						if (m < 0 && p.stc == i)
-								m = x;
-						// 假设 p.stl==p.enl
-						if (m >= 0 && (p.enc == i+1 || i+1 == rowLen || paintX >= mWidth)) {
+					if (idx <= dgl) {
+						if (m < 0
+							// start position
+							&& (p.stl == currLineNum && p.stc == i
+							// following position
+							|| p.stl < currLineNum && p.enl >= currLineNum && x==mLeftOffset))
+							m = x;
+						boolean b;
+						if (m >= 0 && ((b=(p.enl == currLineNum && p.enc == i+1))|| i+1 == rowLen || paintX >= mWidth)) {
 							mLineBrush.setColor(ColorScheme.DIAG[p.severity]);
 							canvas.drawLine(m, paintY, paintX, paintY, mLineBrush);
+							Log.i("LSP", currLineNum+" "+i);
 							m = -1;
-							if (idx<dgl)
+							if (idx<dgl && b)
 								p = dg.get(idx++);
 						}
 					}
@@ -869,9 +872,9 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
             }
 
             if (hDoc.charAt(currIndex - 1) == Language.NEWLINE) {
-                ++currLineNum;
-				while (idx < dgl && p.stl < currLineNum)
+				while (idx < dgl && p.enl == currLineNum)
 					p = dg.get(idx++);
+				++currLineNum;
 			}
 
             paintY += rowheight;
@@ -1204,6 +1207,8 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
      * Invalidate rows from startRow (inclusive) to the end of the field
      */
     void invalidateFromRow(int startRow) {
+		if (mCtrlr.lexing)
+			return;
         TextWarriorException.assertVerbose(startRow >= 0,
 										   "Invalid startRow");
 
@@ -1457,7 +1462,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
                         isEmoji = false;
                     else
                         extent += getCharAdvance(c);
-
             }
 
             if (extent >= x)

@@ -1,14 +1,13 @@
 package cn.rbc.codeeditor.util;
 
-public class ErrSpan
+public class ErrSpan extends Range
 {
 	public final static int
 		ERROR = 0,
 		WARNING = 1,
 		INFOR = 2,
 		HINT = 3;
-	public String msg;
-	public int stl, stc, enl, enc, severity = 0;
+	public int severity = 0;
 
 	@Override
 	public String toString() {

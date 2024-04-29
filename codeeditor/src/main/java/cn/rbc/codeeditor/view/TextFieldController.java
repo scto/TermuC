@@ -5,7 +5,7 @@ import android.text.ClipboardManager;
 import android.view.inputmethod.InputMethodManager;
 
 import cn.rbc.codeeditor.lang.Language;
-import cn.rbc.codeeditor.util.Lexer;
+import cn.rbc.codeeditor.util.Tokenizer;
 import cn.rbc.codeeditor.util.Pair;
 import cn.rbc.codeeditor.util.TextWarriorException;
 
@@ -18,8 +18,8 @@ import cn.rbc.codeeditor.util.*;
 //*********************************************************************
 //************************ Controller logic ***************************
 //*********************************************************************
-public class TextFieldController implements Lexer.LexCallback {
-    private final Lexer _lexer = new Lexer(this);
+public class TextFieldController implements Tokenizer.LexCallback {
+    private final Tokenizer _lexer = new Tokenizer(this);
     public boolean _isInSelectionMode = false;
     private boolean _isInSelectionMode2;
 	public boolean lexing;

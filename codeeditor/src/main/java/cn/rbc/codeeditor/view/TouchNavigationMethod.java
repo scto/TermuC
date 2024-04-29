@@ -11,6 +11,7 @@ import cn.rbc.codeeditor.util.*;
 import java.util.*;
 import android.widget.*;
 import android.util.*;
+import android.content.*;
 
 //TODO minimise unnecessary invalidate calls
 
@@ -303,7 +304,7 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
                 for (end = charOffset; Character.isJavaIdentifierPart(doc.charAt(end)); end++);
                 mTextField.selectText(true);
                 mTextField.setSelectionRange(start, end - start);
-				// err msg
+				// toast err msg
 				List<ErrSpan> dg = mTextField.hDoc.getDiag();
 				if (!(dg == null || dg.isEmpty())) {
 					y = dg.size() - 1;
@@ -312,18 +313,32 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 					start -= x;
 					end -= x;
 					x = 0;
-					ErrSpan es;
+					ErrSpan errspan;
 					while (x < y) {
 						m = (x + y) >> 1;
-						es = dg.get(m);
-						if (es.stl > line || (es.stl == line && es.enc >= start))
+						errspan = dg.get(m);
+						if (errspan.enl > line || errspan.enl == line && errspan.enc >= start)
 							y = m;
 						else
 							x = m + 1;
 					}
-					es = dg.get(y);
-					if (es.stl == line && start <= es.enc && es.stc <= end && es.msg != null) {
-						HelperUtils.show(Toast.makeText(mTextField.getContext(), es.msg, Toast.LENGTH_SHORT));
+					errspan = dg.get(y);
+					if ((errspan.stl < line || errspan.stl==line && errspan.stc<=end)
+						&& (line < errspan.enl || line==errspan.enl && start<=errspan.enc)
+						&& errspan.msg != null) {
+						Context ctx = mTextField.getContext();
+						Toast t = new Toast(ctx);
+						//.makeText(mTextField.getContext(), errspan.msg, Toast.LENGTH_SHORT);
+						LinearLayout ll = new LinearLayout(ctx);
+						ll.setOrientation(LinearLayout.VERTICAL);
+						TextView tv = new TextView(ctx);
+						tv.setTextColor(0xffffffff);
+						tv.setText(errspan.msg);
+						ll.setPadding(40,40,40,40);
+						ll.setBackgroundColor(ColorScheme.DIAG[errspan.severity]&0xf0ffffff);
+						ll.addView(tv);
+						t.setView(ll);
+						HelperUtils.show(t);
 					}
 				}
             }

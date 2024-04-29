@@ -20,7 +20,8 @@ import cn.rbc.codeeditor.util.*;
 
 public class MainActivity extends Activity implements
 	ActionBar.OnNavigationListener, OnGlobalLayoutListener,
-	AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
+	AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener,
+	DialogInterface.OnClickListener {
 	private StrComp cmp = new StrComp();
     private File root = Environment.getExternalStorageDirectory();
     
@@ -250,9 +251,6 @@ public class MainActivity extends Activity implements
 			case R.id.test:
 				lsp.initialize();
 				break;
-			/*case R.id.swth:
-				FreeScrollingTextField.jj = !FreeScrollingTextField.jj;
-				break;*/
         }
         return true;
     }
@@ -306,34 +304,31 @@ public class MainActivity extends Activity implements
         super.onSaveInstanceState(bundle);
     }
 
+	private EditText fname;
+
+	@Override
+	public void onClick(DialogInterface p1, int p2) {
+		try {
+			File f = new File(pwd, fname.getText().toString());
+			if (p2 == DialogInterface.BUTTON_POSITIVE)
+				f.createNewFile();
+			else
+				f.mkdir();
+			refresh();
+		} catch (IOException e) {
+			e.printStackTrace();
+			toast(e.getMessage());
+		}
+	}
+
     public void createFile(View view) {
         View inflate = View.inflate(this, R.layout.edit, null);
-        final EditText e = inflate.findViewById(R.id.file_name);
+        fname = inflate.findViewById(R.id.file_name);
 		new AlertDialog.Builder(this)
 		.setTitle("新建")
 		.setView(inflate)
-		.setPositiveButton("文件", new DialogInterface.OnClickListener(){
-			public void onClick(DialogInterface di, int p) {
-				try {
-					new File(pwd, e.getText().toString()).createNewFile();
-					refresh();
-				} catch (Exception e) {
-					e.printStackTrace();
-					toast(e.getMessage());
-				}
-			}
-		})
-		.setNeutralButton("文件夹", new DialogInterface.OnClickListener(){
-				public void onClick(DialogInterface di, int p) {
-					try {
-						new File(pwd, e.getText().toString()).mkdir();
-						refresh();
-					} catch (Exception e) {
-						e.printStackTrace();
-						toast(e.getMessage());
-					}
-				}
-			})
+		.setPositiveButton("文件", this)
+		.setNeutralButton("文件夹", this)
 		.setNegativeButton(android.R.string.cancel, null)
 		.create().show();
     }
@@ -364,7 +359,7 @@ public class MainActivity extends Activity implements
     }
 
     public void toast(CharSequence charSequence) {
-        Toast.makeText(this, charSequence, 0).show();
+        HelperUtils.show(Toast.makeText(this, charSequence, 0));
     }
 
     public void showList(View view) {

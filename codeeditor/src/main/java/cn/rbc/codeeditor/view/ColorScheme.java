@@ -9,7 +9,7 @@
 
 package cn.rbc.codeeditor.view;
 
-import cn.rbc.codeeditor.util.Lexer;
+import cn.rbc.codeeditor.util.Tokenizer;
 import cn.rbc.codeeditor.util.TextWarriorException;
 
 import java.util.HashMap;
@@ -42,36 +42,36 @@ public abstract class ColorScheme {
     public int getTokenColor(int tokenType) {
         Colorable element;
         switch (tokenType) {
-            case Lexer.NORMAL:
+            case Tokenizer.NORMAL:
                 element = Colorable.FOREGROUND;
                 break;
-            case Lexer.KEYWORD:
+            case Tokenizer.KEYWORD:
                 element = Colorable.KEYWORD;
                 break;
-			case Lexer.TYPE:
+			case Tokenizer.TYPE:
 				element = Colorable.TYPE;
 				break;
-            case Lexer.NAME:
+            case Tokenizer.NAME:
                 element = Colorable.NAME;
                 break;
-            case Lexer.DOUBLE_SYMBOL_LINE: //fall-through
-            case Lexer.DOUBLE_SYMBOL_DELIMITED_MULTILINE:
+            case Tokenizer.DOUBLE_SYMBOL_LINE: //fall-through
+            case Tokenizer.DOUBLE_SYMBOL_DELIMITED_MULTILINE:
                 element = Colorable.COMMENT;
                 break;
-            case Lexer.SINGLE_SYMBOL_DELIMITED_A: //fall-through
-            case Lexer.SINGLE_SYMBOL_DELIMITED_B:
-			case Lexer.KEYNAME:
+            case Tokenizer.SINGLE_SYMBOL_DELIMITED_A: //fall-through
+            case Tokenizer.SINGLE_SYMBOL_DELIMITED_B:
+			case Tokenizer.KEYNAME:
                 element = Colorable.STRING;
                 break;
-            case Lexer.NUMBER:
+            case Tokenizer.NUMBER:
                 element = Colorable.NUMBER;
                 break;
-            case Lexer.SINGLE_SYMBOL_LINE_A: //fall-through
-            case Lexer.SINGLE_SYMBOL_WORD:
-            case Lexer.OPERATOR:
+            case Tokenizer.SINGLE_SYMBOL_LINE_A: //fall-through
+            case Tokenizer.SINGLE_SYMBOL_WORD:
+            case Tokenizer.OPERATOR:
                 element = Colorable.SECONDARY;
                 break;
-            case Lexer.SINGLE_SYMBOL_LINE_B: //类型
+            case Tokenizer.SINGLE_SYMBOL_LINE_B: //类型
                 element = Colorable.NAME;
                 break;
             default:
@@ -119,5 +119,5 @@ public abstract class ColorScheme {
     private static final int WHITE = 0xFFFFFFE0;
     private static final int LIGHT_BLUE2 = 0xFF40B0FF;
 
-	static final int[] DIAG = {Color.RED, 0xFFFFD000, Color.GREEN, Color.GRAY};
+	static final int[] DIAG = {Color.RED, Color.MAGENTA, 0xFF00BB00, Color.GRAY};
 }

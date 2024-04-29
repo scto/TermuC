@@ -8,10 +8,11 @@
  */
 package cn.rbc.codeeditor.lang;
 
-import cn.rbc.codeeditor.util.Lexer;
+import cn.rbc.codeeditor.util.Tokenizer;
 
 import java.util.HashMap;
 import java.util.*;
+import cn.rbc.codeeditor.util.*;
 
 /**
  * Base class for programming language syntax.
@@ -75,6 +76,20 @@ public abstract class Language
 		return _keyword;
 	}
 
+	public Lexer newLexer(CharSeqReader reader) {
+		return null;
+	}
+
+	/*//子类需要实现该方法
+	public LexerTokenizer getTokenizer() {
+		return LexerTokenizer.getInstance();
+	}*/
+
+	//子类需要实现该方法
+	public DefFormatter getFormatter() {
+		return DefFormatter.getInstance();
+	}
+
 	public void setKeywords(String[] keywords)
 	{
 		_keyword = new String[keywords.length];
@@ -96,7 +111,7 @@ public abstract class Language
 	public void addKeynames(String[] keynames) {
 		//_namesMap.clear();
 		for (String keynam:keynames) {
-			_namesMap.put(keynam, Lexer.KEYNAME);
+			_namesMap.put(keynam, Tokenizer.KEYNAME);
 		}
 		_name = new String[_namesMap.size()];
 		_namesMap.keySet().toArray(_name);
@@ -105,7 +120,7 @@ public abstract class Language
 	public void addNames(String[] names)
 	{
 		for (String keynam:names) {
-			_namesMap.put(keynam, Lexer.NAME);
+			_namesMap.put(keynam, Tokenizer.NAME);
 		}
 		_name = new String[_namesMap.size()];
 		_namesMap.keySet().toArray(_name);
@@ -113,7 +128,7 @@ public abstract class Language
 
 	public void addTypes(String[] types) {
 		for (String tp:types)
-			_namesMap.put(tp, Lexer.TYPE);
+			_namesMap.put(tp, Tokenizer.TYPE);
 		_name = new String[_namesMap.size()];
 		_namesMap.keySet().toArray(_name);
 	}
@@ -133,7 +148,7 @@ public abstract class Language
 	{
 		if(!_userCache.contains(name) && !_namesMap.containsKey(name))
 			_userCache.add(name);
-		_usersMap.put(name, Lexer.NAME);
+		_usersMap.put(name, Tokenizer.NAME);
 	}
 
 	protected void setOperators(char[] operators)
@@ -172,9 +187,14 @@ public abstract class Language
 
 	public final boolean isKeyname(String s) {
 		Integer b = _namesMap.get(s);
-		return b!=null && b.intValue() == Lexer.KEYNAME;
+		return b!=null && b.intValue() == Tokenizer.KEYNAME;
 	}
-	
+
+	public final boolean isType(String s) {
+		Integer b = _namesMap.get(s);
+		return b!=null && b.intValue() == Tokenizer.TYPE;
+	}
+
 	public final boolean isBasePackage(String s)
 	{
 		return _basesMap.containsKey(s);
@@ -233,7 +253,7 @@ public abstract class Language
 	 */
 	public boolean isProgLang()
 	{
-		return true;
+		return false;
 	}
 
 	/**

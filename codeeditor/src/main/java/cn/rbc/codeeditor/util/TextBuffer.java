@@ -546,7 +546,7 @@ public class TextBuffer implements CharSequence
 
 	public void clearSpans(){
 		_spans = new Vector<Pair>();
-	    _spans.add(new Pair(0, Lexer.NORMAL));
+	    _spans.add(new Pair(0, Tokenizer.NORMAL));
 	}
 
 	public List<Pair> getSpans(){

@@ -9,6 +9,8 @@ import android.util.Log;
 import android.app.*;
 import java.nio.charset.StandardCharsets;
 import android.os.*;
+import cn.rbc.codeeditor.util.*;
+import android.widget.*;
 
 public class Lsp {
 	//final static String METHOD = "method";
@@ -22,16 +24,24 @@ public class Lsp {
 	int id = 0;
 	private Socket sk;
 	private char[] compTrigs = {};
-	private Thread t;
+	//private Thread t;
 	//private Context mA;
 
-	public void start(Context c, final Handler read) {
-		Utils.run(c, "/system/bin/nc", new String[]{"-l", "-s", "127.0.0.1", "-p", "48455", "clangd", "--header-insertion-decorators=0"}, Environment.getExternalStorageDirectory().getAbsolutePath(), false);
+	public void start(final Context c, final Handler read) {
+		Utils.run(c, "/system/bin/nc", new String[]{"-l", "-s", "127.0.0.1", "-p", "48455", "clangd", "--header-insertion-decorators=0"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
+		sk = new Socket();
 		new Thread(){
 			public void run() {
-				try {
-					Thread.sleep(200L);
-					sk = new Socket("127.0.0.1", 48455);
+				try{
+					int i=0;
+					for (; !sk.isConnected() && i<20; i++) {
+						Thread.sleep(100L);
+						try {
+							sk.connect(new InetSocketAddress("127.0.0.1", 48455));
+						}catch(SocketException s){}
+					}
+					if (i==20)
+						throw new Exception("Connection failed");
 					InputStream is = sk.getInputStream();
 					final int L = 2048;
 					byte[] b = new byte[L];
@@ -62,6 +72,7 @@ public class Lsp {
 					is.close();
 				} catch (Exception ioe) {
 					Log.e(TAG, ioe.getMessage());
+					// HelperUtils.show(Toast.makeText(c, ioe.getMessage(), 1));
 				}
 			}
 		}.start();
@@ -130,31 +141,35 @@ public class Lsp {
 		new SendThread("textDocument/didSave", s, false).start();
 	}
 
-	public synchronized void didChange(File f, int version, List<Quart> chs) {
+	public synchronized void didChange(File f, int version, List<Range> chs) {
 		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":")
 		.append(JSONObject.quote(Uri.fromFile(f).toString()))
 		.append(",\"version\":")
 		.append(version)
 		.append("},\"contentChanges\":[");
 		for (int i=0,j=chs.size(); i<j; i++) {
-			Quart c = chs.get(i);
+			Range c = chs.get(i);
 			sb.append("{\"range\":{\"start\":{\"line\":")
-			.append(c.sr)
+			.append(c.stl)
 			.append(",\"character\":")
-			.append(c.sc)
+			.append(c.stc)
 			.append("},\"end\":{\"line\":")
-			.append(c.er)
+			.append(c.enl)
 			.append(",\"character\":")
-			.append(c.ec)
+			.append(c.enc)
 			.append("}},\"text\":")
-			.append(JSONObject.quote(c.tx))
+			.append(JSONObject.quote(c.msg))
 			.append("},");
 		}
 		sb.setCharAt(sb.length()-1, ']');
 		sb.append('}');
 		Log.d(TAG, sb.toString());
 		//tp = CHANGE;
-		new SendThread("textDocument/didChange", sb.toString(), false).start();
+		Thread td = new SendThread("textDocument/didChange", sb.toString(), false);
+		td.start();
+		try{
+			td.join();
+		}catch(InterruptedException ie){}
 	}
 
 	public synchronized boolean completionTry(File f, int l, int c, char tgc) {
@@ -199,11 +214,11 @@ public class Lsp {
 				else if (!sk.isConnected())
 					sk.connect(new InetSocketAddress("127.0.0.1", 48455));
 				OutputStream ow = sk.getOutputStream();
-				synchronized(Lsp.class) {
-					ow.write(new StringBuilder("Content-Length: ").append(s.length).append("\r\n\r\n").toString().getBytes());
-					ow.write(s);
-					ow.flush();
-				}
+				//synchronized(Lsp.class) {
+				ow.write(new StringBuilder("Content-Length: ").append(s.length).append("\r\n\r\n").toString().getBytes());
+				ow.write(s);
+				ow.flush();
+				//}
 			} catch(IOException e) {
 				Log.e(TAG, e.getMessage());
 			}

@@ -186,7 +186,7 @@ public class LinearSearchStrategy implements SearchStrategy {
      */
     protected boolean isSandwichedByWhitespace(Document src,
                                                int start, int length) {
-        Language charSet = Lexer.getLanguage();
+        Language charSet = Tokenizer.getLanguage();
         boolean startWithWhitespace = (start == 0) || charSet.isWhitespace(src.charAt(start - 1));
 
         int end = start + length;

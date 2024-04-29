@@ -44,15 +44,13 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 				return;
 		}
 		try {
-			JsonReader jr = new JsonReader(new StringReader((String)msg.obj));
+			JsonReader jr = new JsonReader(new CharSeqReader((CharSequence)msg.obj));
 			jr.beginObject();
-			Deque<String> st = new ArrayDeque<>();
-			st = new LinkedList<>();
+			Deque<String> stack = new ArrayDeque<>();
 			int sl = 0, sc = 0, el = 0, ec = 0;
 			Object tmp1 = null, tmp2 = null, tmp3 = null;
-			boolean _ct = true;
-			while (_ct) {
-				//Log.i("LSP", st.toString());
+			boolean _loop = true;
+			while (_loop) {
 				switch (jr.peek()) {
 					case NAME:
 						String n = jr.nextName();
@@ -82,7 +80,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								tmp1 = new ArrayList();
 							case ADDEDIT:
 								jr.beginArray();
-								st.push(n);
+								stack.push(n);
 								break;
 							case TG:
 								jr.beginArray();
@@ -91,7 +89,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 									sb.append(jr.nextString());
 								jr.close();
 								ma.lsp.setCompTrigs(sb.toString().toCharArray());
-								_ct = false;
+								_loop = false;
 								break;
 							case RNG:
 								jr.beginObject();
@@ -121,7 +119,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 							case PARA:
 							case RESU:
 								jr.beginObject();
-								st.push(n);
+								stack.push(n);
 								break;
 							default:
 								jr.skipValue();
@@ -130,8 +128,8 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 						break;
 					case BEGIN_OBJECT:
 						jr.beginObject();
-						if (!st.isEmpty()) {
-						switch (st.peek()) {
+						if (!stack.isEmpty()) {
+						switch (stack.peek()) {
 							case ADDEDIT:
 								tmp3 = new Edit();
 								break;
@@ -146,8 +144,8 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 						break;
 					case END_OBJECT:
 						jr.endObject();
-						if (!st.isEmpty())
-						switch (st.peek()) {
+						if (!stack.isEmpty())
+						switch (stack.peek()) {
 							case ADDEDIT:
 								Edit _p = (Edit)tmp3;
 								Document te = ma.getEditor().getText();
@@ -161,7 +159,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								_p.start = te.getLineOffset(sl) + sc;
 								_p.len = te.getLineOffset(el) + ec - _p.start;
 								((ListItem)tmp2).edits.addFirst(_p);
-								st.pop();
+								stack.pop();
 								break;
 							case IT:
 								((ArrayList)tmp1).add(tmp2);
@@ -177,19 +175,19 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								}
 								break;
 							default:
-								st.pop();
+								stack.pop();
 						}
 						break;
 					case END_ARRAY:
 						jr.endArray();
-						if (!st.isEmpty())
-						switch (st.peek()) {
+						if (!stack.isEmpty())
+						switch (stack.peek()) {
 							case ADDEDIT:
-								st.pop();
+								stack.pop();
 								break;
 							case IT:
 								ma.getEditor().getAutoCompletePanel().update((ArrayList<ListItem>)tmp1);
-								_ct = false;
+								_loop = false;
 								break;
 							case DG:
 								jr.close();
@@ -197,14 +195,15 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								a.sort(this);
 								TextEditor te = ma.getEditor();
 								te.getText().setDiag(a);
+								Log.i("LSP", a.toString());
 								te.invalidate();
-								_ct = false;
+								_loop = false;
 								break;
 						}
 						break;
 					case END_DOCUMENT:
 						jr.close();
-						_ct = false;
+						_loop = false;
 						break;
 					default:
 						jr.skipValue();

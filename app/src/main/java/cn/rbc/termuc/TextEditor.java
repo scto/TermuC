@@ -85,7 +85,7 @@ public class TextEditor extends FreeScrollingTextField{
 
     public static void setLanguage(Language language){
         AutoCompletePanel.setLanguage(language);
-        Lexer.setLanguage(language);
+        Tokenizer.setLanguage(language);
     }
 
     public String getSelectedText() {

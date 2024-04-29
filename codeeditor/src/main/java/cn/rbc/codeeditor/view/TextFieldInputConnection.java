@@ -6,9 +6,11 @@ import android.view.inputmethod.BaseInputConnection;
 
 import cn.rbc.codeeditor.lang.Language;
 import cn.rbc.codeeditor.util.DLog;
-import cn.rbc.codeeditor.util.Lexer;
+import cn.rbc.codeeditor.util.Tokenizer;
 
 import static cn.rbc.codeeditor.util.DLog.log;
+import cn.rbc.codeeditor.util.*;
+import android.widget.*;
 
 //*********************************************************************
 //************************** InputConnection **************************
@@ -59,10 +61,7 @@ public class TextFieldInputConnection extends BaseInputConnection {
     public boolean sendKeyEvent(KeyEvent event) {
         switch (event.getKeyCode()) {
             case KeyEvent.KEYCODE_SHIFT_LEFT:
-                if (textField.isSelectText())
-                    textField.selectText(false);
-                else
-                    textField.selectText(true);
+				textField.selectText(!textField.isSelected());
                 break;
             case KeyEvent.KEYCODE_DPAD_LEFT:
                 textField.moveCaretLeft();
@@ -84,11 +83,10 @@ public class TextFieldInputConnection extends BaseInputConnection {
                 break;
             case KeyEvent.KEYCODE_ENTER:
             case KeyEvent.KEYCODE_NUMPAD_ENTER:
-                if (textField.mAutoCompletePanel.isShow())
+                if (textField.mAutoCompletePanel.isShow()) {
                     textField.mAutoCompletePanel.select(0);
-                else
-                    return super.sendKeyEvent(event);
-                break;
+					break;
+				}
             default:
                 return super.sendKeyEvent(event);
         }
@@ -135,7 +133,6 @@ public class TextFieldInputConnection extends BaseInputConnection {
             tf.moveCaret(mCaretPosition - text.length() - newCursorPosition);
 		if (sel)
 			tf.determineSpans();
-			//tc
         // log("setComposingText:"+text+","+newCursorPosition);
         return true;
     }
@@ -163,7 +160,7 @@ public class TextFieldInputConnection extends BaseInputConnection {
             isComposing = false;
             return true;
 
-              */
+         */
         return setComposingText(text, newCursorPosition) && finishComposingText();
     }
 
@@ -193,7 +190,7 @@ public class TextFieldInputConnection extends BaseInputConnection {
         if ((reqModes & InputType.TYPE_TEXT_FLAG_CAP_WORDS)
                 == InputType.TYPE_TEXT_FLAG_CAP_WORDS) {
             int prevChar = mCaretPosition - 1;
-            if (prevChar < 0 || Lexer.getLanguage().isWhitespace(textField.hDoc.charAt(prevChar))) {
+            if (prevChar < 0 || Tokenizer.getLanguage().isWhitespace(textField.hDoc.charAt(prevChar))) {
                 capsMode |= InputType.TYPE_TEXT_FLAG_CAP_WORDS;
 
                 //set CAP_SENTENCES if client is interested in it
@@ -208,7 +205,7 @@ public class TextFieldInputConnection extends BaseInputConnection {
         // Android bug? Therefore, we assume TYPE_TEXT_FLAG_CAP_SENTENCES
         // is always set to be on the safe side.
         else {
-            Language lang = Lexer.getLanguage();
+            Language lang = Tokenizer.getLanguage();
 
             int prevChar = mCaretPosition - 1;
             int whitespaceCount = 0;

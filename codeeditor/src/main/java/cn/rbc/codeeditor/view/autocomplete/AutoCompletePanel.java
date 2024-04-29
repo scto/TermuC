@@ -24,7 +24,7 @@ import android.util.*;
 import cn.rbc.codeeditor.util.*;
 
 
-public class AutoCompletePanel {
+public class AutoCompletePanel implements OnItemClickListener {
 
     public static Language _globalLanguage = LanguageNonProg.getInstance();
    // public CharSequence _constraint;
@@ -76,7 +76,6 @@ public class AutoCompletePanel {
     @SuppressWarnings("ResourceType")
     private void initAutoCompletePanel() {
         _autoCompletePanel = new ListPopupWindow(_context);
-		_autoCompletePanel.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
         _autoCompletePanel.setAnchorView(_textField);
         _adapter = new AutoPanelAdapter(_context, this, _textField);
         _autoCompletePanel.setAdapter(_adapter);
@@ -98,12 +97,12 @@ public class AutoCompletePanel {
         gd.setStroke(1, textColor);
         setTextColor(textColor);
         _autoCompletePanel.setBackgroundDrawable(gd);
-        _autoCompletePanel.setOnItemClickListener(new OnItemClickListener() {
-            public void onItemClick(AdapterView<?> p1, View p2, int p3, long p4) {
-                select(p3);
-            }
-        });
+        _autoCompletePanel.setOnItemClickListener(this);
     }
+
+	public void onItemClick(AdapterView<?> p1, View p2, int p3, long p4) {
+		select(p3);
+	}
 
     public void select(int pos) {
 		Deque<Edit> edits = _adapter.getItem(pos).edits;
@@ -169,16 +168,19 @@ public class AutoCompletePanel {
         _filter.filter(constraint);
     }
 
-	public void update(@NonNull ArrayList<ListItem> l) {
-		_adapter.setData(l);
-		//_autoCompletePanel.set
-		int y = _textField.getCaretY() + _textField.rowHeight() / 2 - _textField.getScrollY();
-		setHeight(_adapter.getItemHeight() * Math.min(3, l.size()));
-		setHorizontalOffset(AutoPanelAdapter.PADDING);
-		setWidth(_textField.getWidth() - AutoPanelAdapter.PADDING * 2);
-		setVerticalOffset(y - _textField.getHeight());//_textField.getCaretY()-_textField.getScrollY()-_textField.getHeight());
-		_adapter.notifyDataSetChanged();
-		show();
+	public void update(ArrayList<ListItem> l) {
+		if (l==null || l.isEmpty()) {
+			_adapter.notifyDataSetInvalidated();
+		} else {
+			_adapter.setData(l);
+			int y = _textField.getCaretY() + _textField.rowHeight() / 2 - _textField.getScrollY();
+			setHeight(_adapter.getItemHeight() * Math.min(3, l.size()));
+			setHorizontalOffset(AutoPanelAdapter.PADDING);
+			setWidth(_textField.getWidth() - AutoPanelAdapter.PADDING * 2);
+			setVerticalOffset(y - _textField.getHeight());//_textField.getCaretY()-_textField.getScrollY()-_textField.getHeight());
+			_adapter.notifyDataSetChanged();
+			show();
+		}
 	}
 
 	public Bitmap getBitmap() {
@@ -189,15 +191,16 @@ public class AutoCompletePanel {
         if (!isShow()) {
 			_autoCompletePanel.show();
         }
-		//_autoCompletePanel.getListView();.setFadingEdgeLength(0);
-        isShow = true;
+		//_autoCompletePanel.getListView().setFadingEdgeLength(0);
+		isShow = true;
     }
 
     public void dismiss() {
         if (isShow()) {
-            isShow = false;
 			_autoCompletePanel.dismiss();
         }
+		isShow = false;
+		//HelperUtils.show(Toast.makeText(_textField.getContext(), String.valueOf(isShow), 1));
     }
 
     public boolean isShow() {

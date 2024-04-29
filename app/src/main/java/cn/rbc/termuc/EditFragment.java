@@ -7,14 +7,10 @@ import java.io.*;
 import org.json.*;
 import android.net.*;
 import java.util.*;
-/*import tiiehenry.code.view.*;
-import tiiehenry.code.language.c.*;
-import tiiehenry.code.language.cpp.*;
-import tiiehenry.code.language.java.*;*/
 import cn.rbc.codeeditor.lang.*;
 import cn.rbc.codeeditor.common.*;
 import cn.rbc.codeeditor.util.*;
-import android.util.*;
+import cn.rbc.codeeditor.lang.c.*;
 
 public class EditFragment extends Fragment implements OnTextChangeListener
 {
@@ -26,8 +22,6 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 	private File fl;
 	private TextEditor ed;
 	int type;
-	//private int id;
-	//private int _ed;
 	private String C = "gcc";
 
 	public EditFragment() {
@@ -65,21 +59,19 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 			while ((i=fr.read(cs)) != -1)
 				sb.append(cs, 0, i);
 			fr.close();
-			//sb.trimToSize();
 			String s = sb.toString();
 			editor.setText(s);
 			editor.getText().setOnTextChangeListener(this);
 			if ((type&1) == 0) {
 				C = "gcc";
-				editor.setLanguage(LanguageC.getInstance());
+				editor.setLanguage(CLanguage.getInstance());
 			} else {
 				C = "g++";
-				editor.setLanguage(LanguageCpp.getInstance());
+				editor.setLanguage(CppLanguage.getInstance());
 			}
-			//editor.setLanguage(.getInstance());
 			ma.setEditor(editor);
 			ma.lsp.didOpen(fl, (type&1)==1?"cpp":"c", s);
-		} catch(Exception fnf) {
+		} catch(IOException fnf) {
 			fnf.printStackTrace();
 			Toast.makeText(ma, "打开失败！", Toast.LENGTH_SHORT).show();
 		}
@@ -90,46 +82,47 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 		return C;
 	}
 
-	private int lastVer = -1;
-	private ArrayList<Quart> cgs;
+	//private int lastVer = -1;
+	private ArrayList<Range> cgs;
 
-	public void onChanged(CharSequence c, int s, int ver, boolean ins, boolean typ) {
+	public void onChanged(CharSequence c, int start, int ver, boolean ins, boolean typ) {
 		Document dp = ed.getText();
-		boolean b = ed.isWordWrap();
-		Quart q = new Quart();
-		if (b) {
-			q.sr = dp.findLineNumber(s);
-			q.sc = dp.getLineOffset(q.sr);
+		boolean wordwrap = ed.isWordWrap();
+		Range range = new Range();
+		if (wordwrap) {
+			range.stl = dp.findLineNumber(start);
+			range.stc = dp.getLineOffset(range.stl);
 		} else {
-			q.sr = dp.findRowNumber(s);
-			q.sc = dp.getRowOffset(q.sr);
+			range.stl = dp.findRowNumber(start);
+			range.stc = dp.getRowOffset(range.stl);
 		}
-		q.sc = s - q.sc;
-		if (ins) { // i
-			q.er = q.sr;
-			q.ec = q.sc;
-		} else { // d
-			int e = s + c.length();
+		range.stc = start - range.stc;
+		if (ins) { // insert
+			range.enl = range.stl;
+			range.enc = range.stc;
+		} else { // delete
+			int e = start + c.length();
 			c = "";
-			if (b) {
-				q.er = dp.findLineNumber(e);
-				q.ec = dp.getLineOffset(q.er);
+			if (wordwrap) {
+				range.enl = dp.findLineNumber(e);
+				range.enc = dp.getLineOffset(range.enl);
 			} else {
-				q.er = dp.findRowNumber(e);
-				q.ec = dp.getRowOffset(q.er);
+				range.enl = dp.findRowNumber(e);
+				range.enc = dp.getRowOffset(range.enl);
 			}
-			q.ec = e - q.ec;
+			range.enc = e - range.enc;
 		}
-		q.tx = (String)c;
-		cgs.add(q);
+		range.msg = (String)c;
+		cgs.add(range);
 		//lastStr = (String)c;
 		//if (lastVer != ver) {
 		Lsp l = ((MainActivity)getActivity()).lsp;
 		l.didChange(fl, ver, cgs);
 		//lastStart = s;
 		//lastVer = ver;
-		if (ins && typ && (s=c.length())==1 && l.completionTry(fl, q.er, q.ec+1, c.charAt(0)))
-			ed.getAutoCompletePanel().dismiss();
+		// when inserting text and typing, call for completion
+		if (ins && typ && c.length()==1) l.completionTry(fl, range.enl, range.enl+1, c.charAt(0));
+			//ed.getAutoCompletePanel().dismiss();
 		cgs.clear();
 		//}
 	}
@@ -141,12 +134,10 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 		super.onHiddenChanged(hidden);
 		if (!hidden) {
 			((MainActivity)getActivity()).setEditor(ed);
-			if ((type&1) == 0) { // C
-				ed.setLanguage(LanguageC.getInstance());
-			} else {
-				ed.setLanguage(LanguageCpp.getInstance());
-			}
-			//_tmp = 0;
+			if ((type&1) == 0) // C
+				ed.setLanguage(CLanguage.getInstance());
+			else
+				ed.setLanguage(CppLanguage.getInstance());
 		}
 	}
 

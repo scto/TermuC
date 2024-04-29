@@ -8,7 +8,7 @@
  */
 package cn.rbc.codeeditor.lang;
 
-import cn.rbc.codeeditor.util.Lexer;
+import cn.rbc.codeeditor.util.Tokenizer;
 
 import java.util.HashMap;
 
@@ -40,7 +40,7 @@ public abstract class LanguageCFamily
 		_keywords = new HashMap<String, Integer>(keywords.length);
 		for (int i = 0; i < keywords.length; ++i)
 		{
-			_keywords.put(keywords[i], Lexer.KEYWORD);
+			_keywords.put(keywords[i], Tokenizer.KEYWORD);
 		}
 	}
 
@@ -49,7 +49,7 @@ public abstract class LanguageCFamily
 		_operators = new HashMap<>(operators.length);
 		for (int i = 0; i < operators.length; ++i)
 		{
-			_operators.put(operators[i], Lexer.OPERATOR);
+			_operators.put(operators[i], Tokenizer.OPERATOR);
 		}
 	}
 

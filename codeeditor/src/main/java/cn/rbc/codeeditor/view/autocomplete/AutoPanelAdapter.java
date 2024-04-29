@@ -141,7 +141,8 @@ public class AutoPanelAdapter extends BaseAdapter  {
     }
 
 	public void setData(@NonNull ArrayList<ListItem> l) {
-		listItems = l;
+		listItems.clear();
+		listItems.addAll(l);
 	}
     /**
      * 计算列表高
