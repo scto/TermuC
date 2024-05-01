@@ -140,7 +140,7 @@ public class AutoPanelAdapter extends BaseAdapter  {
         _abort.clear();
     }
 
-	public void setData(@NonNull ArrayList<ListItem> l) {
+	public void setData(ArrayList<ListItem> l) {
 		listItems.clear();
 		listItems.addAll(l);
 	}

@@ -24,13 +24,11 @@ public class CLanguage extends Language{
 
 	@Override
 	public boolean isProgLang() {
-		// TODO: Implement this method
 		return true;
 	}
 
 	@Override
 	public Lexer newLexer(CharSeqReader reader) {
-		// TODO: Implement this method
 		return new CLexer(reader);
 	}
 }

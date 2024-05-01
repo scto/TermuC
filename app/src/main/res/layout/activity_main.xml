@@ -14,12 +14,12 @@
 		android:layout_alignParentTop="true">
 
 		<TextView
-			android:id="@+id/msg_empty"
-			android:layout_height="match_parent"
-			android:layout_width="match_parent"
-			android:gravity="center"
-			android:textAppearance="?android:attr/textAppearanceLarge"
-			android:text="未打开文件"/>
+				android:id="@+id/msg_empty"
+				android:layout_height="match_parent"
+				android:layout_width="match_parent"
+				android:gravity="center"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:text="@string/no_open_files"/>
 
 	</FrameLayout>
 

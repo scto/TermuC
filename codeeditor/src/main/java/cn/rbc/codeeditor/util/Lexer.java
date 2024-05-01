@@ -29,7 +29,7 @@ public interface Lexer
 	WHITE_CHAR=23,
 	ERROR=24;
 
-	public int yylex() throws IOException
-	public int yylength()
-	public String yytext()
+	public int yylex() throws IOException;
+	public int yylength();
+	public String yytext();
 }

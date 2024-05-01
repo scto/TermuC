@@ -186,7 +186,7 @@ public class MainActivity extends Activity implements
 			return true;
 		PopupMenu pm = new PopupMenu(MainActivity.this, v);
 		Menu _m = pm.getMenu();
-		_m.add("删除").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener(){
+		_m.add(getString(R.string.delete)).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener(){
 				public boolean onMenuItemClick(MenuItem mi) {
 					if (new File(pwd, adp.getItem(i-1)).delete())
 						adp.remove(adp.getItem(i-1));
@@ -248,8 +248,9 @@ public class MainActivity extends Activity implements
 				mTans.commit();
 				lsp.didClose(pwd);
 				break;
-			case R.id.test:
-				lsp.initialize();
+			case R.id.settings:
+				Intent it = new Intent(this, SettingsActivity.class);
+				startActivity(it);
 				break;
         }
         return true;
@@ -299,7 +300,6 @@ public class MainActivity extends Activity implements
 
     @Override
     public void onSaveInstanceState(Bundle bundle) {
-        //bundle.putCharSequence("code", textEditor.getText());
         bundle.putString("pwd", pwd.getPath());
         super.onSaveInstanceState(bundle);
     }

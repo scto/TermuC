@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">设置</string>
+    <string name="global">通用</string>
+    <string name="dark_mode">暗主题</string>
+    <string name="editor">编辑器</string>
+    <string name="wordwrap">自动换行</string>
+    <string name="compiler">编译器</string>
+    <string name="cflags">编译选项</string>
+    <string name="run">运行</string>
+    <string name="undo">撤销</string>
+    <string name="redo">重做</string>
+    <string name="save">保存</string>
+    <string name="search">查找</string>
+    <string name="close">关闭</string>
+    <string name="no_open_files">未打开文件</string>
+</resources>

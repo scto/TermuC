@@ -328,7 +328,6 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 						&& errspan.msg != null) {
 						Context ctx = mTextField.getContext();
 						Toast t = new Toast(ctx);
-						//.makeText(mTextField.getContext(), errspan.msg, Toast.LENGTH_SHORT);
 						LinearLayout ll = new LinearLayout(ctx);
 						ll.setOrientation(LinearLayout.VERTICAL);
 						TextView tv = new TextView(ctx);

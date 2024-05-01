@@ -22,7 +22,6 @@ public class TextBuffer implements CharSequence
 
 	@Override
 	public int length() {
-		// TODO: Implement this method
 		return getTextLength();
 	}
 

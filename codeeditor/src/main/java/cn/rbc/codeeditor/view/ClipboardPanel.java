@@ -144,7 +144,7 @@ public class ClipboardPanel {
                 menu.add(0, 3, 0, _context.getString(android.R.string.paste))
                         .setShowAsActionFlags(2)
                         .setAlphabeticShortcut('v');
-                menu.add(0, 4, 0, "Delete")
+                menu.add(0, 4, 0, _context.getString(R.string.delete))
                         .setShowAsActionFlags(2)
                         .setAlphabeticShortcut('d');
                 return true;

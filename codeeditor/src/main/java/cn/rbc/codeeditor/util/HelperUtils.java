@@ -36,9 +36,11 @@ public class HelperUtils {
         return bitmap;
     }
 
-	public static void show(@NonNull Toast t) {
+	public static void show(Toast t) {
 		if (_t != null)
 			_t.cancel();
-		(_t = t).show();
+		_t = t;
+        if (t != null)
+            t.show();
 	}
 }

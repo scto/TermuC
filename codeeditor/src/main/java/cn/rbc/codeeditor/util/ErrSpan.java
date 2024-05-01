@@ -11,7 +11,6 @@ public class ErrSpan extends Range
 
 	@Override
 	public String toString() {
-		// TODO: Implement this method
 		return new StringBuilder()
 			.append('(')
 			.append(stl)

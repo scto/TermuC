@@ -51,7 +51,6 @@ public abstract class Language
 
 	public void updateUserWord()
 	{
-		// TODO: Implement this method
 		String[] uw = new String[_userCache.size()];
 		_userWords = _userCache.toArray(uw);
 	}

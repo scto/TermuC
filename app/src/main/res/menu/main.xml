@@ -1,30 +1,27 @@
 <menu xmlns:ad="http://schemas.android.com/apk/res/android">
 	<item
-        ad:id="@+id/run"
-        ad:title="运行"
-		ad:showAsAction="always"
-		ad:icon="@drawable/ic_play_24"/>
+			ad:id="@+id/run"
+			ad:title="@string/run"
+			ad:showAsAction="always"
+			ad:icon="@drawable/ic_play_24"/>
 	<item
-		ad:id="@+id/undo"
-		ad:title="撤销"
-		ad:showAsAction="always"
-		ad:icon="@drawable/ic_undo_24"/>
+			ad:id="@+id/undo"
+			ad:title="@string/undo"
+			ad:showAsAction="always"
+			ad:icon="@drawable/ic_undo_24"/>
 	<item
-		ad:id="@+id/redo"
-		ad:title="重做"/>
+			ad:id="@+id/redo"
+			ad:title="@string/redo"/>
 	<item
-		ad:id="@+id/save"
-		ad:title="保存"/>
+			ad:id="@+id/save"
+			ad:title="@string/save"/>
 	<item
-		ad:id="@+id/search"
-		ad:title="查找"/>
+			ad:id="@+id/search"
+			ad:title="@string/search"/>
 	<item
-		ad:id="@+id/close"
-		ad:title="关闭"/>
+			ad:id="@+id/close"
+			ad:title="@string/close"/>
 	<item
-		ad:id="@+id/test"
-		ad:title="测试"/>
-	<item
-		ad:id="@+id/swth"
-		ad:title="开关"/>
+			ad:id="@+id/settings"
+			ad:title="@string/settings"/>
 </menu>
