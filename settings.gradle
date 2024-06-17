@@ -1,13 +1,13 @@
 pluginManagement {
     repositories {
         // For china developers
-        /* maven { url 'https://maven.aliyun.com/repository/google' }
-        maven { url 'https://maven.aliyun.com/repository/public' } */
+        /*maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/central' }*/
         google()
         mavenCentral()
         gradlePluginPortal()
     }
 }
-rootProject.name='Text Editor'
+rootProject.name='TermuC'
 include ':app' //, ':lib-n-ide'
 include ':codeeditor'

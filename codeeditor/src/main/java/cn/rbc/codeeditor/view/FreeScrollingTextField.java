@@ -58,7 +58,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EdgeEffect;
-import android.widget.Scroller;
+import android.widget.OverScroller;
 
 import cn.rbc.codeeditor.common.OnCaretScrollListener;
 import cn.rbc.codeeditor.common.OnRowChangedListener;
@@ -109,7 +109,7 @@ import cn.rbc.codeeditor.util.*;
  * this extra char. Some bounds manipulation is done so that this implementation
  * detail is hidden from client classes.
  */
-public abstract class FreeScrollingTextField extends View implements Document.TextFieldMetrics {
+public abstract class FreeScrollingTextField extends android.view.View implements Document.TextFieldMetrics {
 
     //---------------------------------------------------------------------
     //--------------------------  Caret Scroll  ---------------------------
@@ -235,7 +235,7 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
     protected int mAutoIndentWidth = 4;
     protected boolean isLongPressCaps = false;
     protected AutoCompletePanel mAutoCompletePanel;
-    private Scroller mScroller;
+    private OverScroller mScroller;
     private Paint mTextPaint, mLineBrush;
     /**
      * Max amount that can be scrolled horizontally based on the longest line
@@ -324,7 +324,7 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         mContext = context;
         hDoc = new Document(this);
         mNavMethod = new TouchNavigationMethod(this);
-        mScroller = new Scroller(context);
+        mScroller = new OverScroller(context);
 
         initView(context);
     }
@@ -1590,8 +1590,8 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
                 scrollTo(x, y);
             }
 			/* ViewCompat */
-            postInvalidateOnAnimation();
-            postInvalidate();
+            if (!awakenScrollBars())
+                postInvalidateOnAnimation();
         }
     }
 
