@@ -109,7 +109,7 @@ import cn.rbc.codeeditor.util.*;
  * this extra char. Some bounds manipulation is done so that this implementation
  * detail is hidden from client classes.
  */
-public abstract class FreeScrollingTextField extends android.view.View implements Document.TextFieldMetrics {
+public abstract class FreeScrollingTextField extends View implements Document.TextFieldMetrics {
 
     //---------------------------------------------------------------------
     //--------------------------  Caret Scroll  ---------------------------
@@ -148,7 +148,7 @@ public abstract class FreeScrollingTextField extends android.view.View implement
      *
      * Copied from android.text.method.QwertyKeyListener, dated 2006
      */
-    private static SparseArray<String> PICKER_SETS = new SparseArray<String>();
+    private final static SparseArray<String> PICKER_SETS = new SparseArray<>();
 
     static {
         PICKER_SETS.put('A', "\u00C0\u00C1\u00C2\u00C4\u00C6\u00C3\u00C5\u0104\u0100");
@@ -2238,7 +2238,7 @@ public abstract class FreeScrollingTextField extends android.view.View implement
         return true;
     }
 
-    final private boolean isPointInView(int x, int y) {
+    private boolean isPointInView(int x, int y) {
         return (x >= 0 && x < getWidth() &&
 			y >= 0 && y < getHeight());
     }
