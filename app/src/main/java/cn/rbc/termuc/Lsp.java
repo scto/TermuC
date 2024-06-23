@@ -214,11 +214,9 @@ public class Lsp {
 				else if (!sk.isConnected())
 					sk.connect(new InetSocketAddress("127.0.0.1", 48455));
 				OutputStream ow = sk.getOutputStream();
-				//synchronized(Lsp.class) {
 				ow.write(new StringBuilder("Content-Length: ").append(s.length).append("\r\n\r\n").toString().getBytes());
 				ow.write(s);
 				ow.flush();
-				//}
 			} catch(IOException e) {
 				Log.e(TAG, e.getMessage());
 			}

@@ -5,6 +5,7 @@
     <string name="dark_mode">暗主题</string>
     <string name="editor">编辑器</string>
     <string name="wordwrap">自动换行</string>
+    <string name="whitespace">显示空白符号</string>
     <string name="compiler">编译器</string>
     <string name="cflags">编译选项</string>
     <string name="run">运行</string>

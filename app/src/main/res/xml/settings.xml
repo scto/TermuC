@@ -1,22 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/settings">
 	<PreferenceCategory
-			android:title="@string/global">
+		android:title="@string/global">
 		<CheckBoxPreference
-				android:title="@string/dark_mode"
-				android:key="@string/dark_mode_key"/>
+			android:key="@string/key_dark_mode"
+			android:title="@string/dark_mode"
+			/>
 	</PreferenceCategory>
 	<PreferenceCategory
-			android:title="@string/editor">
+		android:title="@string/editor">
 		<CheckBoxPreference
-				android:title="@string/wordwrap"
-				android:key="@string/wordwrap_key"/>
+			android:key="@string/key_wordwrap"
+			android:title="@string/wordwrap"
+			/>
+		<CheckBoxPreference
+			android:key="@string/key_whitespace"
+			android:title="@string/whitespace"
+			/>
 	</PreferenceCategory>
 	<PreferenceCategory
-			android:title="@string/compiler">
+		android:title="@string/compiler">
 		<EditTextPreference
-				android:title="@string/cflags"
-				android:key="@string/cflags_key"/>
+			android:key="@string/key_cflags"
+			android:title="@string/cflags"
+			/>
 	</PreferenceCategory>
 </PreferenceScreen>
+

@@ -5,6 +5,7 @@
     <string name="dark_mode">Dark Mode</string>
     <string name="editor">Editor</string>
     <string name="wordwrap">Word Wrap</string>
+    <string name="whitespace">Show Whitespaces</string>
     <string name="compiler">Compiler</string>
     <string name="cflags">Compiler Flags</string>
     <string name="run">Run</string>
@@ -14,7 +15,8 @@
     <string name="search">Search</string>
     <string name="close">Close</string>
     <string name="no_open_files">No Open Files</string>
-    <string name="dark_mode_key" translatable="false">dark_mode</string>
-    <string name="wordwrap_key" translatable="false">wordwrap</string>
-    <string name="cflags_key" translatable="false">cflags</string>
+    <string name="key_dark_mode" translatable="false">darkmode</string>
+	<string name="key_wordwrap" translatable="false">wordwrap</string>
+	<string name="key_whitespace" translatable="false">whitespace</string>
+	<string name="key_cflags" translatable="false">cflags</string>
 </resources>

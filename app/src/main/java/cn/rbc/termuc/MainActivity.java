@@ -17,6 +17,7 @@ import org.json.*;
 import java.net.*;
 import android.net.*;
 import cn.rbc.codeeditor.util.*;
+import android.preference.*;
 
 public class MainActivity extends Activity implements
 	ActionBar.OnNavigationListener, OnGlobalLayoutListener,
@@ -42,6 +43,8 @@ public class MainActivity extends Activity implements
 
 	private void envInit() {
 		pwd = new File(getPreferences(MODE_PRIVATE).getString("pwd", root.getPath()));
+		lsp = new Lsp();
+		Settings.getInstance(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
 	}
 
 	private void showFrag(Fragment frag) {
@@ -73,6 +76,7 @@ public class MainActivity extends Activity implements
 		hda.setDropDownViewTheme(rt);
 		ab = getActionBar();
         ab.setListNavigationCallbacks(hda, this);
+
 		setContentView(R.layout.activity_main);
         showlist = findViewById(R.id.show_list);
 		keys = findViewById(R.id.keys);
@@ -88,7 +92,6 @@ public class MainActivity extends Activity implements
 		l.setOnItemLongClickListener(this);
 		refresh();
 		mSearchAction = new SearchAction(this);
-		lsp = new Lsp();
 		lsp.start(this, hand);
     }
 
@@ -186,7 +189,7 @@ public class MainActivity extends Activity implements
 			return true;
 		PopupMenu pm = new PopupMenu(MainActivity.this, v);
 		Menu _m = pm.getMenu();
-		_m.add(getString(R.string.delete)).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener(){
+		_m.add(R.string.delete).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener(){
 				public boolean onMenuItemClick(MenuItem mi) {
 					if (new File(pwd, adp.getItem(i-1)).delete())
 						adp.remove(adp.getItem(i-1));
@@ -204,7 +207,9 @@ public class MainActivity extends Activity implements
                 try {
                     save();
                     Utils.run(this, new StringBuffer(Utils.PREF).append("/usr/bin/bash").toString(), new String[]{"-c",
-					new StringBuffer(lastFrag.getC()).append(" \"").append(escape(lastFrag.getFile().getAbsolutePath())).append("\" -lm -Wall -o $TMPDIR/m && $TMPDIR/m && echo -n \"\nPress any key to exit...\" && read").toString()},
+					new StringBuffer(lastFrag.getC())
+					.append(" \"").append(escape(lastFrag.getFile().getAbsolutePath())).append("\" ")
+					.append(Settings.mCFlags).append(" -o $TMPDIR/m && $TMPDIR/m && echo -n \"\nPress any key to exit...\" && read").toString()},
 					pwd.getPath(), false);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -318,6 +323,15 @@ public class MainActivity extends Activity implements
 		} catch (IOException e) {
 			e.printStackTrace();
 			toast(e.getMessage());
+		}
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		// Apply Prefs for Edits
+		for (Fragment f:mFmgr.getFragments()) {
+			((TextEditor)f.getView()).setShowNonPrinting(Settings.mWhiteSpace);
 		}
 	}
 

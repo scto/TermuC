@@ -25,11 +25,11 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 	private String C = "gcc";
 
 	public EditFragment() {
-		cgs = new ArrayList<>();
+		changes = new ArrayList<>();
 	}
 
 	public EditFragment(String path, int type) {
-		cgs = new ArrayList<>();
+		changes = new ArrayList<>();
 		Bundle bd = new Bundle();
 		bd.putString(FL, path);
 		bd.putInt(TP, type);
@@ -49,6 +49,7 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 		final MainActivity ma = (MainActivity)getActivity();
 		TextEditor editor = new TextEditor(ma);
 		editor.setVerticalScrollBarEnabled(true);
+		editor.setShowNonPrinting(Settings.mWhiteSpace);
 		editor.setLayoutParams(new FrameLayout.LayoutParams(
 			FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 		try {
@@ -83,18 +84,18 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 	}
 
 	//private int lastVer = -1;
-	private ArrayList<Range> cgs;
+	private ArrayList<Range> changes;
 
 	public void onChanged(CharSequence c, int start, int ver, boolean ins, boolean typ) {
-		Document dp = ed.getText();
+		Document text = ed.getText();
 		boolean wordwrap = ed.isWordWrap();
 		Range range = new Range();
 		if (wordwrap) {
-			range.stl = dp.findLineNumber(start);
-			range.stc = dp.getLineOffset(range.stl);
+			range.stl = text.findLineNumber(start);
+			range.stc = text.getLineOffset(range.stl);
 		} else {
-			range.stl = dp.findRowNumber(start);
-			range.stc = dp.getRowOffset(range.stl);
+			range.stl = text.findRowNumber(start);
+			range.stc = text.getRowOffset(range.stl);
 		}
 		range.stc = start - range.stc;
 		if (ins) { // insert
@@ -104,33 +105,32 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 			int e = start + c.length();
 			c = "";
 			if (wordwrap) {
-				range.enl = dp.findLineNumber(e);
-				range.enc = dp.getLineOffset(range.enl);
+				range.enl = text.findLineNumber(e);
+				range.enc = text.getLineOffset(range.enl);
 			} else {
-				range.enl = dp.findRowNumber(e);
-				range.enc = dp.getRowOffset(range.enl);
+				range.enl = text.findRowNumber(e);
+				range.enc = text.getRowOffset(range.enl);
 			}
 			range.enc = e - range.enc;
 		}
 		range.msg = (String)c;
-		cgs.add(range);
+		changes.add(range);
 		//lastStr = (String)c;
 		//if (lastVer != ver) {
-		Lsp l = ((MainActivity)getActivity()).lsp;
-		l.didChange(fl, ver, cgs);
+		Lsp lsp = ((MainActivity)getActivity()).lsp;
+		lsp.didChange(fl, ver, changes);
 		//lastStart = s;
 		//lastVer = ver;
 		// when inserting text and typing, call for completion
-		if (ins && typ && c.length()==1) l.completionTry(fl, range.enl, range.enl+1, c.charAt(0));
+		if (ins && typ && c.length()==1) lsp.completionTry(fl, range.enl, range.enl+1, c.charAt(0));
 			//ed.getAutoCompletePanel().dismiss();
-		cgs.clear();
+		changes.clear();
 		//}
 	}
 
 	@Override
 	public void onHiddenChanged(boolean hidden)
 	{
-		// TODO: Implement this method
 		super.onHiddenChanged(hidden);
 		if (!hidden) {
 			((MainActivity)getActivity()).setEditor(ed);
