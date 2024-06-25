@@ -286,7 +286,7 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         }
     };
     private boolean isUseGboard = false;
-    private RectF mVerticalScrollBar, mRect;
+    private RectF mRect;
     private EdgeEffect mTopEdge;
     private EdgeEffect mBottomEdge;
     private ClipboardPanel mClipboardPanel;
@@ -393,6 +393,7 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
     public void setTextSize(int pix, float cx, float cy) {
         if (pix <= 20 || pix >= 80 || pix == mTextPaint.getTextSize())
             return;
+		xExtent = 0;
         float oldHeight = rowHeight();
         float oldWidth = getCharAdvance('a');
         mZoomFactor = pix / BASE_TEXT_SIZE_PIXELS;
@@ -408,8 +409,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         float y = (getScrollY() + cy) * rowHeight() / oldHeight - cy;
         scrollTo(Math.max((int)x, 0), Math.max((int)y, 0));
         mSpaceWidth = (int) mTextPaint.measureText(" ");
-        //int idx=coordToCharIndex(getScrollX(), getScrollY());
-        //if (!makeCharVisible(idx))
         invalidate();
     }
 
@@ -434,6 +433,14 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         return true;
     }
 
+	@Override
+	public void scrollTo(int x, int y) {
+		// TODO: Implement this method
+		super.scrollTo(x, y);
+		for(StackTraceElement st:Thread.currentThread().getStackTrace())
+			DLog.i("Text", st.getClassName()+":"+st.getMethodName());
+	}
+
     private void initView(Context context) {
 
         mCtrlr = new TextFieldController(this);
@@ -447,7 +454,7 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         mTopEdge = new EdgeEffect(mContext);
         mBottomEdge = new EdgeEffect(mContext);
         mRect = new RectF();
-        mVerticalScrollBar = new RectF();
+        //mVerticalScrollBar = new RectF();
         //setBackgroundColor(mColorScheme.getColor(Colorable.BACKGROUND));
         setLongClickable(true);
         setFocusableInTouchMode(true);
@@ -797,7 +804,7 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 			p = dg.get(idx++);
 		}
 
-		// 逐行
+		// row by row
         while (currRowNum <= endRowNum && currIndex < mL) {
 
             int rowLen = hDoc.getRowSize(currRowNum);
@@ -811,7 +818,8 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
             paintX = mLeftOffset;
 			m = -1;
 
-			// 逐字
+			// char by char
+			// TODO: Rendering span by span
             for (int i = 0; i < rowLen; i++) {
                 // check if formatting changes are needed
                 if (reachedNextSpan(currIndex, nextSpan)) {
@@ -861,12 +869,12 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 						if (m >= 0 && ((b=(p.enl == currLineNum && p.enc == i+1))|| i+1 == rowLen || paintX >= mWidth)) {
 							mLineBrush.setColor(ColorScheme.DIAG[p.severity]);
 							canvas.drawLine(m, paintY, paintX, paintY, mLineBrush);
-							Log.i("LSP", currLineNum+" "+i);
 							m = -1;
 							if (idx<dgl && b)
 								p = dg.get(idx++);
 						}
 					}
+					r = currIndex;
 				}
                 ++currIndex;
             }
@@ -878,6 +886,7 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 			}
 
             paintY += rowheight;
+			paintX += mTextPaint.measureText(hDoc, r, currIndex);
 
             if (paintX > xExtent)
                 // record widest line seen so far
@@ -1564,7 +1573,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
      * @return The maximum y-value that can be scrolled to.
      */
     int getMaxScrollY() {
-        //return Math.max(0,hDoc.getRowCount() * rowHeight() - getContentHeight() / 2 + mNavMethod.getCaretBloat().bottom);
         //滚动时最后一行下面允许的空高度
         return Math.max(0, hDoc.getRowCount() * rowHeight() - getContentHeight() / 2 + mNavMethod.getCaretBloat().bottom);
     }
@@ -1799,8 +1807,8 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
     /**
      * Scrolls the caret into view if it is not on screen
      */
-    public void focusCaret() {
-        makeCharVisible(mCaretPosition);
+    public final boolean focusCaret() {
+        return makeCharVisible(mCaretPosition);
     }
 
     /**

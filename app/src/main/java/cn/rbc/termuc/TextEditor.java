@@ -20,7 +20,6 @@ public class TextEditor extends FreeScrollingTextField{
     private Context mContext;
     private String _lastSelectFile;
     private int _index;
-    //private Toast toast;
     /*
     private Handler handler = new Handler() {
         @Override
@@ -56,7 +55,7 @@ public class TextEditor extends FreeScrollingTextField{
     }
 
     private void init() {
-        setVerticalScrollBarEnabled(true);
+        //setVerticalScrollBarEnabled(true);
         setTypeface(Typeface.MONOSPACE);
         DisplayMetrics dm = mContext.getResources().getDisplayMetrics();
         //设置字体大小
@@ -74,7 +73,6 @@ public class TextEditor extends FreeScrollingTextField{
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        // TODO: Implement this method
         super.onLayout(changed, left, top, right, bottom);
         if (_index != 0 && right > 0) {
             moveCaret(_index);
@@ -88,7 +86,6 @@ public class TextEditor extends FreeScrollingTextField{
     }
 
     public String getSelectedText() {
-        // TODO: Implement this method
         return hDoc.subSequence(getSelectionStart(), getSelectionEnd() - getSelectionStart()).toString();
     }
 

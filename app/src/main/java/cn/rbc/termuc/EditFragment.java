@@ -4,7 +4,6 @@ import android.os.*;
 import android.view.*;
 import android.widget.*;
 import java.io.*;
-import org.json.*;
 import android.net.*;
 import java.util.*;
 import cn.rbc.codeeditor.lang.*;
@@ -22,7 +21,7 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 	private File fl;
 	private TextEditor ed;
 	int type;
-	private String C = "gcc";
+	private String C = "clang";
 
 	public EditFragment() {
 		changes = new ArrayList<>();
@@ -39,7 +38,6 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
-		// TODO: Implement this method
 		setRetainInstance(true);
 		Bundle arg = getArguments();
 		if (arg == null)
@@ -64,10 +62,10 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 			editor.setText(s);
 			editor.getText().setOnTextChangeListener(this);
 			if ((type&1) == 0) {
-				C = "gcc";
+				C = "clang";
 				editor.setLanguage(CLanguage.getInstance());
 			} else {
-				C = "g++";
+				C = "clang++";
 				editor.setLanguage(CppLanguage.getInstance());
 			}
 			ma.setEditor(editor);

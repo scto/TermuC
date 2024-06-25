@@ -180,7 +180,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
             ++field.mCaretRow;
 
             updateSelectionRange(currCaret, field.mCaretPosition);
-            if (!field.makeCharVisible(field.mCaretPosition))
+            if (!field.focusCaret())
                 field.invalidateRows(currRow, newRow + 1);
             // 拖动yoyo球滚动时，保证yoyo球的坐标与光标一致
             field.crtLis.updateCaret(field.mCaretPosition);
@@ -207,7 +207,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
             --field.mCaretRow;
 
             updateSelectionRange(currCaret, field.mCaretPosition);
-            if (!field.makeCharVisible(field.mCaretPosition))
+            if (!field.focusCaret())
                 field.invalidateRows(newRow, currRow + 1);
             // 拖动yoyo球滚动时，保证yoyo球的坐标与光标一致
             field.crtLis.updateCaret(field.mCaretPosition);
@@ -226,7 +226,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
             ++field.mCaretPosition;
             updateCaretRow();
             updateSelectionRange(field.mCaretPosition - 1, field.mCaretPosition);
-            if (!field.makeCharVisible(field.mCaretPosition))
+            if (!field.focusCaret())
                 field.invalidateRows(originalRow, field.mCaretRow + 1);
 
             if (!isTyping)
@@ -246,7 +246,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
             --field.mCaretPosition;
             updateCaretRow();
             updateSelectionRange(field.mCaretPosition + 1, field.mCaretPosition);
-            if (!field.makeCharVisible(field.mCaretPosition))
+            if (!field.focusCaret())
                 field.invalidateRows(field.mCaretRow, originalRow + 1);
 
             if (!isTyping)
@@ -270,7 +270,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
     private void updateAfterCaretJump() {
         int oldRow = field.mCaretRow;
         updateCaretRow();
-        if (!field.makeCharVisible(field.mCaretPosition)) {
+        if (!field.focusCaret()) {
             field.invalidateRows(oldRow, oldRow + 1); //old caret row
             field.invalidateCaretRow(); //new caret row
         }
@@ -510,7 +510,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
             setSelectText(false);
             stopTextComposing();
 
-            if (!field.makeCharVisible(field.mCaretPosition)) {
+            if (!field.focusCaret()) {
                 int invalidateStartRow = originalRow;
                 //invalidate previous row too if its wrapping changed
                 if (field.hDoc.isWordWrap() &&
@@ -589,7 +589,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
         if (dirty) {
             field.setEdited(true);
             determineSpans();
-			//tc
+			field.focusCaret();
 			return;
         }
 
@@ -598,7 +598,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
         if (originalRow != field.mCaretRow)
             isInvalidateSingleRow = false;
 
-        if (!field.makeCharVisible(field.mCaretPosition)) {
+        if (!field.focusCaret()) {
             //invalidate previous row too if its wrapping changed
             if (field.hDoc.isWordWrap() &&
 				originalOffset != field.hDoc.getRowOffset(invalidateStartRow))
@@ -687,7 +687,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
         if (dirty) {
             field.setEdited(true);
             determineSpans();
-			//tc
+			field.focusCaret();
 			return;
         }
 
@@ -696,7 +696,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
         if (originalRow != field.mCaretRow)
             isInvalidateSingleRow = false;
 
-        if (!field.makeCharVisible(field.mCaretPosition)) {
+        if (!field.focusCaret()) {
             //invalidate previous row too if its wrapping changed
             if (doc.isWordWrap() &&
 				originalOffset != doc.getRowOffset(invalidateStartRow))
