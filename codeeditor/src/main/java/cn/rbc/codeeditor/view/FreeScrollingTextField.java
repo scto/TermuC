@@ -433,14 +433,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         return true;
     }
 
-	@Override
-	public void scrollTo(int x, int y) {
-		// TODO: Implement this method
-		super.scrollTo(x, y);
-		for(StackTraceElement st:Thread.currentThread().getStackTrace())
-			DLog.i("Text", st.getClassName()+":"+st.getMethodName());
-	}
-
     private void initView(Context context) {
 
         mCtrlr = new TextFieldController(this);
@@ -783,31 +775,32 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 		int mL = hDoc.getTextLength();
 		int rowheight = rowHeight();
 
-		int idx, dgl;
-		List<ErrSpan> dg = hDoc.getDiag();
-		ErrSpan p;
-		if (dg==null || dg.isEmpty()) {
-			p = null;
-			dgl = 0;
+		int idx, diagLen;
+		List<ErrSpan> diagList = hDoc.getDiag();
+		ErrSpan diag;
+		if (diagList==null || diagList.isEmpty()) {
+			diag = null;
+			diagLen = 0;
 			idx = 1;
 		} else {
-			dgl = dg.size();
+			diagLen = diagList.size();
 			r = 0;
-			idx = dgl - 1;
+			idx = diagLen - 1;
 			while (r < idx) {
 				m = (idx+r)>>1;
-				if (dg.get(m).stl >= currLineNum)
+				if (diagList.get(m).stl >= currLineNum)
 					idx = m;
 				else
 					r = m+1;
 			}
-			p = dg.get(idx++);
+			diag = diagList.get(idx++);
 		}
 
-		// row by row
-        while (currRowNum <= endRowNum && currIndex < mL) {
+		doOptionHighlightRow(canvas);
 
-            int rowLen = hDoc.getRowSize(currRowNum);
+		// row by row
+		int rowEnd = 0;
+        for (m=-1; currRowNum <= endRowNum && currIndex < mL; currRowNum++) {
 
 			if (showLN && currLineNum != lastLineNum) {
                 String num = String.valueOf(currLineNum);
@@ -816,11 +809,11 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
                 drawLineNum(canvas, num, padx, paintY);
             }
             paintX = mLeftOffset;
-			m = -1;
 
+			int i = rowEnd;
 			// char by char
 			// TODO: Rendering span by span
-            for (int i = 0; i < rowLen; i++) {
+            for (rowEnd+=hDoc.getRowSize(currRowNum); i < rowEnd; i++) {
                 // check if formatting changes are needed
                 if (reachedNextSpan(currIndex, nextSpan)) {
                     currSpan = nextSpan;
@@ -858,20 +851,20 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 					else if (currIndex + 1 == mCaretPosition)
 						mCaretSpan = currSpan;
 					// draw err line
-					if (idx <= dgl) {
+					if (idx <= diagLen) {
 						if (m < 0
 							// start position
-							&& (p.stl == currLineNum && p.stc == i
+							&& (diag.stl == currLineNum && diag.stc == i
 							// following position
-							|| p.stl < currLineNum && p.enl >= currLineNum && x==mLeftOffset))
+							|| diag.stl < currLineNum && diag.enl >= currLineNum && x==mLeftOffset))
 							m = x;
-						boolean b;
-						if (m >= 0 && ((b=(p.enl == currLineNum && p.enc == i+1))|| i+1 == rowLen || paintX >= mWidth)) {
-							mLineBrush.setColor(ColorScheme.DIAG[p.severity]);
+						boolean end, flow = false;
+						if (m >= 0 && ((end = diag.enl==currLineNum && diag.enc==i+1)|| (flow = i+1==rowEnd) || paintX >= mWidth)) {
+							mLineBrush.setColor(ColorScheme.DIAG[diag.severity]);
 							canvas.drawLine(m, paintY, paintX, paintY, mLineBrush);
-							m = -1;
-							if (idx<dgl && b)
-								p = dg.get(idx++);
+							m = flow ? mLeftOffset : -1;
+							if (idx < diagLen && end)
+								diag = diagList.get(idx++);
 						}
 					}
 					r = currIndex;
@@ -880,9 +873,11 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
             }
 
             if (hDoc.charAt(currIndex - 1) == Language.NEWLINE) {
-				while (idx < dgl && p.enl == currLineNum)
-					p = dg.get(idx++);
+				while (idx < diagLen && diag.enl == currLineNum)
+					diag = diagList.get(idx++);
 				++currLineNum;
+				rowEnd = 0;
+				m = -1;
 			}
 
             paintY += rowheight;
@@ -893,9 +888,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
                 xExtent = paintX;
             if (paintX > mLineMaxWidth)
                 mLineMaxWidth = paintX;
-
-            ++currRowNum;
-
         }
         // end while
 		if (showLN) {
@@ -903,8 +895,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
             mTextPaint.setColor(mColorScheme.getColor(Colorable.NON_PRINTING_GLYPH));
             canvas.drawLine(left, getScrollY(), left, getScrollY() + getHeight(), mTextPaint);
         }
-
-        doOptionHighlightRow(canvas);
         //drawScrollBars(canvas);
     }
 

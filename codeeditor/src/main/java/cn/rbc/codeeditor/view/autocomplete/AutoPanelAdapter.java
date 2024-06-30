@@ -90,21 +90,20 @@ public class AutoPanelAdapter extends BaseAdapter  {
 		int tp = it.kind;
         SpannableString spannableString = null;
         ForegroundColorSpan foregroundColorSpan = null;
-        //   Setting setting = Setting.getInstance(_context);
+        boolean isDarkMode = mTextFiled.getColorScheme().isDark();
         log(text);
 		int t;
         if ((t=text.indexOf('(')) >= 0) {
             //函数
             ForegroundColorSpan argsForegroundColorSpan = null;
             spannableString = new SpannableString(text);
-            //    if(setting.isDarkMode()) {
-            //        foregroundColorSpan = new ForegroundColorSpan(Color.WHITE);
-            //       argsForegroundColorSpan = new ForegroundColorSpan(Color.parseColor("#9C9C9C"));
-            //     }
-            //    else{
-            foregroundColorSpan = new ForegroundColorSpan(Color.BLACK);
-            argsForegroundColorSpan = new ForegroundColorSpan(Color.GRAY);
-            //     }
+            if(isDarkMode) {
+                foregroundColorSpan = new ForegroundColorSpan(Color.WHITE);
+                argsForegroundColorSpan = new ForegroundColorSpan(Color.parseColor("#9C9C9C"));
+            } else {
+                foregroundColorSpan = new ForegroundColorSpan(Color.BLACK);
+                argsForegroundColorSpan = new ForegroundColorSpan(Color.GRAY);
+            }
             spannableString.setSpan(foregroundColorSpan, 0, t, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             spannableString.setSpan(argsForegroundColorSpan, t, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         } else if (tp == 14) {

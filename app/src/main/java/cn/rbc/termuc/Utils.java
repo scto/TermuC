@@ -10,12 +10,12 @@ public class Utils
 		Intent intent = new Intent()
         .setClassName("com.termux", "com.termux.app.RunCommandService")
         .setAction("com.termux.RUN_COMMAND")
-        .putExtra(new StringBuffer(PREFC).append("PATH").toString(), cmd)
-        .putExtra(new StringBuffer(PREFC).append("RUNNER").toString(), "app-shell")
-        .putExtra(new StringBuffer(PREFC).append("ARGUMENTS").toString(), args)
-        .putExtra(new StringBuffer(PREFC).append("WORKDIR").toString(), pwd)
-        .putExtra(new StringBuffer(PREFC).append("BACKGROUND").toString(), background)
-        .putExtra(new StringBuffer(PREFC).append("SESSION_ACTION").toString(), "0");
+        .putExtra(new StringBuilder(PREFC).append("PATH").toString(), cmd)
+        .putExtra(new StringBuilder(PREFC).append("RUNNER").toString(), "app-shell")
+        .putExtra(new StringBuilder(PREFC).append("ARGUMENTS").toString(), args)
+        .putExtra(new StringBuilder(PREFC).append("WORKDIR").toString(), pwd)
+        .putExtra(new StringBuilder(PREFC).append("BACKGROUND").toString(), background)
+        .putExtra(new StringBuilder(PREFC).append("SESSION_ACTION").toString(), "0");
         cont.startService(intent);
 	}
 }

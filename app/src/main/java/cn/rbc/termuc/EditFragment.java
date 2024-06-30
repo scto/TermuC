@@ -10,6 +10,7 @@ import cn.rbc.codeeditor.lang.*;
 import cn.rbc.codeeditor.common.*;
 import cn.rbc.codeeditor.util.*;
 import cn.rbc.codeeditor.lang.c.*;
+import cn.rbc.codeeditor.view.*;
 
 public class EditFragment extends Fragment implements OnTextChangeListener
 {
@@ -47,6 +48,9 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 		final MainActivity ma = (MainActivity)getActivity();
 		TextEditor editor = new TextEditor(ma);
 		editor.setVerticalScrollBarEnabled(true);
+		if (Settings.mDarkMode)
+			editor.setColorScheme(ColorSchemeDark.getInstance());
+		editor.setWordWrap(Settings.mWordWrap);
 		editor.setShowNonPrinting(Settings.mWhiteSpace);
 		editor.setLayoutParams(new FrameLayout.LayoutParams(
 			FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
@@ -120,8 +124,8 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 		//lastStart = s;
 		//lastVer = ver;
 		// when inserting text and typing, call for completion
-		if (ins && typ && c.length()==1) lsp.completionTry(fl, range.enl, range.enl+1, c.charAt(0));
-			//ed.getAutoCompletePanel().dismiss();
+		if (ins && typ && c.length()==1)
+			lsp.completionTry(fl, range.enl, range.enc+1, c.charAt(0));
 		changes.clear();
 		//}
 	}

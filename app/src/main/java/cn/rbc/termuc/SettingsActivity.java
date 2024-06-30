@@ -12,6 +12,8 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		if (Settings.mDarkMode)
+			setTheme(android.R.style.Theme_Holo);
 		super.onCreate(savedInstanceState);
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		addPreferencesFromResource(R.xml.settings);

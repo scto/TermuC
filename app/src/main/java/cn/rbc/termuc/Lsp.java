@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import android.os.*;
 import cn.rbc.codeeditor.util.*;
 import android.widget.*;
+import android.util.JsonReader;
 
 public class Lsp {
 	//final static String METHOD = "method";
@@ -24,13 +25,12 @@ public class Lsp {
 	int id = 0;
 	private Socket sk;
 	private char[] compTrigs = {};
-	//private Thread t;
-	//private Context mA;
+	private static SendThread mLastSend;
 
 	public void start(final Context c, final Handler read) {
-		Utils.run(c, "/system/bin/nc", new String[]{"-l", "-s", "127.0.0.1", "-p", "48455", "clangd", "--header-insertion-decorators=0"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
+		Utils.run(c, "/system/bin/nc", new String[]{"-l", "-s", "127.0.0.1", "-p", "48455", "clangd", "--header-insertion-decorators=0", "--log=verbose"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
 		sk = new Socket();
-		new Thread(){
+		new HandlerThread("read"){
 			public void run() {
 				try{
 					int i=0;
@@ -41,30 +41,36 @@ public class Lsp {
 						}catch(SocketException s){}
 					}
 					if (i==20)
-						throw new Exception("Connection failed");
+						throw new IOException("Connection failed");
 					InputStream is = sk.getInputStream();
 					final int L = 2048;
 					byte[] b = new byte[L];
-					while (is.read(b, 0, 16) != -1) {
+			OUTER:	while (true) {
+						for (i=0;i<16;i++) {
+							int t = is.read();
+							if (t==-1)
+								break OUTER;
+							b[i] = (byte)t;
+						}
 						if (new String(b, 0, 14).equals("Content-Length")) {
-							int c = 0, d;
-							while (Character.isDigit(d = is.read())) {
-								c = c * 10 + d - 48;
-							}
+							int len = 0;
+							while (Character.isDigit(i = is.read()))
+								len = len * 10 + i - 48;
 							is.skip(3L);
 							StringBuilder sb = new StringBuilder();
-							while (c > L) {
+							while (len > L) {
 								int rl = is.read(b);
-								c -= rl;
+								len -= rl;
 								String s = new String(b, 0, rl, StandardCharsets.UTF_8);
 								sb.append(s);
 							}
-							for (d=0; d<c; d++)
-								b[d] = (byte)is.read();
-							String s = sb.append(new String(b,0,c, StandardCharsets.UTF_8)).toString();
+							for (i=0; i<len; i++)
+								b[i] = (byte)is.read();
+							String s = sb.append(new String(b,0,len,StandardCharsets.UTF_8)).toString();
+							JsonReader limitInput = new JsonReader(new CharSeqReader(s));
 							Message msg = new Message();
 							msg.what = tp;
-							msg.obj = s;
+							msg.obj = limitInput;
 							read.sendMessage(msg);
 							//tp = NOTI;
 						}
@@ -167,9 +173,9 @@ public class Lsp {
 		//tp = CHANGE;
 		Thread td = new SendThread("textDocument/didChange", sb.toString(), false);
 		td.start();
-		try{
+		/*try{
 			td.join();
-		}catch(InterruptedException ie){}
+		}catch(InterruptedException ie){}*/
 	}
 
 	public synchronized boolean completionTry(File f, int l, int c, char tgc) {
@@ -209,6 +215,13 @@ public class Lsp {
 
 		public void run() {
 			try {
+				if (mLastSend!=null && mLastSend.isAlive())
+					try {
+						mLastSend.join();
+					} catch (InterruptedException ie) {
+						ie.printStackTrace();
+					}
+				mLastSend = this;
 				if (sk==null || sk.isClosed())
 					sk = new Socket("127.0.0.1", 48455);
 				else if (!sk.isConnected())
@@ -218,7 +231,7 @@ public class Lsp {
 				ow.write(s);
 				ow.flush();
 			} catch(IOException e) {
-				Log.e(TAG, e.getMessage());
+				e.printStackTrace();
 			}
 		}
 	}

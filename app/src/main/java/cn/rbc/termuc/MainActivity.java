@@ -18,6 +18,8 @@ import java.net.*;
 import android.net.*;
 import cn.rbc.codeeditor.util.*;
 import android.preference.*;
+import android.content.pm.*;
+import android.*;
 
 public class MainActivity extends Activity implements
 	ActionBar.OnNavigationListener, OnGlobalLayoutListener,
@@ -66,8 +68,10 @@ public class MainActivity extends Activity implements
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
 		envInit();
+		if (Settings.mDarkMode)
+			setTheme(android.R.style.Theme_Holo);
+        super.onCreate(savedInstanceState);
 		getWindow().getDecorView().getViewTreeObserver().addOnGlobalLayoutListener(this);
 		mFmgr = getFragmentManager();
 		hda = new ArrayAdapter<>(new ContextThemeWrapper(getBaseContext(), android.R.style.Theme_Holo), R.layout.header_dropdown_item);
@@ -78,6 +82,11 @@ public class MainActivity extends Activity implements
         ab.setListNavigationCallbacks(hda, this);
 
 		setContentView(R.layout.activity_main);
+		requestPermissions(new String[]{
+			Manifest.permission.READ_EXTERNAL_STORAGE,
+			Manifest.permission.WRITE_EXTERNAL_STORAGE,
+			Manifest.permission.MANAGE_EXTERNAL_STORAGE
+		}, PackageManager.PERMISSION_GRANTED);
         showlist = findViewById(R.id.show_list);
 		keys = findViewById(R.id.keys);
 		subc = findViewById(R.id.subcontainer);
@@ -257,6 +266,8 @@ public class MainActivity extends Activity implements
 				Intent it = new Intent(this, SettingsActivity.class);
 				startActivity(it);
 				break;
+			case R.id.test:
+				break;
         }
         return true;
     }
@@ -331,7 +342,9 @@ public class MainActivity extends Activity implements
 		super.onResume();
 		// Apply Prefs for Edits
 		for (Fragment f:mFmgr.getFragments()) {
-			((TextEditor)f.getView()).setShowNonPrinting(Settings.mWhiteSpace);
+			TextEditor ed = (TextEditor)f.getView();
+			ed.setWordWrap(Settings.mWordWrap);
+			ed.setShowNonPrinting(Settings.mWhiteSpace);
 		}
 	}
 

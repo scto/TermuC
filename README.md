@@ -18,7 +18,7 @@ This app use `com.termux.RUN_COMMAND` to call Termux to run command, and run `cl
 - [x] Autocompletion
 - [x] Diagnose
 - [x] Compile flags
+- [x] Dark mode
 - [ ] Debug
 - [ ] Project manage
 - [ ] Workspace
-- [ ] Dark mode

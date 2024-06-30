@@ -8,6 +8,7 @@ import android.widget.*;
 import java.io.*;
 import cn.rbc.codeeditor.view.autocomplete.*;
 import static android.util.JsonToken.*;
+import java.nio.charset.*;
 
 public class MainHandler extends Handler implements Comparator<ErrSpan> {
 	private MainActivity ma;
@@ -44,13 +45,12 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 				return;
 		}
 		try {
-			JsonReader jr = new JsonReader(new CharSeqReader((CharSequence)msg.obj));
+			JsonReader jr = (JsonReader)msg.obj;
 			jr.beginObject();
 			Deque<String> stack = new ArrayDeque<>();
 			int sl = 0, sc = 0, el = 0, ec = 0;
 			Object tmp1 = null, tmp2 = null, tmp3 = null;
-			boolean _loop = true;
-			while (_loop) {
+	LOOP:	while (true) {
 				switch (jr.peek()) {
 					case NAME:
 						String n = jr.nextName();
@@ -89,8 +89,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 									sb.append(jr.nextString());
 								jr.close();
 								ma.lsp.setCompTrigs(sb.toString().toCharArray());
-								_loop = false;
-								break;
+								break LOOP;
 							case RNG:
 								jr.beginObject();
 								while (jr.hasNext()) {
@@ -187,24 +186,20 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								break;
 							case IT:
 								ma.getEditor().getAutoCompletePanel().update((ArrayList<ListItem>)tmp1);
-								_loop = false;
-								break;
+								break LOOP;
 							case DG:
 								jr.close();
 								ArrayList<ErrSpan> a = (ArrayList<ErrSpan>)tmp1;
 								a.sort(this);
 								TextEditor te = ma.getEditor();
 								te.getText().setDiag(a);
-								Log.i("LSP", a.toString());
 								te.invalidate();
-								_loop = false;
-								break;
+								break LOOP;
 						}
 						break;
 					case END_DOCUMENT:
 						jr.close();
-						_loop = false;
-						break;
+						break LOOP;
 					default:
 						jr.skipValue();
 				}

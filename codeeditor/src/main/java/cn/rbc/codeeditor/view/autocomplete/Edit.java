@@ -7,7 +7,6 @@ public class Edit
 
 	@Override
 	public String toString() {
-		// TODO: Implement this method
 		return text == null ? "null" : text;
 	}
 }

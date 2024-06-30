@@ -41,7 +41,7 @@
 		android:orientation="vertical"
 		android:layout_alignParentBottom="true"
 		android:visibility="gone"
-		android:background="#f0f0f0">
+		android:background="?android:attr/colorBackground">
 
 		<View
 			android:background="?android:attr/dividerVertical"
@@ -62,7 +62,7 @@
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:layout_alignParentBottom="true"
-		android:background="#f0f0f0">
+		android:background="?android:attr/colorBackground">
 
 		<View
 			android:background="?android:attr/dividerVertical"

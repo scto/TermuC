@@ -24,4 +24,7 @@
 	<item
 			ad:id="@+id/settings"
 			ad:title="@string/settings"/>
+	<item
+			ad:id="@+id/test"
+			ad:title="测试"/>
 </menu>
