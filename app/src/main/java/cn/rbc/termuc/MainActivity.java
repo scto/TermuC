@@ -84,8 +84,7 @@ public class MainActivity extends Activity implements
 		setContentView(R.layout.activity_main);
 		requestPermissions(new String[]{
 			Manifest.permission.READ_EXTERNAL_STORAGE,
-			Manifest.permission.WRITE_EXTERNAL_STORAGE,
-			Manifest.permission.MANAGE_EXTERNAL_STORAGE
+			Manifest.permission.WRITE_EXTERNAL_STORAGE
 		}, PackageManager.PERMISSION_GRANTED);
         showlist = findViewById(R.id.show_list);
 		keys = findViewById(R.id.keys);
