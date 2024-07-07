@@ -390,10 +390,16 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 		setTextSize(pix, 0.f, 0.f);
 	}
 
+	@Override
+	public void scrollTo(int x, int y) {
+		x = Math.max(Math.min(x, getMaxScrollX()),0);
+		y = Math.max(Math.min(y, getMaxScrollY()),0);
+		super.scrollTo(x, y);
+	}
+
     public void setTextSize(int pix, float cx, float cy) {
         if (pix <= 20 || pix >= 80 || pix == mTextPaint.getTextSize())
             return;
-		xExtent = 0;
         float oldHeight = rowHeight();
         float oldWidth = getCharAdvance('a');
         mZoomFactor = pix / BASE_TEXT_SIZE_PIXELS;
@@ -407,9 +413,10 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 		mLineBrush.setStrokeWidth(mAlphaWidth*.15f);
         float x = (getScrollX() + cx) * mAlphaWidth / oldWidth - cx;
         float y = (getScrollY() + cy) * rowHeight() / oldHeight - cy;
-        scrollTo(Math.max((int)x, 0), Math.max((int)y, 0));
         mSpaceWidth = (int) mTextPaint.measureText(" ");
-        invalidate();
+		scrollTo((int)x, (int)y);
+		xExtent = 0;
+		invalidate();
     }
 
     public void replaceText(int from, int charCount, String text) {

@@ -15,4 +15,5 @@
     <string name="search">查找</string>
     <string name="close">关闭</string>
     <string name="no_open_files">未打开文件</string>
+	<string name="file_modified">文件 %s 已被修改，您是否需要重新加载？</string>
 </resources>

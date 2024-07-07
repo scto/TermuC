@@ -11,8 +11,10 @@ import cn.rbc.codeeditor.common.*;
 import cn.rbc.codeeditor.util.*;
 import cn.rbc.codeeditor.lang.c.*;
 import cn.rbc.codeeditor.view.*;
+import android.content.*;
 
-public class EditFragment extends Fragment implements OnTextChangeListener
+public class EditFragment extends Fragment
+implements OnTextChangeListener, DialogInterface.OnClickListener
 {
 	public final static int TYPE_C = 0;
 	public final static int TYPE_CPP = 1;
@@ -23,13 +25,13 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 	private TextEditor ed;
 	int type;
 	private String C = "clang";
+	private long lastModified;
+	private List<Range> changes = new ArrayList<>();
 
 	public EditFragment() {
-		changes = new ArrayList<>();
 	}
 
 	public EditFragment(String path, int type) {
-		changes = new ArrayList<>();
 		Bundle bd = new Bundle();
 		bd.putString(FL, path);
 		bd.putInt(TP, type);
@@ -44,9 +46,11 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 		if (arg == null)
 			return null;
 		fl = new File(arg.getString(FL));
+		lastModified = fl.lastModified();
 		type = arg.getInt(TP);
 		final MainActivity ma = (MainActivity)getActivity();
 		TextEditor editor = new TextEditor(ma);
+		ed = editor;
 		editor.setVerticalScrollBarEnabled(true);
 		if (Settings.mDarkMode)
 			editor.setColorScheme(ColorSchemeDark.getInstance());
@@ -55,16 +59,7 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 		editor.setLayoutParams(new FrameLayout.LayoutParams(
 			FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 		try {
-			FileReader fr = new FileReader(fl);
-			char[] cs = new char[1024];
-			int i;
-			StringBuilder sb = new StringBuilder();
-			while ((i=fr.read(cs)) != -1)
-				sb.append(cs, 0, i);
-			fr.close();
-			String s = sb.toString();
-			editor.setText(s);
-			editor.getText().setOnTextChangeListener(this);
+			String s = load();
 			if ((type&1) == 0) {
 				C = "clang";
 				editor.setLanguage(CLanguage.getInstance());
@@ -73,12 +68,12 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 				editor.setLanguage(CppLanguage.getInstance());
 			}
 			ma.setEditor(editor);
-			ma.lsp.didOpen(fl, (type&1)==1?"cpp":"c", s);
+			MainActivity.lsp.didOpen(fl, (type&1)==1?"cpp":"c", s);
 		} catch(IOException fnf) {
 			fnf.printStackTrace();
 			Toast.makeText(ma, "打开失败！", Toast.LENGTH_SHORT).show();
 		}
-		return ed = editor;
+		return editor;
 	}
 
 	public String getC() {
@@ -86,9 +81,8 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 	}
 
 	//private int lastVer = -1;
-	private ArrayList<Range> changes;
 
-	public void onChanged(CharSequence c, int start, int ver, boolean ins, boolean typ) {
+	public void onChanged(CharSequence c, int start, final int ver, boolean ins, boolean typ) {
 		Document text = ed.getText();
 		boolean wordwrap = ed.isWordWrap();
 		Range range = new Range();
@@ -119,7 +113,7 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 		changes.add(range);
 		//lastStr = (String)c;
 		//if (lastVer != ver) {
-		Lsp lsp = ((MainActivity)getActivity()).lsp;
+		Lsp lsp = MainActivity.lsp;
 		lsp.didChange(fl, ver, changes);
 		//lastStart = s;
 		//lastVer = ver;
@@ -127,7 +121,41 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 		if (ins && typ && c.length()==1)
 			lsp.completionTry(fl, range.enl, range.enc+1, c.charAt(0));
 		changes.clear();
+		ed.postDelayed(new Runnable(){
+			long sendTime = System.currentTimeMillis();
+			public void run() {
+				Lsp lsp = MainActivity.lsp;
+				if (lsp.lastReceivedTime()<sendTime) {
+					lsp.didChange(fl, ver, ed.getText().toString());
+				}
+			}
+		}, 1000L);
 		//}
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		long mLast = fl.lastModified();
+		if (mLast>lastModified) {
+			lastModified = mLast;
+			new AlertDialog.Builder(getContext())
+			.setTitle(fl.getName())
+			.setMessage(getString(R.string.file_modified, fl.getName()))
+			.setPositiveButton(android.R.string.ok, this)
+			.setNegativeButton(android.R.string.cancel, null)
+			.create().show();
+		}
+	}
+
+	@Override
+	public void onClick(DialogInterface diag, int id) {
+		try {
+			String s = load();
+			((MainActivity)getActivity()).lsp.didChange(fl, 0, s);
+		} catch(IOException ioe) {
+			ioe.printStackTrace();
+		}
 	}
 
 	@Override
@@ -136,11 +164,35 @@ public class EditFragment extends Fragment implements OnTextChangeListener
 		super.onHiddenChanged(hidden);
 		if (!hidden) {
 			((MainActivity)getActivity()).setEditor(ed);
-			if ((type&1) == 0) // C
+			if ((type&1) == 0) {// C
 				ed.setLanguage(CLanguage.getInstance());
-			else
+				C = "clang";
+			} else {
 				ed.setLanguage(CppLanguage.getInstance());
+				C = "clang++";
+			}
 		}
+	}
+
+	public void save() throws IOException {
+        FileWriter fileWriter = new FileWriter(fl);
+        fileWriter.write(ed.getText().toString());
+        fileWriter.close();
+		lastModified = fl.lastModified();
+    }
+
+	public String load() throws IOException {
+		FileReader fr = new FileReader(fl);
+		char[] buf = new char[1024];
+		int i;
+		StringBuilder sb = new StringBuilder();
+		while ((i=fr.read(buf))!=-1)
+			sb.append(buf, 0, i);
+		fr.close();
+		String s = sb.toString();
+		ed.setText(s);
+		ed.getText().setOnTextChangeListener(this);
+		return s;
 	}
 
 	public File getFile() {

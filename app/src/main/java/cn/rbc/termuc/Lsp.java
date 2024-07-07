@@ -14,23 +14,20 @@ import android.widget.*;
 import android.util.JsonReader;
 
 public class Lsp {
-	//final static String METHOD = "method";
-	//final static String PARAMS = "params";
 	final static int INITIALIZE = 0, INITIALIZED = 1,
 	OPEN = 2, CLOSE = 3,
 	COMPLETION = 4, FIX = 5, CHANGE = 6, SAVE = 7, NOTI = 8;
 	private final static String TAG = "LSP";
-	//private static int idx;
 	private int tp;
-	int id = 0;
 	private Socket sk;
 	private char[] compTrigs = {};
 	private static SendThread mLastSend;
+	private long mLastReceivedTime;
 
-	public void start(final Context c, final Handler read) {
-		Utils.run(c, "/system/bin/nc", new String[]{"-l", "-s", "127.0.0.1", "-p", "48455", "clangd", "--header-insertion-decorators=0", "--log=verbose"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
+	public void start(final Context mC, final Handler read) {
+		Utils.run(mC, "/system/bin/nc", new String[]{"-l", "-s", "127.0.0.1", "-p", "48455", "clangd", "--header-insertion-decorators=0", "--log=verbose"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
 		sk = new Socket();
-		new HandlerThread("read"){
+		new Thread(){
 			public void run() {
 				try{
 					int i=0;
@@ -43,8 +40,7 @@ public class Lsp {
 					if (i==20)
 						throw new IOException("Connection failed");
 					InputStream is = sk.getInputStream();
-					final int L = 2048;
-					byte[] b = new byte[L];
+					byte[] b = new byte[16];
 			OUTER:	while (true) {
 						for (i=0;i<16;i++) {
 							int t = is.read();
@@ -52,22 +48,17 @@ public class Lsp {
 								break OUTER;
 							b[i] = (byte)t;
 						}
-						if (new String(b, 0, 14).equals("Content-Length")) {
+						if (Arrays.equals(b, "Content-Length: ".getBytes())) {
 							int len = 0;
 							while (Character.isDigit(i = is.read()))
 								len = len * 10 + i - 48;
+							mLastReceivedTime = System.currentTimeMillis();
 							is.skip(3L);
-							StringBuilder sb = new StringBuilder();
-							while (len > L) {
-								int rl = is.read(b);
-								len -= rl;
-								String s = new String(b, 0, rl, StandardCharsets.UTF_8);
-								sb.append(s);
-							}
+							byte[] strb = new byte[len];
 							for (i=0; i<len; i++)
-								b[i] = (byte)is.read();
-							String s = sb.append(new String(b,0,len,StandardCharsets.UTF_8)).toString();
-							JsonReader limitInput = new JsonReader(new CharSeqReader(s));
+								strb[i] = (byte)is.read();
+							InputStream r = new ByteArrayInputStream(strb);
+							JsonReader limitInput = new JsonReader(new InputStreamReader(r, StandardCharsets.UTF_8));
 							Message msg = new Message();
 							msg.what = tp;
 							msg.obj = limitInput;
@@ -82,6 +73,10 @@ public class Lsp {
 				}
 			}
 		}.start();
+	}
+
+	public long lastReceivedTime() {
+		return mLastReceivedTime;
 	}
 
 	private static String wrap(String m, Object p, boolean req) {
@@ -147,6 +142,17 @@ public class Lsp {
 		new SendThread("textDocument/didSave", s, false).start();
 	}
 
+	public synchronized void didChange(File f, int version, String text) {
+		String sb = new StringBuilder("{\"textDocument\":{\"uri\":")
+		.append(JSONObject.quote(Uri.fromFile(f).toString()))
+		.append(",\"version\":")
+		.append(version)
+		.append("},\"contentChanges\":[{\"text\":")
+		.append(JSONObject.quote(text))
+		.append("}]}").toString();
+		new SendThread("textDocument/didChange", sb, false).start();
+	}
+
 	public synchronized void didChange(File f, int version, List<Range> chs) {
 		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":")
 		.append(JSONObject.quote(Uri.fromFile(f).toString()))
@@ -171,11 +177,7 @@ public class Lsp {
 		sb.append('}');
 		Log.d(TAG, sb.toString());
 		//tp = CHANGE;
-		Thread td = new SendThread("textDocument/didChange", sb.toString(), false);
-		td.start();
-		/*try{
-			td.join();
-		}catch(InterruptedException ie){}*/
+		new SendThread("textDocument/didChange", sb.toString(), false).start();
 	}
 
 	public synchronized boolean completionTry(File f, int l, int c, char tgc) {
@@ -227,6 +229,7 @@ public class Lsp {
 				else if (!sk.isConnected())
 					sk.connect(new InetSocketAddress("127.0.0.1", 48455));
 				OutputStream ow = sk.getOutputStream();
+				ow.flush();
 				ow.write(new StringBuilder("Content-Length: ").append(s.length).append("\r\n\r\n").toString().getBytes());
 				ow.write(s);
 				ow.flush();

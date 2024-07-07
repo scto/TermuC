@@ -19,7 +19,6 @@ import android.net.*;
 import cn.rbc.codeeditor.util.*;
 import android.preference.*;
 import android.content.pm.*;
-import android.*;
 
 public class MainActivity extends Activity implements
 	ActionBar.OnNavigationListener, OnGlobalLayoutListener,
@@ -40,12 +39,17 @@ public class MainActivity extends Activity implements
 	private Menu _appmenu;
 	private ActionBar ab;
 	private SearchAction mSearchAction;
-	private Handler hand = new MainHandler(this);
-	public Lsp lsp;
+	private static MainHandler hand;
+	public static Lsp lsp;
 
 	private void envInit() {
 		pwd = new File(getPreferences(MODE_PRIVATE).getString("pwd", root.getPath()));
-		lsp = new Lsp();
+		if (lsp==null) {
+			hand = new MainHandler(this);
+			lsp = new Lsp();
+			lsp.start(this, hand);
+		} else
+			hand.updateActivity(this);
 		Settings.getInstance(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
 	}
 
@@ -83,8 +87,8 @@ public class MainActivity extends Activity implements
 
 		setContentView(R.layout.activity_main);
 		requestPermissions(new String[]{
-			Manifest.permission.READ_EXTERNAL_STORAGE,
-			Manifest.permission.WRITE_EXTERNAL_STORAGE
+			android.Manifest.permission.READ_EXTERNAL_STORAGE,
+			android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 		}, PackageManager.PERMISSION_GRANTED);
         showlist = findViewById(R.id.show_list);
 		keys = findViewById(R.id.keys);
@@ -100,7 +104,6 @@ public class MainActivity extends Activity implements
 		l.setOnItemLongClickListener(this);
 		refresh();
 		mSearchAction = new SearchAction(this);
-		lsp.start(this, hand);
     }
 
     private void refresh() {
@@ -213,7 +216,8 @@ public class MainActivity extends Activity implements
         switch (menuItem.getItemId()) {
             case R.id.run:
                 try {
-                    save();
+                    lastFrag.save();
+					lsp.didSave(lastFrag.getFile());
                     Utils.run(this, new StringBuffer(Utils.PREF).append("/usr/bin/bash").toString(), new String[]{"-c",
 					new StringBuffer(lastFrag.getC())
 					.append(" \"").append(escape(lastFrag.getFile().getAbsolutePath())).append("\" ")
@@ -231,7 +235,8 @@ public class MainActivity extends Activity implements
                 break;
             case R.id.save:
 				try {
-					save();
+					lastFrag.save();
+					lsp.didSave(lastFrag.getFile());
 					toast("已保存");
 				} catch(IOException e) {
 					e.printStackTrace();
@@ -264,8 +269,6 @@ public class MainActivity extends Activity implements
 			case R.id.settings:
 				Intent it = new Intent(this, SettingsActivity.class);
 				startActivity(it);
-				break;
-			case R.id.test:
 				break;
         }
         return true;
@@ -357,14 +360,6 @@ public class MainActivity extends Activity implements
 		.setNeutralButton("文件夹", this)
 		.setNegativeButton(android.R.string.cancel, null)
 		.create().show();
-    }
-
-    public void save() throws IOException {
-		File f = lastFrag.getFile();
-        FileWriter fileWriter = new FileWriter(f);
-        fileWriter.write(codeEditor.getText().toString());
-        fileWriter.close();
-		lsp.didSave(f);
     }
 
 	@Override

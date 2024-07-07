@@ -32,6 +32,11 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 	TG = "triggerCharacters";
 
 	public MainHandler(MainActivity ma) {
+		super();
+		this.ma = ma;
+	}
+
+	public void updateActivity(MainActivity ma) {
 		this.ma = ma;
 	}
 

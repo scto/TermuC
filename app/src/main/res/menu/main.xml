@@ -11,7 +11,9 @@
 			ad:icon="@drawable/ic_undo_24"/>
 	<item
 			ad:id="@+id/redo"
-			ad:title="@string/redo"/>
+			ad:title="@string/redo"
+			ad:showAsAction="ifRoom"
+			ad:icon="@drawable/ic_redo_24"/>
 	<item
 			ad:id="@+id/save"
 			ad:title="@string/save"/>
@@ -24,7 +26,7 @@
 	<item
 			ad:id="@+id/settings"
 			ad:title="@string/settings"/>
-	<item
+	<!--item
 			ad:id="@+id/test"
-			ad:title="测试"/>
+			ad:title="测试"/-->
 </menu>

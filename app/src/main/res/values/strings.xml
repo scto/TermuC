@@ -14,8 +14,9 @@
     <string name="save">Save</string>
     <string name="search">Search</string>
     <string name="close">Close</string>
-    <string name="no_open_files">No Open Files</string>
-    <string name="key_dark_mode" translatable="false">darkmode</string>
+	<string name="no_open_files">No Open Files</string>
+    <string name="file_modified">The file %s has been modified. Do you want to reload it?</string>
+	<string name="key_dark_mode" translatable="false">darkmode</string>
 	<string name="key_wordwrap" translatable="false">wordwrap</string>
 	<string name="key_whitespace" translatable="false">whitespace</string>
 	<string name="key_cflags" translatable="false">cflags</string>
