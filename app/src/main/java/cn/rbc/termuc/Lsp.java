@@ -12,21 +12,24 @@ import android.os.*;
 import cn.rbc.codeeditor.util.*;
 import android.widget.*;
 import android.util.JsonReader;
+import java.util.concurrent.*;
 
 public class Lsp {
 	final static int INITIALIZE = 0, INITIALIZED = 1,
 	OPEN = 2, CLOSE = 3,
 	COMPLETION = 4, FIX = 5, CHANGE = 6, SAVE = 7, NOTI = 8;
 	private final static String TAG = "LSP";
+	private final static byte[] CONTENTLEN = "Content-Length: ".getBytes(StandardCharsets.UTF_8);
 	private int tp;
 	private Socket sk;
+	private ExecutorService mExecutor;
 	private char[] compTrigs = {};
-	private static SendThread mLastSend;
 	private long mLastReceivedTime;
 
 	public void start(final Context mC, final Handler read) {
-		Utils.run(mC, "/system/bin/nc", new String[]{"-l", "-s", "127.0.0.1", "-p", "48455", "clangd", "--header-insertion-decorators=0", "--log=verbose"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
+		Utils.run(mC, "/system/bin/nc", new String[]{"-l", "-s", "127.0.0.1", "-p", "48455", "clangd", "--header-insertion-decorators=0", "--log=verbose", "--completion-style=bundled"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
 		sk = new Socket();
+		mExecutor = Executors.newSingleThreadExecutor();
 		new Thread(){
 			public void run() {
 				try{
@@ -48,7 +51,7 @@ public class Lsp {
 								break OUTER;
 							b[i] = (byte)t;
 						}
-						if (Arrays.equals(b, "Content-Length: ".getBytes())) {
+						if (Arrays.equals(b, CONTENTLEN)) {
 							int len = 0;
 							while (Character.isDigit(i = is.read()))
 								len = len * 10 + i - 48;
@@ -67,6 +70,7 @@ public class Lsp {
 						}
 					}
 					is.close();
+					mExecutor.shutdown();
 				} catch (Exception ioe) {
 					Log.e(TAG, ioe.getMessage());
 					// HelperUtils.show(Toast.makeText(c, ioe.getMessage(), 1));
@@ -93,7 +97,7 @@ public class Lsp {
 		StringBuilder sb = new StringBuilder("{\"processId\":")
 		.append(android.os.Process.myPid())
 		.append(",\"initializationOptions\":{\"fallbackFlags\":[\"-Wall\"]}}");
-		new SendThread("initialize", sb.toString(), true).start();
+		mExecutor.execute(new Send("initialize", sb.toString(), true));
 	}
 
 	public void setCompTrigs(char[] c) {
@@ -111,7 +115,7 @@ public class Lsp {
 
 	public void initialized() {
 		tp = INITIALIZED;
-		new SendThread("initialized", new HashMap(), false).start();
+		mExecutor.execute(new Send("initialized", new HashMap(), false));
 	}
 
 	public void didClose(File f) {
@@ -120,7 +124,7 @@ public class Lsp {
 		HashMap<String,HashMap> k = new HashMap<>();
 		k.put("textDocument", m);
 		tp = CLOSE;
-		new SendThread("textDocument/didClose", k, false).start();
+		mExecutor.execute(new Send("textDocument/didClose", k, false));
 	}
 
 	public void didOpen(File f, String lang, String ct) {
@@ -131,7 +135,7 @@ public class Lsp {
 		.append(JSONObject.quote(ct))
 		.append("}}");
 		//tp = OPEN;
-		new SendThread("textDocument/didOpen", m.toString(), false).start();
+		mExecutor.execute(new Send("textDocument/didOpen", m.toString(), false));
 	}
 
 	public void didSave(File f) {
@@ -139,7 +143,7 @@ public class Lsp {
 		.append(JSONObject.quote(Uri.fromFile(f).toString()))
 		.append("}}").toString();
 		//tp = SAVE;
-		new SendThread("textDocument/didSave", s, false).start();
+		mExecutor.execute(new Send("textDocument/didSave", s, false));
 	}
 
 	public synchronized void didChange(File f, int version, String text) {
@@ -150,7 +154,7 @@ public class Lsp {
 		.append("},\"contentChanges\":[{\"text\":")
 		.append(JSONObject.quote(text))
 		.append("}]}").toString();
-		new SendThread("textDocument/didChange", sb, false).start();
+		mExecutor.execute(new Send("textDocument/didChange", sb, false));
 	}
 
 	public synchronized void didChange(File f, int version, List<Range> chs) {
@@ -177,7 +181,7 @@ public class Lsp {
 		sb.append('}');
 		Log.d(TAG, sb.toString());
 		//tp = CHANGE;
-		new SendThread("textDocument/didChange", sb.toString(), false).start();
+		mExecutor.execute(new Send("textDocument/didChange", sb.toString(), false));
 	}
 
 	public synchronized boolean completionTry(File f, int l, int c, char tgc) {
@@ -199,7 +203,7 @@ public class Lsp {
 		sb.append("}}");
 		tp = COMPLETION;
 		Log.d(TAG, sb.toString());
-		new SendThread("textDocument/completion", sb.toString(), true).start();
+		mExecutor.execute(new Send("textDocument/completion", sb.toString(), true));
 		return true;
 	}
 
@@ -207,34 +211,26 @@ public class Lsp {
 		return sk.isConnected();
 	}
 
-	class SendThread extends Thread {
+	class Send implements Runnable {
 		private byte[] s;
 
-		public SendThread(String cmd, Object hm, boolean req) {
-			super();
+		public Send(String cmd, Object hm, boolean req) {
 			s = wrap(cmd, hm, req).getBytes(StandardCharsets.UTF_8);
 		}
 
 		public void run() {
 			try {
-				if (mLastSend!=null && mLastSend.isAlive())
-					try {
-						mLastSend.join();
-					} catch (InterruptedException ie) {
-						ie.printStackTrace();
-					}
-				mLastSend = this;
 				if (sk==null || sk.isClosed())
 					sk = new Socket("127.0.0.1", 48455);
 				else if (!sk.isConnected())
 					sk.connect(new InetSocketAddress("127.0.0.1", 48455));
 				OutputStream ow = sk.getOutputStream();
-				ow.flush();
-				ow.write(new StringBuilder("Content-Length: ").append(s.length).append("\r\n\r\n").toString().getBytes());
+				ow.write(CONTENTLEN);
+				ow.write(new StringBuilder().append(s.length).append("\r\n\r\n").toString().getBytes(StandardCharsets.UTF_8));
 				ow.write(s);
 				ow.flush();
-			} catch(IOException e) {
-				e.printStackTrace();
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
 			}
 		}
 	}
