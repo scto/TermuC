@@ -27,7 +27,7 @@ public class Lsp {
 	private long mLastReceivedTime;
 
 	public void start(final Context mC, final Handler read) {
-		Utils.run(mC, "/system/bin/nc", new String[]{"-l", "-s", "127.0.0.1", "-p", "48455", "clangd", "--header-insertion-decorators=0", "--log=verbose", "--completion-style=bundled"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
+		Utils.run(mC, "/system/bin/nc", new String[]{"-l", "-s", Settings.lsp_host, "-p", Integer.toString(Settings.lsp_port), "clangd", "--header-insertion-decorators=0", "--completion-style=bundled"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
 		sk = new Socket();
 		mExecutor = Executors.newSingleThreadExecutor();
 		new Thread(){
@@ -37,7 +37,7 @@ public class Lsp {
 					for (; !sk.isConnected() && i<20; i++) {
 						Thread.sleep(100L);
 						try {
-							sk.connect(new InetSocketAddress("127.0.0.1", 48455));
+							sk.connect(new InetSocketAddress(Settings.lsp_host, Settings.lsp_port));
 						}catch(SocketException s){}
 					}
 					if (i==20)
@@ -221,9 +221,9 @@ public class Lsp {
 		public void run() {
 			try {
 				if (sk==null || sk.isClosed())
-					sk = new Socket("127.0.0.1", 48455);
+					sk = new Socket(Settings.lsp_host, Settings.lsp_port);
 				else if (!sk.isConnected())
-					sk.connect(new InetSocketAddress("127.0.0.1", 48455));
+					sk.connect(new InetSocketAddress(Settings.lsp_host, Settings.lsp_port));
 				OutputStream ow = sk.getOutputStream();
 				ow.write(CONTENTLEN);
 				ow.write(new StringBuilder().append(s.length).append("\r\n\r\n").toString().getBytes(StandardCharsets.UTF_8));

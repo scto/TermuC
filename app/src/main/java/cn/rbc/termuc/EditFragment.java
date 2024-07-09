@@ -52,10 +52,10 @@ implements OnTextChangeListener, DialogInterface.OnClickListener
 		TextEditor editor = new TextEditor(ma);
 		ed = editor;
 		editor.setVerticalScrollBarEnabled(true);
-		if (Settings.mDarkMode)
+		if (Settings.dark_mode)
 			editor.setColorScheme(ColorSchemeDark.getInstance());
-		editor.setWordWrap(Settings.mWordWrap);
-		editor.setShowNonPrinting(Settings.mWhiteSpace);
+		editor.setWordWrap(Settings.wordwrap);
+		editor.setShowNonPrinting(Settings.whitespace);
 		editor.setLayoutParams(new FrameLayout.LayoutParams(
 			FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 		try {

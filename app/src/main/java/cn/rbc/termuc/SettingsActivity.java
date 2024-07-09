@@ -2,17 +2,20 @@ package cn.rbc.termuc;
 import android.preference.*;
 import android.os.*;
 import android.view.*;
+import cn.rbc.codeeditor.util.*;
+import android.widget.*;
 
 public class SettingsActivity extends PreferenceActivity implements Preference.OnPreferenceChangeListener
 {
 	private final static String TAG = "SettingsActivity";
 
 	private CheckBoxPreference mDarkModePref, mWordWrapPref, mWhitespacePref;
-	private EditTextPreference mCFlagsPref;
+	private EditTextPreference mCFlagsPref, mHost, mPort;
+	private ListPreference mEngine;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		if (Settings.mDarkMode)
+		if (Settings.dark_mode)
 			setTheme(android.R.style.Theme_Holo);
 		super.onCreate(savedInstanceState);
 		getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -28,7 +31,14 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 			.findPreference(getText(R.string.key_whitespace));
 		mCFlagsPref = (EditTextPreference)prefSet
 			.findPreference(getText(R.string.key_cflags));
-		prefSet.setOnPreferenceChangeListener(this);
+		mEngine = (ListPreference)prefSet
+			.findPreference(getText(R.string.key_completion));
+		mEngine.setOnPreferenceChangeListener(this);
+		mHost = (EditTextPreference)prefSet
+			.findPreference(getText(R.string.key_lsp_host));
+		mPort = (EditTextPreference)prefSet
+			.findPreference(getText(R.string.key_lsp_port));
+		//prefSet.setOnPreferenceChangeListener(this);
 
 		Settings.getInstance(PreferenceManager
 			.getDefaultSharedPreferences(getApplicationContext()));
@@ -48,6 +58,11 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 
 	@Override
 	public boolean onPreferenceChange(Preference p1, Object p2) {
+		if (p1.compareTo(mEngine)==0) {
+			boolean enable = "s".equals(p2);
+			mHost.setEnabled(enable);
+			mPort.setEnabled(enable);
+		}
 		return true;
 	}
 
@@ -66,17 +81,23 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 	@Override
 	protected void onPause() {
 		super.onPause();
-		Settings.mDarkMode = mDarkModePref.isChecked();
-		Settings.mWordWrap = mWordWrapPref.isChecked();
-		Settings.mWhiteSpace = mWhitespacePref.isChecked();
-		Settings.mCFlags = mCFlagsPref.getText();
+		Settings.dark_mode = mDarkModePref.isChecked();
+		Settings.wordwrap = mWordWrapPref.isChecked();
+		Settings.whitespace = mWhitespacePref.isChecked();
+		Settings.cflags = mCFlagsPref.getText();
+		Settings.completion = mEngine.getValue();
+		Settings.lsp_host = mHost.getText();
+		Settings.lsp_port = Integer.parseInt(mPort.getText());
 		Settings.writeBack();
 	}
 
 	private void updateWidget() {
-		mDarkModePref.setChecked(Settings.mDarkMode);
-		mWordWrapPref.setChecked(Settings.mWordWrap);
-		mWhitespacePref.setChecked(Settings.mWhiteSpace);
-		mCFlagsPref.setText(Settings.mCFlags);
+		mDarkModePref.setChecked(Settings.dark_mode);
+		mWordWrapPref.setChecked(Settings.wordwrap);
+		mWhitespacePref.setChecked(Settings.whitespace);
+		mCFlagsPref.setText(Settings.cflags);
+		mEngine.setValue(Settings.completion);
+		mHost.setText(Settings.lsp_host);
+		mPort.setText(Integer.toString(Settings.lsp_port));
 	}
 }

@@ -15,5 +15,13 @@
     <string name="search">查找</string>
     <string name="close">关闭</string>
     <string name="no_open_files">未打开文件</string>
+	<string name="analysis">代码分析</string>
+	<string name="completion">自动补全</string>
+	<string name="engine">引擎</string>
+	<string name="lang_serv">语言服务器</string>
+	<string name="local">本地Snippets</string>
+	<string name="none">无</string>
+	<string name="lsp_host">服务器地址</string>
+	<string name="lsp_port">服务器端口</string>
 	<string name="file_modified">文件 %s 已被修改，您是否需要重新加载？</string>
 </resources>

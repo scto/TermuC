@@ -26,5 +26,23 @@
 			android:title="@string/cflags"
 			/>
 	</PreferenceCategory>
+	<PreferenceCategory
+		android:title="@string/analysis">
+		<ListPreference
+			android:key="@string/key_completion"
+			android:title="@string/completion"
+			android:entries="@array/engine"
+			android:entryValues="@array/v_engine"
+			/>
+		<EditTextPreference
+			android:key="@string/key_lsp_host"
+			android:title="@string/lsp_host"
+			/>
+		<EditTextPreference
+			android:key="@string/key_lsp_port"
+			android:title="@string/lsp_port"
+			android:inputType="numberDecimal"
+			/>
+	</PreferenceCategory>
 </PreferenceScreen>
 

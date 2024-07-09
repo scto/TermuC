@@ -15,9 +15,30 @@
     <string name="search">Search</string>
     <string name="close">Close</string>
 	<string name="no_open_files">No Open Files</string>
+	<string name="analysis">Code Analysis</string>
+	<string name="completion">Auto Completion</string>
+	<string name="engine">Engine</string>
+	<string name="lang_serv">Language Server</string>
+	<string name="local">Local Snippets</string>
+	<string name="none">None</string>
+	<string name="lsp_host">Server Host</string>
+	<string name="lsp_port">Server Port</string>
     <string name="file_modified">The file %s has been modified. Do you want to reload it?</string>
+	<string-array name="engine">
+		<item>@string/lang_serv</item>
+		<item>@string/local</item>
+		<item>@string/none</item>
+	</string-array>
+	<string-array name="v_engine">
+		<item>s</item>
+		<item>l</item>
+		<item>n</item>
+	</string-array>
 	<string name="key_dark_mode" translatable="false">darkmode</string>
 	<string name="key_wordwrap" translatable="false">wordwrap</string>
 	<string name="key_whitespace" translatable="false">whitespace</string>
 	<string name="key_cflags" translatable="false">cflags</string>
+	<string name="key_completion" translatable="false">completion</string>
+	<string name="key_lsp_host" translatable="false">lsphost</string>
+	<string name="key_lsp_port" translatable="false">lspport</string>
 </resources>

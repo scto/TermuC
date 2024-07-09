@@ -3,23 +3,33 @@
 			ad:id="@+id/run"
 			ad:title="@string/run"
 			ad:showAsAction="always"
-			ad:icon="@drawable/ic_play_24"/>
+			ad:icon="@drawable/ic_play_24"
+			ad:alphabeticShortcut="r"
+			ad:alphabeticModifiers="CTRL"/>
 	<item
 			ad:id="@+id/undo"
 			ad:title="@string/undo"
 			ad:showAsAction="always"
-			ad:icon="@drawable/ic_undo_24"/>
+			ad:icon="@drawable/ic_undo_24"
+			ad:alphabeticShortcut="z"
+			ad:alphabeticModifiers="CTRL"/>
 	<item
 			ad:id="@+id/redo"
 			ad:title="@string/redo"
 			ad:showAsAction="ifRoom"
-			ad:icon="@drawable/ic_redo_24"/>
+			ad:icon="@drawable/ic_redo_24"
+			ad:alphabeticShortcut="z"
+			ad:alphabeticModifiers="CTRL|SHIFT"/>
 	<item
 			ad:id="@+id/save"
-			ad:title="@string/save"/>
+			ad:title="@string/save"
+			ad:alphabeticShortcut="s"
+			ad:alphabeticModifiers="CTRL"/>
 	<item
 			ad:id="@+id/search"
-			ad:title="@string/search"/>
+			ad:title="@string/search"
+			ad:alphabeticShortcut="f"
+			ad:alphabeticModifiers="CTRL"/>
 	<item
 			ad:id="@+id/close"
 			ad:title="@string/close"/>

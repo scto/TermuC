@@ -23,6 +23,7 @@
 
 		<Button
 			android:layout_width="wrap_content"
+			android:tooltipText="创建文件(夹)"
 			style="?android:attr/buttonBarButtonStyle"
 			android:layout_height="wrap_content"
 			android:text="+"

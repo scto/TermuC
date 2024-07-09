@@ -43,6 +43,7 @@ public class MainActivity extends Activity implements
 	public static Lsp lsp;
 
 	private void envInit() {
+		Settings.getInstance(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
 		pwd = new File(getPreferences(MODE_PRIVATE).getString("pwd", root.getPath()));
 		if (lsp==null) {
 			hand = new MainHandler(this);
@@ -50,7 +51,6 @@ public class MainActivity extends Activity implements
 			lsp.start(this, hand);
 		} else
 			hand.updateActivity(this);
-		Settings.getInstance(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
 	}
 
 	private void showFrag(Fragment frag) {
@@ -73,7 +73,7 @@ public class MainActivity extends Activity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 		envInit();
-		if (Settings.mDarkMode)
+		if (Settings.dark_mode)
 			setTheme(android.R.style.Theme_Holo);
         super.onCreate(savedInstanceState);
 		getWindow().getDecorView().getViewTreeObserver().addOnGlobalLayoutListener(this);
@@ -83,6 +83,7 @@ public class MainActivity extends Activity implements
 		rt.applyStyle(android.R.style.Theme_Holo, true);
 		hda.setDropDownViewTheme(rt);
 		ab = getActionBar();
+		// ab.setHomeButtonEnabled(true);
         ab.setListNavigationCallbacks(hda, this);
 
 		setContentView(R.layout.activity_main);
@@ -106,17 +107,26 @@ public class MainActivity extends Activity implements
 		mSearchAction = new SearchAction(this);
     }
 
+	@Override
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		if (requestCode==PackageManager.PERMISSION_GRANTED
+			&& grantResults[0]==PackageManager.PERMISSION_GRANTED
+			&& grantResults[1]==PackageManager.PERMISSION_GRANTED)
+			refresh();
+	}
+
     private void refresh() {
 		pwdpth.setText(pwd.getPath());
         adp.clear();
         String[] list = this.pwd.list();
-        if (list != null) {
-            if (!root.equals(this.pwd))
-                adp.add("..");
+        if (list == null)
+			list = new String[0];
+        if (!root.equals(this.pwd))
+            adp.add("..");
             adp.addAll(list);
             adp.sort(cmp);
             adp.notifyDataSetChanged();
-        }
     }
 
 	@Override
@@ -196,8 +206,8 @@ public class MainActivity extends Activity implements
 	}
 
 	public boolean onItemLongClick(AdapterView<?> av, View v, final int i, long l) {
-		if ("..".equals(adp.getItem(i-1)))
-			return true;
+		if (i==0||"..".equals(adp.getItem(i-1)))
+			return false;
 		PopupMenu pm = new PopupMenu(MainActivity.this, v);
 		Menu _m = pm.getMenu();
 		_m.add(R.string.delete).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener(){
@@ -221,7 +231,7 @@ public class MainActivity extends Activity implements
                     Utils.run(this, new StringBuffer(Utils.PREF).append("/usr/bin/bash").toString(), new String[]{"-c",
 					new StringBuffer(lastFrag.getC())
 					.append(" \"").append(escape(lastFrag.getFile().getAbsolutePath())).append("\" ")
-					.append(Settings.mCFlags).append(" -o $TMPDIR/m && $TMPDIR/m && echo -n \"\nPress any key to exit...\" && read").toString()},
+					.append(Settings.cflags).append(" -o $TMPDIR/m && $TMPDIR/m && echo -n \"\nPress any key to exit...\" && read").toString()},
 					pwd.getPath(), false);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -314,11 +324,14 @@ public class MainActivity extends Activity implements
 			ab.setSelectedNavigationItem(j);
 			byhand = true;
 		}
+		if (subc!=null)
+			subc.setVisibility(bundle.getInt("showList"));
     }
 
     @Override
     public void onSaveInstanceState(Bundle bundle) {
         bundle.putString("pwd", pwd.getPath());
+		bundle.putInt("showList", subc.getVisibility());
         super.onSaveInstanceState(bundle);
     }
 
@@ -345,8 +358,8 @@ public class MainActivity extends Activity implements
 		// Apply Prefs for Edits
 		for (Fragment f:mFmgr.getFragments()) {
 			TextEditor ed = (TextEditor)f.getView();
-			ed.setWordWrap(Settings.mWordWrap);
-			ed.setShowNonPrinting(Settings.mWhiteSpace);
+			ed.setWordWrap(Settings.wordwrap);
+			ed.setShowNonPrinting(Settings.whitespace);
 		}
 	}
 
@@ -384,7 +397,7 @@ public class MainActivity extends Activity implements
     }
 
     public void showList(View view) {
-        subc.setVisibility(View.VISIBLE);
+        subc.setVisibility(subc.getVisibility()==View.VISIBLE?View.GONE:View.VISIBLE);
     }
 
 	public void setEditor(TextEditor edit) {
