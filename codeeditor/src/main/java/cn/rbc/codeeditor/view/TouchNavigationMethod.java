@@ -333,7 +333,8 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 						TextView tv = new TextView(ctx);
 						tv.setTextColor(0xffffffff);
 						tv.setText(errspan.msg);
-						ll.setPadding(40,40,40,40);
+						int pd = (int)(12*HelperUtils.getDpi(ctx)+.5f);
+						ll.setPadding(pd, pd, pd, pd);
 						ll.setBackgroundColor(ColorScheme.DIAG[errspan.severity]&0xf0ffffff);
 						ll.addView(tv);
 						t.setView(ll);

@@ -75,6 +75,8 @@ import cn.rbc.codeeditor.view.ColorScheme.Colorable;
 import java.util.List;
 import android.util.SparseIntArray;
 import cn.rbc.codeeditor.util.*;
+import android.view.*;
+import android.widget.*;
 
 /**
  * A custom text view that uses a solid shaded caret (aka cursor) instead of a
@@ -214,7 +216,7 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
     }
 
     //光标宽度
-    public final int mCursorWidth = 4;
+    public int mCursorWidth;
     public TextFieldController mCtrlr; // the controller in MVC
     public TextFieldInputConnection mInputConnection;
     public OnRowChangedListener mRowListener;
@@ -244,6 +246,7 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
     private int mTopOffset, mLeftOffset;
     private int mLineMaxWidth, xExtent;
     private int mAlphaWidth, mSpaceWidth;
+	private int mSizeMax, mSizeMin;
     private long mLastScroll;
     private boolean isAutoCompeted = true; //代码提示
     private boolean isShowLineNumbers = true;
@@ -398,8 +401,9 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 	}
 
     public void setTextSize(int pix, float cx, float cy) {
-        if (pix <= 20 || pix >= 80 || pix == mTextPaint.getTextSize())
+        if (pix<mSizeMin || pix>mSizeMax || pix == (int)mTextPaint.getTextSize())
             return;
+		//pix = Math.max(mSizeMin, Math.min(mSizeMax, pix));
         float oldHeight = rowHeight();
         float oldWidth = getCharAdvance('a');
         mZoomFactor = pix / BASE_TEXT_SIZE_PIXELS;
@@ -459,6 +463,11 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         setFocusableInTouchMode(true);
         setHapticFeedbackEnabled(true);
         mColorScheme = new ColorSchemeLight();
+		mSpaceWidth = (int)mTextPaint.measureText(" ");
+		mCursorWidth = (int)(HelperUtils.getDpi(mContext)*1.5f);
+		android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+		mSizeMin = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 8.f, dm);
+		mSizeMax = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 32.f, dm);
 
         mRowListener = new OnRowChangedListener() {
             @Override
@@ -470,7 +479,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         selLis = new OnSelectionChangedListener() {
             @Override
             public void onSelectionChanged(boolean active, int selStart, int selEnd) {
-                // TODO: Implement this method
                 if (active)
                     mClipboardPanel.show();
                 else
@@ -622,7 +630,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        // TODO: Implement this method
         if (changed) {
             Rect rect = new Rect();
             getWindowVisibleDisplayFrame(rect);
@@ -993,7 +1000,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         return advance;
     }
 
-    //光标
     private void drawCaret(Canvas canvas, int paintX, int paintY) {
         int originalColor = mTextPaint.getColor();
         mCaretX = paintX - mCursorWidth / 2;
@@ -1005,7 +1011,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         mTextPaint.setColor(originalColor);
     }
 
-    // 绘制行号
     private void drawLineNum(Canvas canvas, String s, int paintX, int paintY) {
         mLineBrush.setColor(mColorScheme.getColor(Colorable.NON_PRINTING_GLYPH));
         canvas.drawText(s, paintX, paintY, mLineBrush);
@@ -2243,6 +2248,15 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         return true;
     }
 
+	// TODO support mouse rolling
+	/*@Override
+	public boolean onGenericMotionEvent(MotionEvent event) {
+		if (event.isFromSource(InputDevice.SOURCE_CLASS_POINTER) && event.getAction()==MotionEvent.ACTION_SCROLL) {
+			HelperUtils.show(Toast.makeText(mContext, ""+mScroller.isFinished(), 1));
+		}
+		return super.onGenericMotionEvent(event);
+	}*/
+
     private boolean isPointInView(int x, int y) {
         return (x >= 0 && x < getWidth() &&
 			y >= 0 && y < getHeight());
@@ -2253,6 +2267,11 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
         invalidateCaretRow();
     }
+
+	@Override
+	public PointerIcon onResolvePointerIcon(MotionEvent event, int pointerIndex) {
+		return PointerIcon.getSystemIcon(mContext, PointerIcon.TYPE_TEXT);
+	}
 
     /**
      * Not public to allow access by {@link TouchNavigationMethod}

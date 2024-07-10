@@ -20,6 +20,7 @@ public class TextEditor extends FreeScrollingTextField{
     private Context mContext;
     private String _lastSelectFile;
     private int _index;
+	//private int mSize = 14;
     /*
     private Handler handler = new Handler() {
         @Override
@@ -59,7 +60,7 @@ public class TextEditor extends FreeScrollingTextField{
         setTypeface(Typeface.MONOSPACE);
         DisplayMetrics dm = mContext.getResources().getDisplayMetrics();
         //设置字体大小
-        float size = TypedValue.applyDimension(2, BASE_TEXT_SIZE_PIXELS, dm);
+        float size = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 16.f, dm);
         setTextSize((int) size);
         setShowLineNumbers(true);
         setHighlightCurrentRow(true);
@@ -114,6 +115,12 @@ public class TextEditor extends FreeScrollingTextField{
                 case KeyEvent.KEYCODE_V:
                     paste();
                     return true;
+				case KeyEvent.KEYCODE_EQUALS:
+					setTextSize((int)(getTextSize()+HelperUtils.getDpi(mContext)));
+					return true;
+				case KeyEvent.KEYCODE_MINUS:
+					setTextSize((int)(getTextSize()-HelperUtils.getDpi(mContext)));
+					return true;
             }
         }
         return super.onKeyShortcut(keyCode, event);

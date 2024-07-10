@@ -111,8 +111,8 @@ public class MainActivity extends Activity implements
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 		if (requestCode==PackageManager.PERMISSION_GRANTED
-			&& grantResults[0]==PackageManager.PERMISSION_GRANTED
-			&& grantResults[1]==PackageManager.PERMISSION_GRANTED)
+			&& grantResults[0]==requestCode
+			&& grantResults[1]==requestCode)
 			refresh();
 	}
 
@@ -122,11 +122,11 @@ public class MainActivity extends Activity implements
         String[] list = this.pwd.list();
         if (list == null)
 			list = new String[0];
-        if (!root.equals(this.pwd))
-            adp.add("..");
-            adp.addAll(list);
-            adp.sort(cmp);
-            adp.notifyDataSetChanged();
+        adp.addAll(list);
+        adp.sort(cmp);
+		if (!root.equals(this.pwd))
+            adp.insert("..", 0);
+        adp.notifyDataSetChanged();
     }
 
 	@Override
