@@ -3,7 +3,7 @@
  *
  * --------------------------------- row length
  * Hello World(\n)                 | 12
- * This is a test of the caret(\n) | 28
+ * This is a test the caret(\n) | 28
  * func|t|ions(\n)                 | 10
  * of this program(EOF)            | 16
  * ---------------------------------
@@ -389,8 +389,8 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         return mTextPaint.getTextSize();
     }
 
-	public void setTextSize(int pix) {
-		setTextSize(pix, 0.f, 0.f);
+	public boolean setTextSize(int pix) {
+		return setTextSize(pix, 0.f, 0.f);
 	}
 
 	@Override
@@ -400,9 +400,9 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 		super.scrollTo(x, y);
 	}
 
-    public void setTextSize(int pix, float cx, float cy) {
+    public boolean setTextSize(int pix, float cx, float cy) {
         if (pix<mSizeMin || pix>mSizeMax || pix == (int)mTextPaint.getTextSize())
-            return;
+            return false;
 		//pix = Math.max(mSizeMin, Math.min(mSizeMax, pix));
         float oldHeight = rowHeight();
         float oldWidth = getCharAdvance('a');
@@ -421,6 +421,7 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 		scrollTo((int)x, (int)y);
 		xExtent = 0;
 		invalidate();
+		return true;
     }
 
     public void replaceText(int from, int charCount, String text) {
@@ -495,7 +496,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
     }
 
 	public void onNewLine(String s, int caretPosition, int pos) {
-		// TODO: Implement this method
 		isTextChanged = true;
 		mCaretSpan.first += 1;
 		mAutoCompletePanel.dismiss();
@@ -2248,14 +2248,34 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         return true;
     }
 
-	// TODO support mouse rolling
-	/*@Override
+	@Override
 	public boolean onGenericMotionEvent(MotionEvent event) {
 		if (event.isFromSource(InputDevice.SOURCE_CLASS_POINTER) && event.getAction()==MotionEvent.ACTION_SCROLL) {
-			HelperUtils.show(Toast.makeText(mContext, ""+mScroller.isFinished(), 1));
+			// if (!isDragging)
+			final float vscroll = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
+			if (vscroll != 0) {
+				if ((event.getMetaState()&KeyEvent.META_CTRL_ON)!=0
+					&& setTextSize((int)(getTextSize()+vscroll*HelperUtils.getDpi(mContext)))) {
+					return true;
+				} else {
+					final int delta = (int) (vscroll * rowHeight());
+					final int range = getMaxScrollY();
+					int oldScrollY = getScrollY();
+					int newScrollY = oldScrollY - delta;
+					if (newScrollY < 0) {
+						newScrollY = 0;
+					} else if (newScrollY > range) {
+						newScrollY = range;
+					}
+					if (newScrollY != oldScrollY) {
+						super.scrollTo(getScrollX(), newScrollY);
+						return true;
+					}
+				}
+			}
 		}
 		return super.onGenericMotionEvent(event);
-	}*/
+	}
 
     private boolean isPointInView(int x, int y) {
         return (x >= 0 && x < getWidth() &&

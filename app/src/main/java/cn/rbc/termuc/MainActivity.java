@@ -23,28 +23,28 @@ import android.content.pm.*;
 public class MainActivity extends Activity implements
 	ActionBar.OnNavigationListener, OnGlobalLayoutListener,
 	AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener,
-	DialogInterface.OnClickListener {
-	private StrComp cmp = new StrComp();
-    private File root = Environment.getExternalStorageDirectory();
-    
-    private ArrayAdapter<String> adp, hda;
+	DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener {
+
+    private ArrayAdapter<String> hda;
+	private FileAdapter adp;
 	private FragmentManager mFmgr;
 	private EditFragment lastFrag = null;
 	private boolean byhand = true, inited = false;
     private View keys, showlist;
     private File pwd;
-    private TextView pwdpth, msgEmpty;
+    private TextView pwdpth, msgEmpty, transTxV;
     private LinearLayout subc;
     private TextEditor codeEditor;
 	private Menu _appmenu;
 	private ActionBar ab;
 	private SearchAction mSearchAction;
+	private String transStr;
 	private static MainHandler hand;
 	public static Lsp lsp;
 
 	private void envInit() {
 		Settings.getInstance(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
-		pwd = new File(getPreferences(MODE_PRIVATE).getString("pwd", root.getPath()));
+		pwd = new File(getPreferences(MODE_PRIVATE).getString("pwd", Utils.ROOT.getPath()));
 		if (lsp==null) {
 			hand = new MainHandler(this);
 			lsp = new Lsp();
@@ -99,7 +99,7 @@ public class MainActivity extends Activity implements
 		pwdpth = hd.findViewById(R.id.pwd);
 		msgEmpty = findViewById(R.id.msg_empty);
 		l.addHeaderView(hd);
-		adp = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
+		adp = new FileAdapter(this, pwd);
 		l.setAdapter(adp);
 		l.setOnItemClickListener(this);
 		l.setOnItemLongClickListener(this);
@@ -118,14 +118,7 @@ public class MainActivity extends Activity implements
 
     private void refresh() {
 		pwdpth.setText(pwd.getPath());
-        adp.clear();
-        String[] list = this.pwd.list();
-        if (list == null)
-			list = new String[0];
-        adp.addAll(list);
-        adp.sort(cmp);
-		if (!root.equals(this.pwd))
-            adp.insert("..", 0);
+		adp.setPath(pwd);
         adp.notifyDataSetChanged();
     }
 
@@ -149,7 +142,7 @@ public class MainActivity extends Activity implements
 	}
 
 	public void onItemClick(AdapterView<?> av, View v, int i, long n) {
-		String _it = adp.getItem(i-1);
+		String _it = adp.getItem(i-1).name;
 		if ("..".equals(_it))
 			pwd = pwd.getParentFile();
 		else {
@@ -186,6 +179,7 @@ public class MainActivity extends Activity implements
 						hda.add(_it);
 						byhand = false;
 						if (_i==0) {
+							_appmenu.clear();
 							getMenuInflater().inflate(R.menu.main, _appmenu);
 							ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
 							ab.setDisplayShowTitleEnabled(false);
@@ -206,18 +200,29 @@ public class MainActivity extends Activity implements
 	}
 
 	public boolean onItemLongClick(AdapterView<?> av, View v, final int i, long l) {
-		if (i==0||"..".equals(adp.getItem(i-1)))
+		if (i==0||"..".equals(adp.getItem(i-1).name))
 			return false;
 		PopupMenu pm = new PopupMenu(MainActivity.this, v);
 		Menu _m = pm.getMenu();
-		_m.add(R.string.delete).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener(){
-				public boolean onMenuItemClick(MenuItem mi) {
-					if (new File(pwd, adp.getItem(i-1)).delete())
-						adp.remove(adp.getItem(i-1));
-					return true;
-				}
-			});
+		transStr = adp.getItem(i-1).name;
+		_m.add(R.string.delete).setOnMenuItemClickListener(this);
 		pm.show();
+		return true;
+	}
+
+	@Override
+	public boolean onMenuItemClick(MenuItem p1) {
+		new AlertDialog.Builder(MainActivity.this)
+			.setTitle(R.string.delete)
+			.setMessage(getString(R.string.confirm_delete, transStr))
+			.setNegativeButton(android.R.string.cancel, null)
+			.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener(){
+				public void onClick(DialogInterface di, int id) {
+					if (new File(pwd, transStr).delete())
+						refresh();
+				}
+			})
+			.create().show();
 		return true;
 	}
 
@@ -266,6 +271,7 @@ public class MainActivity extends Activity implements
 					ab.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
 					ab.setDisplayShowTitleEnabled(true);
 					_appmenu.clear();
+					getMenuInflater().inflate(R.menu.nopen, _appmenu);
 					msgEmpty.setVisibility(View.VISIBLE);
 				} else {
 					if (cnt == sd)
@@ -316,6 +322,7 @@ public class MainActivity extends Activity implements
 			i++;
 		}
 		if (!hda.isEmpty()) {
+			_appmenu.clear();
 			getMenuInflater().inflate(R.menu.main, _appmenu);
 			ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
 			ab.setDisplayShowTitleEnabled(false);
@@ -335,12 +342,10 @@ public class MainActivity extends Activity implements
         super.onSaveInstanceState(bundle);
     }
 
-	private EditText fname;
-
 	@Override
 	public void onClick(DialogInterface p1, int p2) {
 		try {
-			File f = new File(pwd, fname.getText().toString());
+			File f = new File(pwd, transTxV.getText().toString());
 			if (p2 == DialogInterface.BUTTON_POSITIVE)
 				f.createNewFile();
 			else
@@ -365,7 +370,7 @@ public class MainActivity extends Activity implements
 
     public void createFile(View view) {
         View inflate = View.inflate(this, R.layout.edit, null);
-        fname = inflate.findViewById(R.id.file_name);
+        transTxV = inflate.findViewById(R.id.edit_name);
 		new AlertDialog.Builder(this)
 		.setTitle("新建")
 		.setView(inflate)
@@ -376,10 +381,16 @@ public class MainActivity extends Activity implements
     }
 
 	@Override
-	public boolean onPrepareOptionsMenu(Menu menu)
-	{
+	public boolean onPrepareOptionsMenu(Menu menu) {
 		_appmenu = menu;
 		return super.onPrepareOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+		getMenuInflater().inflate(R.menu.nopen, menu);
+		return true;
 	}
 
     @Override
@@ -388,7 +399,7 @@ public class MainActivity extends Activity implements
         super.onStop();
     }
 
-    private String escape(String str) {
+    private static String escape(String str) {
         return str.replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$").replace("\"", "\\\"");
     }
 

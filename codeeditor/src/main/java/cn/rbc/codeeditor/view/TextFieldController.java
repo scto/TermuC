@@ -39,7 +39,6 @@ public class TextFieldController implements Tokenizer.LexCallback {
      */
     public void determineSpans() {
 		lexing = true;
-		//Log.i("CodeEditor", field.hDoc.);
 		_lexer.tokenize(field.hDoc);
     }
 

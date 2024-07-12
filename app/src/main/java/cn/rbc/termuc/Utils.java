@@ -1,8 +1,11 @@
 package cn.rbc.termuc;
 import android.content.*;
+import android.os.*;
+import java.io.*;
 
 public class Utils
 {
+	public final static File ROOT = Environment.getExternalStorageDirectory();
 	public final static String PREF = "/data/data/com.termux/files";
     private final static String PREFC = "com.termux.RUN_COMMAND_";
 

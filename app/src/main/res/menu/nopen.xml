@@ -1,0 +1,5 @@
+<menu xmlns:ad="http://schemas.android.com/apk/res/android">
+    <item
+		ad:id="@+id/settings"
+		ad:title="@string/settings"/>
+</menu>

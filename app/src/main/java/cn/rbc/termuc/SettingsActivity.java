@@ -62,6 +62,8 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 			boolean enable = "s".equals(p2);
 			mHost.setEnabled(enable);
 			mPort.setEnabled(enable);
+			if (!enable)
+				HelperUtils.show(Toast.makeText(this, "敬请期待\nComing soon", Toast.LENGTH_SHORT));
 		}
 		return true;
 	}
@@ -99,5 +101,8 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 		mEngine.setValue(Settings.completion);
 		mHost.setText(Settings.lsp_host);
 		mPort.setText(Integer.toString(Settings.lsp_port));
+		boolean b = "s".equals(Settings.completion);
+		mHost.setEnabled(b);
+		mPort.setEnabled(b);
 	}
 }

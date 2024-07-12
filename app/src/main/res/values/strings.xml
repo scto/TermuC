@@ -24,6 +24,7 @@
 	<string name="lsp_host">Server Host</string>
 	<string name="lsp_port">Server Port</string>
     <string name="file_modified">The file %s has been modified. Do you want to reload it?</string>
+	<string name="confirm_delete">Do you want to delete %s?</string>
 	<string-array name="engine">
 		<item>@string/lang_serv</item>
 		<item>@string/local</item>

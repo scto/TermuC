@@ -24,4 +24,5 @@
 	<string name="lsp_host">服务器地址</string>
 	<string name="lsp_port">服务器端口</string>
 	<string name="file_modified">文件 %s 已被修改，您是否需要重新加载？</string>
+	<string name="confirm_delete">是否删除 %s？</string>
 </resources>
