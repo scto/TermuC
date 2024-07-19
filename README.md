@@ -6,7 +6,7 @@ TermuC is a simple C/C++ IDE backed on Termux. Based on [MrIkso/CodeEditor](//gi
 
 ## Screenshot
 
-![Screenshot_20240306_125511](_res/Screenshot_20240306_125511.jpg)
+![1](fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg)
 
 ## Technology
 

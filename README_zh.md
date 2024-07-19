@@ -4,7 +4,7 @@ TermuC 是一个简单的 C/C++ IDE，采用 Termux 作为后台。项目基于 
 
 ## 截图
 
-![Screenshot_20240306_125511](_res/Screenshot_20240306_125511.jpg)
+![1](fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg)
 
 ## 技术原理
 
