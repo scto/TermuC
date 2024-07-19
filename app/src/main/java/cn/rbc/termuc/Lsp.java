@@ -27,7 +27,7 @@ public class Lsp {
 	private long mLastReceivedTime;
 
 	public void start(final Context mC, final Handler read) {
-		Utils.run(mC, "/system/bin/nc", new String[]{"-l", "-s", Settings.lsp_host, "-p", Integer.toString(Settings.lsp_port), "clangd", "--header-insertion-decorators=0", "--log=verbose", "--completion-style=bundled"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
+		Utils.run(mC, "/system/bin/nc", new String[]{"-l", "-s", Settings.lsp_host, "-p", Integer.toString(Settings.lsp_port), "clangd", "--header-insertion-decorators=0", "--completion-style=bundled"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
 		sk = new Socket();
 		mExecutor = Executors.newSingleThreadExecutor();
 		new Thread(){
@@ -60,8 +60,6 @@ public class Lsp {
 							byte[] strb = new byte[len];
 							for (i=0; i<len; i++)
 								strb[i] = (byte)is.read();
-							if (cn.rbc.termuc.BuildConfig.DEBUG)
-								Log.i(TAG, new String(strb));
 							InputStream r = new ByteArrayInputStream(strb);
 							JsonReader limitInput = new JsonReader(new InputStreamReader(r, StandardCharsets.UTF_8));
 							Message msg = new Message();
