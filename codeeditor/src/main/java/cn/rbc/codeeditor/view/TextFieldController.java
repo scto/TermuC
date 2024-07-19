@@ -530,7 +530,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
         }
     }
 
-    void replaceText(int from, int charCount, String text) {
+    void replaceText(int from, int charCount, CharSequence text) {
         int invalidateStartRow, originalOffset;
         boolean isInvalidateSingleRow = true;
         boolean dirty = false;
@@ -579,8 +579,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
                 invalidateStartRow = insFromRow;
                 originalOffset = field.hDoc.getRowOffset(insFromRow);
             }
-
-            field.hDoc.insertBefore(text.toCharArray(), field.mCaretPosition, System.nanoTime());
+            field.hDoc.insertBefore(text.toString().toCharArray(), field.mCaretPosition, System.nanoTime());
             field.mCaretPosition += text.length();
             dirty = true;
         }

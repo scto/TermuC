@@ -12,7 +12,7 @@ public class CLanguage extends Language{
 		"signed", "unsigned", "sizeof", "typedef",
 		"enum", "struct", "union",
 		"break", "case", "continue", "default", "do", "else", "for",
-		"goto", "if", "return", "switch", "while"*
+		"goto", "if", "return", "switch", "while"
 	};*/
 
 	public static Language getInstance(){
@@ -30,6 +30,11 @@ public class CLanguage extends Language{
 	@Override
 	public Lexer newLexer(CharSeqReader reader) {
 		return new CLexer(reader);
+	}
+
+	@Override
+	public Formatter getFormatter() {
+		return super.getFormatter();
 	}
 }
 

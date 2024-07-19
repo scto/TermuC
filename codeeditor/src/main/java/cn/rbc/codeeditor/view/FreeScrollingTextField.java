@@ -77,6 +77,7 @@ import android.util.SparseIntArray;
 import cn.rbc.codeeditor.util.*;
 import android.view.*;
 import android.widget.*;
+import java.util.*;
 
 /**
  * A custom text view that uses a solid shaded caret (aka cursor) instead of a
@@ -1933,6 +1934,10 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 		mCtrlr.determineSpans();
 		//tc
     }
+
+	public void format() {
+		replaceText(0, hDoc.length()-1, Tokenizer.getLanguage().getFormatter().format(hDoc, mAutoIndentWidth).toString());
+	}
 
     private boolean reachedNextSpan(int charIndex, Pair span) {
         return span != null && (charIndex == span.first);

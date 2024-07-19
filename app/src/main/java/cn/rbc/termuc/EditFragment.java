@@ -5,7 +5,6 @@ import android.view.*;
 import android.widget.*;
 import java.io.*;
 import android.net.*;
-import java.util.*;
 import cn.rbc.codeeditor.lang.*;
 import cn.rbc.codeeditor.common.*;
 import cn.rbc.codeeditor.util.*;
@@ -14,7 +13,7 @@ import cn.rbc.codeeditor.view.*;
 import android.content.*;
 
 public class EditFragment extends Fragment
-implements OnTextChangeListener, DialogInterface.OnClickListener
+implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 {
 	public final static int TYPE_C = 0;
 	public final static int TYPE_CPP = 1;
@@ -26,7 +25,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener
 	int type;
 	private String C = "clang";
 	private long lastModified;
-	private List<Range> changes = new ArrayList<>();
+	private java.util.List<Range> changes = new java.util.ArrayList<>();
 
 	public EditFragment() {
 	}
@@ -58,6 +57,8 @@ implements OnTextChangeListener, DialogInterface.OnClickListener
 		editor.setShowNonPrinting(Settings.whitespace);
 		editor.setLayoutParams(new FrameLayout.LayoutParams(
 			FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+		if ("s".equals(Settings.completion))
+			editor.setFormatter(this);
 		try {
 			String s = load();
 			if ((type&1) == 0) {
@@ -78,6 +79,37 @@ implements OnTextChangeListener, DialogInterface.OnClickListener
 
 	public String getC() {
 		return C;
+	}
+
+	@Override
+	public int createAutoIndent(CharSequence text) {
+		return 0;
+	}
+
+	@Override
+	public CharSequence format(CharSequence txt, int width) {
+		int start = ed.getSelectionStart(), end = ed.getSelectionEnd();
+		if (start==end)
+			MainActivity.lsp.formatting(fl, width);
+		else {
+			Range range = new Range();
+			Document text = ed.getText();
+			if (ed.isWordWrap()) {
+				range.stl = text.findLineNumber(start);
+				range.stc = text.getLineOffset(range.stl);
+				range.enl = text.findLineNumber(end);
+				range.enc = text.getLineOffset(range.enl);
+			} else {
+				range.stl = text.findRowNumber(start);
+				range.stc = text.getRowOffset(range.stl);
+				range.enl = text.findRowNumber(start);
+				range.enc = text.getRowOffset(range.enl);
+			}
+			range.stc = start - range.stc;
+			range.enc = end - range.enc;
+			MainActivity.lsp.rangeFormatting(fl, range, width);
+		}
+		return null;
 	}
 
 	//private int lastVer = -1;

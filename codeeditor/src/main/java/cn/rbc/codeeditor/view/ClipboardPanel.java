@@ -32,10 +32,8 @@ public class ClipboardPanel {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             initData();
             startClipboardActionNew();
-        } else {
+        } else
             startClipboardAction();
-        }
-
     }
 
     public void hide() {
@@ -43,20 +41,18 @@ public class ClipboardPanel {
     }
 
     public void startClipboardAction() {
-        // TODO: Implement this method
         if (_clipboardActionMode == null)
             _textField.startActionMode(new ActionMode.Callback() {
 
                 @Override
                 public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-                    // TODO: Implement this method
                     _clipboardActionMode = mode;
-                    mode.setTitle(android.R.string.selectTextMode);
+                    //mode.setTitle(android.R.string.selectTextMode);
                     TypedArray array = _context.getTheme().obtainStyledAttributes(new int[]{
                             android.R.attr.actionModeSelectAllDrawable,
                             android.R.attr.actionModeCutDrawable,
                             android.R.attr.actionModeCopyDrawable,
-                            android.R.attr.actionModePasteDrawable,
+                            android.R.attr.actionModePasteDrawable
                     });
                     menu.add(0, 0, 0, _context.getString(android.R.string.selectAll))
                             .setShowAsActionFlags(2)
@@ -77,6 +73,14 @@ public class ClipboardPanel {
                             .setShowAsActionFlags(2)
                             .setAlphabeticShortcut('v')
                             .setIcon(array.getDrawable(3));
+
+					menu.add(0, 4, 0, _context.getString(R.string.delete))
+							.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM)
+							.setAlphabeticShortcut('d');
+
+					menu.add(0, 5, 0, _context.getString(R.string.format))
+							.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM)
+							.setAlphabeticShortcut('f');
                     array.recycle();
                     return true;
                 }
@@ -89,7 +93,6 @@ public class ClipboardPanel {
 
                 @Override
                 public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-                    // TODO: Implement this method
                     switch (item.getItemId()) {
                         case 0:
                             _textField.selectAll();
@@ -105,13 +108,20 @@ public class ClipboardPanel {
                         case 3:
                             _textField.paste();
                             mode.finish();
+							break;
+						case 4:
+							_textField.delete();
+							mode.finish();
+							break;
+						case 5:
+							_textField.format();
+							mode.finish();
                     }
                     return false;
                 }
 
                 @Override
                 public void onDestroyActionMode(ActionMode p1) {
-                    // TODO: Implement this method
                     _textField.selectText(false);
                     _clipboardActionMode = null;
                 }
@@ -120,7 +130,6 @@ public class ClipboardPanel {
     }
 
     public void startClipboardActionNew() {
-        // TODO: Implement this method
         if (_clipboardActionMode == null)
             _textField.startActionMode(_clipboardActionModeCallback2, ActionMode.TYPE_FLOATING);
 	}
@@ -129,12 +138,10 @@ public class ClipboardPanel {
         _clipboardActionModeCallback2 = new ActionMode.Callback2() {
             @Override
             public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-                // TODO: Implement this method
                 _clipboardActionMode = mode;
                 menu.add(0, 0, 0, _context.getString(android.R.string.selectAll))
                         .setShowAsActionFlags(2)
                         .setAlphabeticShortcut('a');
-
                 menu.add(0, 1, 0, _context.getString(android.R.string.cut))
                         .setShowAsActionFlags(2)
                         .setAlphabeticShortcut('x');
@@ -147,6 +154,9 @@ public class ClipboardPanel {
                 menu.add(0, 4, 0, _context.getString(R.string.delete))
                         .setShowAsActionFlags(2)
                         .setAlphabeticShortcut('d');
+				menu.add(0, 5, 0, _context.getString(R.string.format))
+						.setShowAsActionFlags(2)
+						.setAlphabeticShortcut('f');
                 return true;
             }
 
@@ -158,7 +168,6 @@ public class ClipboardPanel {
 
             @Override
             public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-                // TODO: Implement this method
                 switch (item.getItemId()) {
                     case 0:
                         _textField.selectAll();
@@ -178,15 +187,16 @@ public class ClipboardPanel {
                     case 4:
                         _textField.delete();
                         mode.finish();
+						break;
+					case 5:
+						_textField.format();
+						mode.finish();
                 }
                 return false;
-
-
             }
 
             @Override
             public void onDestroyActionMode(ActionMode p1) {
-                // TODO: Implement this method
                 _textField.selectText(false);
                 _clipboardActionMode = null;
                 caret = null;
@@ -198,7 +208,6 @@ public class ClipboardPanel {
 				caret.top -= _textField.getScrollY();
 				caret.left += _textField.getScrollX();
 				outRect.set(caret);
-               // super.onGetContentRect(mode, view, caret);
             }
         };
 
@@ -209,7 +218,6 @@ public class ClipboardPanel {
             //_clipboardActionModeCallback2.onDestroyActionMode(_clipboardActionMode);
             _clipboardActionMode.finish();
             _clipboardActionMode = null;
-
         }
     }
 

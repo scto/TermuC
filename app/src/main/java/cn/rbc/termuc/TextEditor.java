@@ -20,7 +20,8 @@ public class TextEditor extends FreeScrollingTextField{
     private Context mContext;
     private String _lastSelectFile;
     private int _index;
-	//private int mSize = 14;
+	private Formatter mFormatter;
+
     /*
     private Handler handler = new Handler() {
         @Override
@@ -125,6 +126,18 @@ public class TextEditor extends FreeScrollingTextField{
         }
         return super.onKeyShortcut(keyCode, event);
     }
+
+	@Override
+	public void format() {
+		if (mFormatter!=null) {
+			mFormatter.format(hDoc, mAutoIndentWidth);
+		} else
+			super.format();
+	}
+
+	public void setFormatter(Formatter fmt) {
+		mFormatter = fmt;
+	}
 
     public void setText(CharSequence c) {
         Document doc = new Document(this);

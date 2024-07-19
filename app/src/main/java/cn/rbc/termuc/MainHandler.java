@@ -56,13 +56,16 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 			int sl = 0, sc = 0, el = 0, ec = 0;
 			Object tmp1 = null, tmp2 = null, tmp3 = null;
 	LOOP:	while (true) {
+				Log.i("LSP", stack.toString());
 				switch (jr.peek()) {
 					case NAME:
 						String n = jr.nextName();
 						switch (n) {
 							case NEWTX:
+								n = jr.nextString();
 								//if (tmp3 instanceof Edit)
-								((Edit)tmp3).text = jr.nextString();
+									((Edit)tmp3).text = n;
+								//else tmp3 = n;
 								break;
 							case LABEL:
 								if (tmp2 instanceof ListItem)
@@ -116,12 +119,20 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								}
 								jr.endObject();
 								break;
+							case RESU:
+								if (jr.peek()==BEGIN_ARRAY) {
+									jr.beginArray();
+									tmp2 = new ArrayList<Edit>();
+									//tmpi = ma.getEditor().getCaretPosition();
+								} else
+									jr.beginObject();
+								stack.push(n);
+								break;
 							case TEDIT:
 								tmp3 = new Edit();
 							case COMPLE:
 							case CAPA:
 							case PARA:
-							case RESU:
 								jr.beginObject();
 								stack.push(n);
 								break;
@@ -135,6 +146,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 						if (!stack.isEmpty()) {
 						switch (stack.peek()) {
 							case ADDEDIT:
+							case RESU:
 								tmp3 = new Edit();
 								break;
 							case IT:
@@ -151,11 +163,15 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 						if (!stack.isEmpty())
 						switch (stack.peek()) {
 							case ADDEDIT:
+							case RESU:
 								Edit _p = (Edit)tmp3;
 								Document te = ma.getEditor().getText();
 								_p.start = te.getLineOffset(sl) + sc;
 								_p.len = te.getLineOffset(el) + ec - _p.start;
-								((ListItem)tmp2).edits.addLast(_p);
+								if (tmp2 instanceof ListItem)
+									((ListItem)tmp2).edits.addLast(_p);
+								else
+									((List)tmp2).add(0, _p);
 								break;
 							case TEDIT:
 								_p = (Edit)tmp3;
@@ -199,6 +215,25 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								TextEditor te = ma.getEditor();
 								te.getText().setDiag(a);
 								te.invalidate();
+								break LOOP;
+							case RESU:
+								jr.close();
+								te = ma.getEditor();
+								Document doc = te.getText();
+								doc.beginBatchEdit();
+								long tpl = System.nanoTime();
+								int mc = te.getCaretPosition();
+								for (Edit e:(List<Edit>)tmp2) {
+									doc.deleteAt(e.start, e.len, tpl);
+									doc.insertBefore(e.text.toCharArray(), e.start, tpl);
+									if (e.start + e.len <= mc)
+										mc += e.text.length() - e.len;
+									else if (e.start < mc)
+										mc = e.start + e.text.length();
+								}
+								doc.endBatchEdit();
+								te.moveCaret(mc);
+								te.mCtrlr.determineSpans();
 								break LOOP;
 						}
 						break;

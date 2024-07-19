@@ -85,7 +85,7 @@ public abstract class Language
 	}*/
 
 	//子类需要实现该方法
-	public DefFormatter getFormatter() {
+	public Formatter getFormatter() {
 		return DefFormatter.getInstance();
 	}
 

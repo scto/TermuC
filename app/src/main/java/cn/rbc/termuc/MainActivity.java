@@ -365,6 +365,7 @@ public class MainActivity extends Activity implements
 			TextEditor ed = (TextEditor)f.getView();
 			ed.setWordWrap(Settings.wordwrap);
 			ed.setShowNonPrinting(Settings.whitespace);
+			ed.setFormatter("s".equals(Settings.completion)?(EditFragment)f:null);
 		}
 	}
 
