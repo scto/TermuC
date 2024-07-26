@@ -72,7 +72,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 			MainActivity.lsp.didOpen(fl, (type&1)==1?"cpp":"c", s);
 		} catch(IOException fnf) {
 			fnf.printStackTrace();
-			Toast.makeText(ma, "打开失败！", Toast.LENGTH_SHORT).show();
+			Toast.makeText(ma, R.string.open_failed, Toast.LENGTH_SHORT).show();
 		}
 		return editor;
 	}

@@ -5,6 +5,6 @@
     <EditText
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:hint="名称"
+		android:hint="@string/hint_filename"
 		android:id="@+id/edit_name"/>
 </LinearLayout>

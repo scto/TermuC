@@ -3,9 +3,9 @@
     <item
         ad:id="@+id/menu_last"
 		ad:showAsAction="always"
-        ad:title="上个"/>
+        ad:title="@string/prev"/>
     <item
         ad:id="@+id/menu_next"
 		ad:showAsAction="always"
-        ad:title="下个"/>
+        ad:title="@string/next"/>
 </menu>

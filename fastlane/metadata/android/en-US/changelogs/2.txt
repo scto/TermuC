@@ -1,0 +1,2 @@
+- Full translated
+- Fixed bugs when detecting file changes

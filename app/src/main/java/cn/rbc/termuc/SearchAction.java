@@ -57,7 +57,7 @@ public class SearchAction implements ActionMode.Callback, TextWatcher {
 			i = indexDoc(ed, idx+1);
 		}
 		if (i==-1) {
-			ma.toast("查找结束");
+			HelperUtils.show(Toast.makeText(ma, R.string.find_completed, Toast.LENGTH_SHORT));
 			idx = 0;
 			te.setSelection(0,0);
 		} else {

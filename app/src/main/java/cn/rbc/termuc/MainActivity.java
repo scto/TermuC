@@ -27,7 +27,7 @@ public class MainActivity extends Activity implements
 
     private ArrayAdapter<String> hda;
 	private FileAdapter adp;
-	private FragmentManager mFmgr;
+	FragmentManager mFmgr;
 	private EditFragment lastFrag = null;
 	private boolean byhand = true, inited = false;
     private View keys, showlist;
@@ -252,7 +252,7 @@ public class MainActivity extends Activity implements
 				try {
 					lastFrag.save();
 					lsp.didSave(lastFrag.getFile());
-					toast("已保存");
+					toast(getText(R.string.saved));
 				} catch(IOException e) {
 					e.printStackTrace();
 				}
@@ -373,10 +373,10 @@ public class MainActivity extends Activity implements
         View inflate = View.inflate(this, R.layout.edit, null);
         transTxV = inflate.findViewById(R.id.edit_name);
 		new AlertDialog.Builder(this)
-		.setTitle("新建")
+		.setTitle(R.string.new_)
 		.setView(inflate)
-		.setPositiveButton("文件", this)
-		.setNeutralButton("文件夹", this)
+		.setPositiveButton(R.string.file, this)
+		.setNeutralButton(R.string.folder, this)
 		.setNegativeButton(android.R.string.cancel, null)
 		.create().show();
     }

@@ -12,7 +12,7 @@
     <string name="undo">Undo</string>
     <string name="redo">Redo</string>
     <string name="save">Save</string>
-    <string name="search">Search</string>
+    <string name="find">Find</string>
     <string name="close">Close</string>
 	<string name="no_open_files">No Open Files</string>
 	<string name="analysis">Code Analysis</string>
@@ -25,6 +25,18 @@
 	<string name="lsp_port">Server Port</string>
     <string name="file_modified">The file %s has been modified. Do you want to reload it?</string>
 	<string name="confirm_delete">Do you want to delete %s?</string>
+	<string name="new_">New</string>
+	<string name="file">File</string>
+	<string name="folder">Folder</string>
+	<string name="saved">Saved</string>
+	<string name="open_failed">Open failed!</string>
+	<string name="browse_files">Browse Files</string>
+	<string name="hint_filename">Name (eg: main.cpp)</string>
+	<string name="new_f">New File/Folder</string>
+	<string name="find_">Find...</string>
+	<string name="next">Next</string>
+	<string name="prev">Prev</string>
+	<string name="find_completed">Find Completed</string>
 	<string-array name="engine">
 		<item>@string/lang_serv</item>
 		<item>@string/local</item>

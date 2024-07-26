@@ -9,6 +9,7 @@ import java.io.*;
 import cn.rbc.codeeditor.view.autocomplete.*;
 import static android.util.JsonToken.*;
 import java.nio.charset.*;
+import android.net.*;
 
 public class MainHandler extends Handler implements Comparator<ErrSpan> {
 	private MainActivity ma;
@@ -29,7 +30,8 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 	RESU = "result",
 	SEVE = "severity",
 	TEDIT = "textEdit",
-	TG = "triggerCharacters";
+	TG = "triggerCharacters",
+	URI = "uri";
 
 	public MainHandler(MainActivity ma) {
 		super();
@@ -56,7 +58,6 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 			int sl = 0, sc = 0, el = 0, ec = 0;
 			Object tmp1 = null, tmp2 = null, tmp3 = null;
 	LOOP:	while (true) {
-				Log.i("LSP", stack.toString());
 				switch (jr.peek()) {
 					case NAME:
 						String n = jr.nextName();
@@ -127,6 +128,18 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								} else
 									jr.beginObject();
 								stack.push(n);
+								break;
+							case URI:
+								if (DG.equals(stack.peek())) {
+									String tag = Uri.parse(jr.nextString()).getPath();
+									jr.close();
+									TextEditor te = (TextEditor)ma.mFmgr.findFragmentByTag(tag).getView();
+									ArrayList<ErrSpan> a = (ArrayList<ErrSpan>)tmp1;
+									a.sort(this);
+									te.getText().setDiag(a);
+									te.invalidate();
+									break LOOP;
+								}
 								break;
 							case TEDIT:
 								tmp3 = new Edit();
@@ -208,17 +221,10 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 							case IT:
 								ma.getEditor().getAutoCompletePanel().update((ArrayList<ListItem>)tmp1);
 								break LOOP;
-							case DG:
-								jr.close();
-								ArrayList<ErrSpan> a = (ArrayList<ErrSpan>)tmp1;
-								a.sort(this);
-								TextEditor te = ma.getEditor();
-								te.getText().setDiag(a);
-								te.invalidate();
-								break LOOP;
+							//case DG:
 							case RESU:
 								jr.close();
-								te = ma.getEditor();
+								TextEditor te = ma.getEditor();
 								Document doc = te.getText();
 								doc.beginBatchEdit();
 								long tpl = System.nanoTime();

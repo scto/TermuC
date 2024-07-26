@@ -9,7 +9,7 @@
 
 	<ImageButton
 		android:src="@android:drawable/ic_menu_more"
-		android:tooltipText="浏览文件"
+		android:tooltipText="@string/browse_files"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_alignParentRight="true"

@@ -12,7 +12,7 @@
     <string name="undo">撤销</string>
     <string name="redo">重做</string>
     <string name="save">保存</string>
-    <string name="search">查找</string>
+    <string name="find">查找</string>
     <string name="close">关闭</string>
     <string name="no_open_files">未打开文件</string>
 	<string name="analysis">代码分析</string>
@@ -25,4 +25,16 @@
 	<string name="lsp_port">服务器端口</string>
 	<string name="file_modified">文件 %s 已被修改，您是否需要重新加载？</string>
 	<string name="confirm_delete">是否删除 %s？</string>
+	<string name="new_">新建</string>
+	<string name="file">文件</string>
+	<string name="folder">文件夹</string>
+	<string name="saved">已保存</string>
+	<string name="open_failed">打开失败！</string>
+	<string name="browse_files">浏览文件</string>
+	<string name="hint_filename">名称（例如 main.cpp）</string>
+	<string name="new_f">新建文件（夹）</string>
+	<string name="find_">查找…</string>
+	<string name="next">向后</string>
+	<string name="prev">向前</string>
+	<string name="find_completed">查找结束</string>
 </resources>

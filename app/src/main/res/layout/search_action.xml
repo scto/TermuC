@@ -13,7 +13,7 @@
 		android:background="@null"
 		android:singleLine="true"
 		android:maxLines="1"
-		android:hint="搜索..."
+		android:hint="@string/find_"
 		android:id="@+id/search_edit"
 		android:layout_weight="1.0"/>
 

@@ -27,7 +27,7 @@
 			ad:alphabeticModifiers="CTRL"/>
 	<item
 			ad:id="@+id/search"
-			ad:title="@string/search"
+			ad:title="@string/find"
 			ad:alphabeticShortcut="f"
 			ad:alphabeticModifiers="CTRL"/>
 	<item
