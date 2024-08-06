@@ -4,8 +4,8 @@ TermuC is a simple C/C++ IDE backed on powerful Termux. Install Termux first and
 
 To support the full functions as an IDE, please follow the setup instruction.
 
-1. Install Termux(https://github.com/termux/termux-app or https://f-droid.org/packages/com.termux) first.
-2. Run `pkg install clang' to install the clang compiler & clangd language server.
+1. Install Termux(<a href="https://github.com/termux/termux-app/releases">Github Releases</a> or <a href="https://f-droid.org/packages/com.termux">F-Droid</a>) first.
+2. Run <code>pkg install clang</code> to install the clang compiler & clangd language server.
 3. See https://github.com/termux/termux-app/wiki/RUN_COMMAND-Intent#setup-instructions to enable calls from 3rd-party apps.
 4. Then install TermuC.
 
