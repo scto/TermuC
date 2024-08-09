@@ -8,6 +8,8 @@ public class Settings
 		KEY_DARKMODE = "darkmode",
 		KEY_WORDWRAP = "wordwrap",
 		KEY_WHITESPACE = "whitespace",
+		KEY_TEXTSIZE = "textsize",
+		KEY_SHOW_HIDDEN = "showhidden",
 		KEY_CFLAGS = "cflags",
 		KEY_COMPLETION = "completion",
 		KEY_LSP_HOST = "lsphost",
@@ -17,9 +19,9 @@ public class Settings
 	private static Settings mInstance = null;
 	private static int mRefCount = 0;
 
-	public static boolean dark_mode, wordwrap, whitespace;
+	public static boolean dark_mode, wordwrap, whitespace, show_hidden;
 	public static String cflags, completion, lsp_host;
-	public static int lsp_port;
+	public static int lsp_port, textsize;
 
 	private Settings(SharedPreferences pref) {
 		mSharedPref = pref;
@@ -36,16 +38,18 @@ public class Settings
     }
 
 	public static void writeBack() {
-        Editor editor = mSharedPref.edit();
-        editor.putBoolean(KEY_DARKMODE, dark_mode);
-        editor.putBoolean(KEY_WORDWRAP, wordwrap);
-		editor.putBoolean(KEY_WHITESPACE, whitespace);
-        editor.putString(KEY_CFLAGS, cflags);
-		editor.putString(KEY_COMPLETION, completion);
-		editor.putString(KEY_LSP_HOST, lsp_host);
-		editor.putString(KEY_LSP_PORT, Integer.toString(lsp_port));
-        editor.commit();
-    }
+        mSharedPref.edit()
+		.putBoolean(KEY_DARKMODE, dark_mode)
+		.putBoolean(KEY_WORDWRAP, wordwrap)
+		.putBoolean(KEY_WHITESPACE, whitespace)
+		.putBoolean(KEY_SHOW_HIDDEN, show_hidden)
+		.putInt(KEY_TEXTSIZE, textsize)
+		.putString(KEY_CFLAGS, cflags)
+		.putString(KEY_COMPLETION, completion)
+		.putString(KEY_LSP_HOST, lsp_host)
+		.putString(KEY_LSP_PORT, Integer.toString(lsp_port))
+		.commit();
+	}
 
     public static void releaseInstance() {
         mRefCount--;
@@ -56,8 +60,10 @@ public class Settings
 
     private void initConfs() {
         dark_mode = mSharedPref.getBoolean(KEY_DARKMODE, false);
+		textsize = mSharedPref.getInt(KEY_TEXTSIZE, 14);
         wordwrap = mSharedPref.getBoolean(KEY_WORDWRAP, true);
 		whitespace = mSharedPref.getBoolean(KEY_WHITESPACE, false);
+		show_hidden = mSharedPref.getBoolean(KEY_SHOW_HIDDEN, true);
         cflags = mSharedPref.getString(KEY_CFLAGS, "-lm -Wall");
 		completion = mSharedPref.getString(KEY_COMPLETION, "s");
 		lsp_host = mSharedPref.getString(KEY_LSP_HOST, "127.0.0.1");

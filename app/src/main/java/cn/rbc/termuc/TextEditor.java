@@ -13,6 +13,8 @@ import cn.rbc.codeeditor.view.*;
 import cn.rbc.codeeditor.util.*;
 import cn.rbc.codeeditor.view.autocomplete.*;
 import cn.rbc.codeeditor.lang.*;
+import android.os.*;
+import android.text.*;
 
 public class TextEditor extends FreeScrollingTextField{
    // private Document _inputtingDoc;
@@ -57,19 +59,15 @@ public class TextEditor extends FreeScrollingTextField{
     }
 
     private void init() {
-        //setVerticalScrollBarEnabled(true);
+        setVerticalScrollBarEnabled(true);
         setTypeface(Typeface.MONOSPACE);
-        DisplayMetrics dm = mContext.getResources().getDisplayMetrics();
-        //设置字体大小
-        float size = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 16.f, dm);
-        setTextSize((int) size);
         setShowLineNumbers(true);
         setHighlightCurrentRow(true);
-        //setWordWrap(true);
         setAutoComplete(false);
         setAutoIndent(true);
         setUseGboard(true);
-        //setLanguage(LanguageC.getInstance());
+		setUseSpace(false);
+		//setAutoIndentWidth(2);
         setNavigationMethod(new YoyoNavigationMethod(this));
     }
 
@@ -198,6 +196,7 @@ public class TextEditor extends FreeScrollingTextField{
             moveCaret(newPosition);
         }
     }
+
 /*
     public void open(String filename) {
         _lastSelectFile = filename;
@@ -217,15 +216,6 @@ public class TextEditor extends FreeScrollingTextField{
     public void save(String file) {
         WriteThread writeThread = new WriteThread(getText().toString(), file, handler);
         writeThread.start();
-    }
-*
-    private void showToast(CharSequence text) {
-        if (toast == null) {
-            toast = Toast.makeText(mContext, text, Toast.LENGTH_SHORT);
-        } else {
-            toast.setText(text);
-        }
-        toast.show();
     }*/
 }
 

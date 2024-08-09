@@ -21,14 +21,16 @@ import android.util.*;
  * The programming language syntax used is set as a static class variable.
  */
 public class Tokenizer {
-    public final static int UNKNOWN = -1;
-    public final static int NORMAL = 0;
-    public final static int KEYWORD = 1;
-    public final static int OPERATOR = 2;
-    public final static int NAME = 3;
-    public final static int NUMBER = 4;
-	public final static int KEYNAME = 5;
-	public final static int TYPE = 6;
+    public final static int
+	UNKNOWN = -1,
+    NORMAL = 0,
+    KEYWORD = 1,
+    OPERATOR = 2,
+	NOTE = 3,
+    NAME = 4,
+    NUMBER = 5,
+	KEYNAME = 6,
+	TYPE = 7;
 	final static int NUM_HEX = 1;
 	final static int NUM_FLOAT = 2;
 	final static int NUM_EXP = 4;
@@ -88,8 +90,12 @@ public class Tokenizer {
     }
 
     public void tokenize(Document hDoc) {
-        if (!Tokenizer.getLanguage().isProgLang())
+        if (!Tokenizer.getLanguage().isProgLang()) {
+			List<Pair> tokens = new ArrayList<>();
+			tokens.add(new Pair(0, Tokenizer.NORMAL));
+			tokenizeDone(tokens);
             return;
+		}
 
         //tokenize will modify the state of hDoc; make a copy
         setDocument(hDoc);
@@ -190,32 +196,32 @@ public class Tokenizer {
 						switch (type)
 						{
 							case Lexer.KEYWORD:
-								tokens.add(new Pair(idx, Tokenizer.KEYWORD));
+								tokens.add(new Pair(idx, KEYWORD));
 								break;
 							case Lexer.TYPE:
-								tokens.add(new Pair(idx, Tokenizer.TYPE));
+								tokens.add(new Pair(idx, TYPE));
 								break;
 							case Lexer.COMMENT:
-								tokens.add(new Pair(idx, Tokenizer.DOUBLE_SYMBOL_DELIMITED_MULTILINE));
+								tokens.add(new Pair(idx, DOUBLE_SYMBOL_DELIMITED_MULTILINE));
 								break;
 								// macro
 							case Lexer.PRETREATMENT_LINE:
 							case Lexer.DEFINE_LINE:
-								tokens.add(new Pair(idx, Tokenizer.SINGLE_SYMBOL_LINE_A));
+								tokens.add(new Pair(idx, SINGLE_SYMBOL_LINE_A));
 								break;
 								// string, char
 							case Lexer.STRING_LITERAL:
 							case Lexer.CHARACTER_LITERAL:
-								tokens.add(new Pair(idx, Tokenizer.SINGLE_SYMBOL_DELIMITED_A));
+								tokens.add(new Pair(idx, SINGLE_SYMBOL_DELIMITED_A));
 								break;
 								// number
 							case Lexer.INTEGER_LITERAL:
 							case Lexer.FLOATING_POINT_LITERAL:
-								tokens.add(new Pair(idx, Tokenizer.NUMBER));
+								tokens.add(new Pair(idx, NUMBER));
 								break;
 							case Lexer.IDENTIFIER:
 								identifier=lexer.yytext();
-								tokens.add(new Pair(idx, Tokenizer.NORMAL));
+								tokens.add(new Pair(idx, NORMAL));
 								break;
 								// symbols
 							case Lexer.LPAREN:// (
@@ -224,6 +230,7 @@ public class Tokenizer {
 							case Lexer.RBRACK:// ]
 							case Lexer.LBRACE:// {
 							case Lexer.RBRACE:// }
+							case Lexer.DOT: // .
 							case Lexer.COMMA:// ,
 							case Lexer.WHITE_CHAR:// ' '
 							case Lexer.SEMICOLON:// ;
@@ -233,10 +240,10 @@ public class Tokenizer {
 									language.updateUserWord();
 									identifier=null;
 								}
-								tokens.add(new Pair(idx, Tokenizer.OPERATOR));
+								tokens.add(new Pair(idx, type==Lexer.OPERATOR ? OPERATOR : NOTE));
 								break;
 							default:
-								tokens.add(new Pair(idx, Tokenizer.NORMAL));
+								tokens.add(new Pair(idx, NORMAL));
 						}
 					lastCtype = type;
 					idx += lexer.yylength();

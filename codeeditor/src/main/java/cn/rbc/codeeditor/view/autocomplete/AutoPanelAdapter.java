@@ -93,8 +93,8 @@ public class AutoPanelAdapter extends BaseAdapter  {
         boolean isDarkMode = mTextFiled.getColorScheme().isDark();
         log(text);
 		int t;
-        if ((t=text.indexOf('(')) >= 0) {
-            //函数
+		if ((t=text.indexOf(tp==15?' ':'(')) >= 0) {
+            // 宏、函数
             ForegroundColorSpan argsForegroundColorSpan = null;
             spannableString = new SpannableString(text);
             if(isDarkMode) {
@@ -106,20 +106,8 @@ public class AutoPanelAdapter extends BaseAdapter  {
             }
             spannableString.setSpan(foregroundColorSpan, 0, t, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             spannableString.setSpan(argsForegroundColorSpan, t, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        } else if (tp == 14) {
-            //关键字
-            //    if(setting.isDarkMode()) {
-            //       foregroundColorSpan = new ForegroundColorSpan(Color.YELLOW);
-            //   }
-            //     else{
-            foregroundColorSpan = new ForegroundColorSpan(mAutoComplete._textColor);
-            //    }
-          //  text = text.substring(3);
-            spannableString = new SpannableString(text);
-			spannableString.setSpan(new StyleSpan(Typeface.BOLD), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            spannableString.setSpan(foregroundColorSpan, 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         } else {
-            //其他
+            // 其他
             spannableString = new SpannableString(text);
             //    if(setting.isDarkMode()) {
             //          foregroundColorSpan = new ForegroundColorSpan(Color.WHITE);
@@ -127,6 +115,8 @@ public class AutoPanelAdapter extends BaseAdapter  {
             //    else{
             foregroundColorSpan = new ForegroundColorSpan(mAutoComplete._textColor);
             //    }
+			if (tp == 14) // 关键字
+				spannableString.setSpan(new StyleSpan(Typeface.BOLD), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             spannableString.setSpan(foregroundColorSpan, 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
         textView.setText(spannableString);

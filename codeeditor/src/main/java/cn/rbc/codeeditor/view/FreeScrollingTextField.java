@@ -112,7 +112,9 @@ import java.util.*;
  * this extra char. Some bounds manipulation is done so that this implementation
  * detail is hidden from client classes.
  */
-public abstract class FreeScrollingTextField extends View implements Document.TextFieldMetrics {
+public abstract class FreeScrollingTextField extends View
+	implements Document.TextFieldMetrics, OnRowChangedListener, OnSelectionChangedListener,
+	DialogInterface.OnDismissListener, Runnable {
 
     //---------------------------------------------------------------------
     //--------------------------  Caret Scroll  ---------------------------
@@ -255,14 +257,8 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
     private boolean isLayout = false;
     private boolean isTextChanged = false;
     private boolean isCaretScrolled = false;
-    private final Runnable mScrollCaretDownTask = new Runnable() {
-        @Override
-        public void run() {
-            mCtrlr.moveCaretDown();
-            if (!caretOnLastRowOfFile())
-                postDelayed(mScrollCaretDownTask, SCROLL_PERIOD);
-        }
-    };
+	private boolean useSpace = false;
+    private final Runnable mScrollCaretDownTask = this;
     private final Runnable mScrollCaretUpTask = new Runnable() {
         @Override
         public void run() {
@@ -471,22 +467,9 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 		mSizeMin = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 8.f, dm);
 		mSizeMax = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 32.f, dm);
 
-        mRowListener = new OnRowChangedListener() {
-            @Override
-            public void onRowChanged(int newRowIndex) {
-                // Do nothing
-            }
-        };
+        mRowListener = this;
 
-        selLis = new OnSelectionChangedListener() {
-            @Override
-            public void onSelectionChanged(boolean active, int selStart, int selEnd) {
-                if (active)
-                    mClipboardPanel.show();
-                else
-                    mClipboardPanel.hide();
-            }
-        };
+        selLis = this;
 
         resetView();
         mClipboardPanel = new ClipboardPanel(this);
@@ -495,6 +478,23 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
         setScrollContainer(true);
         invalidate();
     }
+
+	public void run() {
+		mCtrlr.moveCaretDown();
+		if (!caretOnLastRowOfFile())
+			postDelayed(mScrollCaretDownTask, SCROLL_PERIOD);
+	}
+
+	public void onRowChanged(int newRowIndex) {
+		// Do nothing
+	}
+
+	public void onSelectionChanged(boolean active, int selStart, int selEnd) {
+		if (active)
+			mClipboardPanel.show();
+		else
+			mClipboardPanel.hide();
+	}
 
 	public void onNewLine(String s, int caretPosition, int pos) {
 		isTextChanged = true;
@@ -816,7 +816,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 		// row by row
 		int rowEnd = 0;
         for (m=-1; currRowNum <= endRowNum && currIndex < mL; currRowNum++) {
-
 			if (showLN && currLineNum != lastLineNum) {
                 String num = String.valueOf(currLineNum);
 				int padx = (int) (mLeftOffset - mTextPaint.measureText(num) - mSpaceWidth);
@@ -832,18 +831,14 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
                 // check if formatting changes are needed
                 if (reachedNextSpan(currIndex, nextSpan)) {
                     currSpan = nextSpan;
-
 					lastType = currType;
 					currType = currSpan.second;
-
                     spanColor = mColorScheme.getTokenColor(currSpan.second);
                     mTextPaint.setColor(spanColor);
 					if (lastType != currType) {
                         Typeface currTypeface = currType==Tokenizer.KEYWORD ? boldTypeface : defTypeface;
-
                         if (mTextPaint.getTypeface() != currTypeface)
                             mTextPaint.setTypeface(currTypeface);
-
                         spanColor = mColorScheme.getTokenColor(currType);
                         mTextPaint.setColor(spanColor);
                     }
@@ -1314,7 +1309,6 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
 
         int charLeft = visibleRange.first;
         int charRight = visibleRange.second;
-
 
         if (isCaretScrolled) {
             // 拖动水滴滚动在距离SCROLL_EDGE_SLOP / 3的时候就开始滚动
@@ -2028,6 +2022,17 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
             invalidate();
     }
 
+	public int getTabSpaces() {
+		return mTabLength;
+	}
+
+	public void setUseSpace(boolean enable) {
+		useSpace = enable;
+	}
+
+	public boolean isUseSpace() {
+		return useSpace;
+	}
     /**
      * Enable/disable auto-indent
      */
@@ -2197,26 +2202,28 @@ public abstract class FreeScrollingTextField extends View implements Document.Te
      *                   with the user-selected char. If false, the user-selected char will
      *                   be inserted at the caret position.
      */
+	private boolean mTransBool;
+	private CharSequence mTransTx;
+
     private void showCharacterPicker(String candidates, boolean replace) {
-        final boolean shouldReplace = replace;
-        final SpannableStringBuilder dummyString = new SpannableStringBuilder();
+        mTransBool = replace;
+        SpannableStringBuilder dummyString = new SpannableStringBuilder();
         Selection.setSelection(dummyString, 0);
 
         CharacterPickerDialog dialog = new CharacterPickerDialog(getContext(),
 																 this, dummyString, candidates, true);
-
-        dialog.setOnDismissListener(new OnDismissListener() {
-				@Override
-				public void onDismiss(DialogInterface dialog) {
-					if (dummyString.length() > 0) {
-						if (shouldReplace)
-							mCtrlr.onPrintableChar(Language.BACKSPACE);
-						mCtrlr.onPrintableChar(dummyString.charAt(0));
-					}
-				}
-			});
+		mTransTx = dummyString;
+        dialog.setOnDismissListener(this);
         dialog.show();
     }
+
+	public void onDismiss(DialogInterface dialog) {
+		if (mTransTx.length() > 0) {
+			if (mTransBool)
+				mCtrlr.onPrintableChar(Language.BACKSPACE);
+			mCtrlr.onPrintableChar(mTransTx.charAt(0));
+		}
+	}
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {

@@ -15,6 +15,7 @@
 		android:maxLines="1"
 		android:hint="@string/find_"
 		android:id="@+id/search_edit"
+		android:imeOptions="actionSearch"
 		android:layout_weight="1.0"/>
 
 </LinearLayout>

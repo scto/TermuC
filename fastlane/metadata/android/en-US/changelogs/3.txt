@@ -1,0 +1,6 @@
+• Update target API to 30 (Android 10)
+• Update color schemas
+• Support opening any text files
+• Add 'Default font size' and 'Show hidden files' options
+• Fix bugs when connecting to language server
+• Fix bugs that modifications are lost while rotating or etc

@@ -23,7 +23,7 @@ import android.content.pm.*;
 public class MainActivity extends Activity implements
 	ActionBar.OnNavigationListener, OnGlobalLayoutListener,
 	AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener,
-	DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener {
+	DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 
     private ArrayAdapter<String> hda;
 	private FileAdapter adp;
@@ -39,6 +39,7 @@ public class MainActivity extends Activity implements
 	private ActionBar ab;
 	private SearchAction mSearchAction;
 	private String transStr;
+	private Dialog transDlg;
 	private static MainHandler hand;
 	public static Lsp lsp;
 
@@ -89,7 +90,8 @@ public class MainActivity extends Activity implements
 		setContentView(R.layout.activity_main);
 		requestPermissions(new String[]{
 			android.Manifest.permission.READ_EXTERNAL_STORAGE,
-			android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+			android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+			android.Manifest.permission.MANAGE_EXTERNAL_STORAGE
 		}, PackageManager.PERMISSION_GRANTED);
         showlist = findViewById(R.id.show_list);
 		keys = findViewById(R.id.keys);
@@ -103,7 +105,6 @@ public class MainActivity extends Activity implements
 		l.setAdapter(adp);
 		l.setOnItemClickListener(this);
 		l.setOnItemLongClickListener(this);
-		refresh();
 		mSearchAction = new SearchAction(this);
     }
 
@@ -112,7 +113,8 @@ public class MainActivity extends Activity implements
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 		if (requestCode==PackageManager.PERMISSION_GRANTED
 			&& grantResults[0]==requestCode
-			&& grantResults[1]==requestCode)
+			&& grantResults[1]==requestCode
+			&& grantResults[2]==requestCode)
 			refresh();
 	}
 
@@ -149,26 +151,28 @@ public class MainActivity extends Activity implements
 			pwd = new File(pwd, _it);
 			if (pwd.isFile()) {
 				_it = pwd.getAbsolutePath();
-				int _i = hda.getCount(), _idx = -1;
+				int _i = hda.getCount(), _tp = -1;
 				if (mFmgr.findFragmentByTag(_it)!=null) {
 					for (_i--; -1<_i && !_it.equals(hda.getItem(_i)); _i--);
 				} else {
 					if (_it.endsWith(".c"))
-						_idx = EditFragment.TYPE_C;
-					else if (_it.endsWith(".cpp"))
-						_idx = EditFragment.TYPE_CPP;
+						_tp = EditFragment.TYPE_C;
+					else if (_it.endsWith(".cpp")||_it.endsWith(".cxx"))
+						_tp = EditFragment.TYPE_CPP;
 					else if (_it.endsWith(".h"))
-						_idx = EditFragment.TYPE_H;
+						_tp = EditFragment.TYPE_C|EditFragment.TYPE_HEADER;
 					else if (_it.endsWith(".hpp"))
-						_idx = EditFragment.TYPE_HPP;
+						_tp = EditFragment.TYPE_CPP|EditFragment.TYPE_HEADER;
+					else if (!Utils.isBlob(pwd))
+						_tp = EditFragment.TYPE_OTHER|EditFragment.TYPE_HEADER;
 					else
 						_i = -1;
-					if (_idx != -1) {
+					if (_tp != -1) {
 						if (!inited) {
 							lsp.initialize();
 							inited = true;
 						}
-						EditFragment ef = new EditFragment(pwd.getPath(), _idx);
+						EditFragment ef = new EditFragment(pwd.getPath(), _tp);
 						FragmentTransaction mts = mFmgr.beginTransaction()
 							.add(R.id.editFrag, ef, _it);
 						if (lastFrag!=null)
@@ -185,7 +189,7 @@ public class MainActivity extends Activity implements
 							ab.setDisplayShowTitleEnabled(false);
 							msgEmpty.setVisibility(View.GONE);
 						}
-						_appmenu.findItem(R.id.run).setEnabled(_idx<2);
+						setFileRunnable(((_tp&EditFragment.TYPE_HEADER)==0));
 					}
 				}
 				if (_i != -1) {
@@ -212,18 +216,17 @@ public class MainActivity extends Activity implements
 
 	@Override
 	public boolean onMenuItemClick(MenuItem p1) {
-		new AlertDialog.Builder(MainActivity.this)
+		new AlertDialog.Builder(this)
 			.setTitle(R.string.delete)
 			.setMessage(getString(R.string.confirm_delete, transStr))
 			.setNegativeButton(android.R.string.cancel, null)
-			.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener(){
-				public void onClick(DialogInterface di, int id) {
-					if (new File(pwd, transStr).delete())
-						refresh();
-				}
-			})
+			.setPositiveButton(android.R.string.ok, this)
 			.create().show();
 		return true;
+	}
+
+	void setFileRunnable(boolean exec) {
+		_appmenu.findItem(R.id.run).setVisible(exec);
 	}
 
     @Override
@@ -232,10 +235,11 @@ public class MainActivity extends Activity implements
             case R.id.run:
                 try {
                     lastFrag.save();
-					lsp.didSave(lastFrag.getFile());
-                    Utils.run(this, new StringBuffer(Utils.PREF).append("/usr/bin/bash").toString(), new String[]{"-c",
+					if ((lastFrag.type&EditFragment.TYPE_MASK)!=EditFragment.TYPE_OTHER)
+						lsp.didSave(lastFrag.getFile());
+                    Utils.run(this, new StringBuilder(Utils.PREF).append("/usr/bin/bash").toString(), new String[]{"-c",
 					new StringBuffer(lastFrag.getC())
-					.append(" \"").append(escape(lastFrag.getFile().getAbsolutePath())).append("\" ")
+					.append(" \"").append(Utils.escape(lastFrag.getFile().getAbsolutePath())).append("\" ")
 					.append(Settings.cflags).append(" -o $TMPDIR/m && $TMPDIR/m && echo -n \"\nPress any key to exit...\" && read").toString()},
 					pwd.getPath(), false);
                 } catch (IOException e) {
@@ -251,7 +255,8 @@ public class MainActivity extends Activity implements
             case R.id.save:
 				try {
 					lastFrag.save();
-					lsp.didSave(lastFrag.getFile());
+					if ((lastFrag.type&EditFragment.TYPE_MASK)!=EditFragment.TYPE_OTHER)
+						lsp.didSave(lastFrag.getFile());
 					toast(getText(R.string.saved));
 				} catch(IOException e) {
 					e.printStackTrace();
@@ -292,9 +297,19 @@ public class MainActivity extends Activity implements
 
     public void inputKey(View view) {
         String charSequence = ((TextView) view).getText().toString();
-        if ("⇥".equals(charSequence))
-            charSequence = "\t";
-		codeEditor.selectText(false);
+        if ("⇥".equals(charSequence)) {
+			if (codeEditor.isUseSpace()) {
+				int tabLen = codeEditor.getTabSpaces();
+				int pos = codeEditor.getCaretPosition();
+				Document doc = codeEditor.getText();
+				int l = doc.findLineNumber(pos);
+				int of = doc.getLineOffset(l);
+				char[] cs = new char[tabLen-(pos-of)%tabLen];
+				Arrays.fill(cs, ' ');
+				charSequence = new String(cs);
+			} else
+            	charSequence = "\t";
+		}
 		codeEditor.getText().setTyping(true);
         codeEditor.paste(charSequence);
     }
@@ -343,24 +358,33 @@ public class MainActivity extends Activity implements
     }
 
 	@Override
-	public void onClick(DialogInterface p1, int p2) {
-		try {
-			File f = new File(pwd, transTxV.getText().toString());
-			if (p2 == DialogInterface.BUTTON_POSITIVE)
-				f.createNewFile();
-			else
-				f.mkdir();
-			refresh();
-		} catch (IOException e) {
-			e.printStackTrace();
-			toast(e.getMessage());
-		}
+	public void onClick(DialogInterface di, int id) {
+		ProgressDialog pd = new ProgressDialog(MainActivity.this);
+		pd.setMessage(getString(R.string.deleting, transStr));
+		pd.setIndeterminate(true);
+		pd.show();
+		transDlg = pd;
+		new Thread(this).start();
+	}
+
+	public void run(){
+		final boolean ok = Utils.removeFiles(new File(pwd, transStr));
+		runOnUiThread(new Runnable(){
+				public void run(){
+					if (ok) {
+						toast(getText(R.string.deleted));
+						refresh();
+					}
+					transDlg.dismiss();
+				}
+			});
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 		// Apply Prefs for Edits
+		refresh();
 		for (Fragment f:mFmgr.getFragments()) {
 			TextEditor ed = (TextEditor)f.getView();
 			ed.setWordWrap(Settings.wordwrap);
@@ -369,14 +393,30 @@ public class MainActivity extends Activity implements
 		}
 	}
 
+	private DialogInterface.OnClickListener onc = new DialogInterface.OnClickListener(){
+		public void onClick(DialogInterface p1, int p2) {
+			try {
+				File f = new File(pwd, transTxV.getText().toString());
+				if (p2 == DialogInterface.BUTTON_POSITIVE)
+					f.createNewFile();
+				else
+					f.mkdir();
+				refresh();
+			} catch (IOException e) {
+				e.printStackTrace();
+				toast(e.getMessage());
+			}
+		}
+	};
+
     public void createFile(View view) {
         View inflate = View.inflate(this, R.layout.edit, null);
         transTxV = inflate.findViewById(R.id.edit_name);
 		new AlertDialog.Builder(this)
 		.setTitle(R.string.new_)
 		.setView(inflate)
-		.setPositiveButton(R.string.file, this)
-		.setNeutralButton(R.string.folder, this)
+		.setPositiveButton(R.string.file, onc)
+		.setNeutralButton(R.string.folder, onc)
 		.setNegativeButton(android.R.string.cancel, null)
 		.create().show();
     }
@@ -400,16 +440,13 @@ public class MainActivity extends Activity implements
         super.onStop();
     }
 
-    private static String escape(String str) {
-        return str.replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$").replace("\"", "\\\"");
-    }
-
-    public void toast(CharSequence charSequence) {
+    private void toast(CharSequence charSequence) {
         HelperUtils.show(Toast.makeText(this, charSequence, 0));
     }
 
     public void showList(View view) {
-        subc.setVisibility(subc.getVisibility()==View.VISIBLE?View.GONE:View.VISIBLE);
+		View v = subc;
+        v.setVisibility(v.getVisibility()==View.VISIBLE?View.GONE:View.VISIBLE);
     }
 
 	public void setEditor(TextEditor edit) {

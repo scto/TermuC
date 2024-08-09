@@ -29,12 +29,17 @@
 	<string name="file">文件</string>
 	<string name="folder">文件夹</string>
 	<string name="saved">已保存</string>
+	<string name="deleting">正在删除 %s</string>
+	<string name="deleted">已删除</string>
 	<string name="open_failed">打开失败！</string>
 	<string name="browse_files">浏览文件</string>
 	<string name="hint_filename">名称（例如 main.cpp）</string>
 	<string name="new_f">新建文件（夹）</string>
 	<string name="find_">查找…</string>
-	<string name="next">向后</string>
-	<string name="prev">向前</string>
+	<string name="next">下一个</string>
+	<string name="prev">上一个</string>
 	<string name="find_completed">查找结束</string>
+	<string name="file_browser">文件浏览器</string>
+	<string name="show_hidden">显示隐藏文件</string>
+	<string name="textsize">默认字号</string>
 </resources>

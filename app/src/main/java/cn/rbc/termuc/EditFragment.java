@@ -11,18 +11,22 @@ import cn.rbc.codeeditor.util.*;
 import cn.rbc.codeeditor.lang.c.*;
 import cn.rbc.codeeditor.view.*;
 import android.content.*;
+import android.content.res.*;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 
 public class EditFragment extends Fragment
-implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
+implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter, Runnable
 {
-	public final static int TYPE_C = 0;
-	public final static int TYPE_CPP = 1;
-	public final static int TYPE_H = 2;
-	public final static int TYPE_HPP = 3;
-	final static String FL = "f", TP = "t";
+	public final static int TYPE_C = 1;
+	public final static int TYPE_CPP = 2;
+	public final static int TYPE_HEADER = 0x80000000;
+	public final static int TYPE_OTHER = 0;
+	public final static int TYPE_MASK = 0x7fffffff;
+	final static String FL = "f", TP = "t", CS = "c", TS = "s";
 	private File fl;
 	private TextEditor ed;
-	int type;
+	int type = -1;
 	private String C = "clang";
 	private long lastModified;
 	private java.util.List<Range> changes = new java.util.ArrayList<>();
@@ -31,49 +35,51 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 	}
 
 	public EditFragment(String path, int type) {
-		Bundle bd = new Bundle();
-		bd.putString(FL, path);
-		bd.putInt(TP, type);
-		setArguments(bd);
+		fl = new File(path);
+		this.type = type;
 	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
-		setRetainInstance(true);
-		Bundle arg = getArguments();
-		if (arg == null)
-			return null;
-		fl = new File(arg.getString(FL));
-		lastModified = fl.lastModified();
-		type = arg.getInt(TP);
 		final MainActivity ma = (MainActivity)getActivity();
 		TextEditor editor = new TextEditor(ma);
 		ed = editor;
-		editor.setVerticalScrollBarEnabled(true);
 		if (Settings.dark_mode)
 			editor.setColorScheme(ColorSchemeDark.getInstance());
+		DisplayMetrics dm = getResources().getDisplayMetrics();
+		editor.setTextSize((int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, Settings.textsize, dm));
 		editor.setWordWrap(Settings.wordwrap);
 		editor.setShowNonPrinting(Settings.whitespace);
 		editor.setLayoutParams(new FrameLayout.LayoutParams(
-			FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-		if ("s".equals(Settings.completion))
-			editor.setFormatter(this);
-		try {
+								   FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+		if (savedInstanceState!=null) {
+			fl = new File((String)savedInstanceState.getCharSequence(FL));
+			type = savedInstanceState.getInt(TP, type);
+			editor.setDocument((Document)savedInstanceState.getCharSequence(CS));
+			editor.setTextSize(savedInstanceState.getInt(TS));
+		} else try {
 			String s = load();
-			if ((type&1) == 0) {
+			int tp = type&TYPE_MASK;
+			if (tp == TYPE_C) {
 				C = "clang";
 				editor.setLanguage(CLanguage.getInstance());
-			} else {
+			} else if (tp == TYPE_CPP) {
 				C = "clang++";
 				editor.setLanguage(CppLanguage.getInstance());
+			} else {
+				editor.setLanguage(LanguageNonProg.getInstance());
 			}
 			ma.setEditor(editor);
-			MainActivity.lsp.didOpen(fl, (type&1)==1?"cpp":"c", s);
+			if (tp != TYPE_OTHER)
+				MainActivity.lsp.didOpen(fl, tp==TYPE_CPP?"cpp":"c", s);
 		} catch(IOException fnf) {
 			fnf.printStackTrace();
-			Toast.makeText(ma, R.string.open_failed, Toast.LENGTH_SHORT).show();
+			HelperUtils.show(Toast.makeText(ma, R.string.open_failed, Toast.LENGTH_SHORT));
 		}
+		if ((type&TYPE_MASK)!=TYPE_OTHER && "s".equals(Settings.completion))
+			editor.setFormatter(this);
+		lastModified = fl.lastModified();
 		return editor;
 	}
 
@@ -90,7 +96,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 	public CharSequence format(CharSequence txt, int width) {
 		int start = ed.getSelectionStart(), end = ed.getSelectionEnd();
 		if (start==end)
-			MainActivity.lsp.formatting(fl, width);
+			MainActivity.lsp.formatting(fl, width, ed.isUseSpace());
 		else {
 			Range range = new Range();
 			Document text = ed.getText();
@@ -107,16 +113,18 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 			}
 			range.stc = start - range.stc;
 			range.enc = end - range.enc;
-			MainActivity.lsp.rangeFormatting(fl, range, width);
+			MainActivity.lsp.rangeFormatting(fl, range, width, ed.isUseSpace());
 		}
 		return null;
 	}
 
-	//private int lastVer = -1;
+	private int mVer;
+	private long mSendTime;
 
-	public void onChanged(CharSequence c, int start, final int ver, boolean ins, boolean typ) {
-		Document text = ed.getText();
-		boolean wordwrap = ed.isWordWrap();
+	public void onChanged(CharSequence c, int start, int ver, boolean ins, boolean typ) {
+		TextEditor editor = ed;
+		Document text = editor.getText();
+		boolean wordwrap = editor.isWordWrap();
 		Range range = new Range();
 		if (wordwrap) {
 			range.stl = text.findLineNumber(start);
@@ -153,16 +161,17 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		if (ins && typ && c.length()==1)
 			lsp.completionTry(fl, range.enl, range.enc+1, c.charAt(0));
 		changes.clear();
-		ed.postDelayed(new Runnable(){
-			long sendTime = System.currentTimeMillis();
-			public void run() {
-				Lsp lsp = MainActivity.lsp;
-				if (lsp.lastReceivedTime()<sendTime) {
-					lsp.didChange(fl, ver, ed.getText().toString());
-				}
-			}
-		}, 1000L);
+		mVer = ver;
+		mSendTime = System.currentTimeMillis();
+		editor.postDelayed(this, 1000L);
 		//}
+	}
+
+	public void run() {
+		Lsp lsp = MainActivity.lsp;
+		if (lsp.lastReceivedTime()<mSendTime) {
+			lsp.didChange(fl, mVer, ed.getText().toString());
+		}
 	}
 
 	@Override
@@ -191,24 +200,38 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 	}
 
 	@Override
-	public void onHiddenChanged(boolean hidden)
-	{
+	public void onHiddenChanged(boolean hidden) {
 		super.onHiddenChanged(hidden);
 		if (!hidden) {
-			((MainActivity)getActivity()).setEditor(ed);
-			if ((type&1) == 0) {// C
+			MainActivity ma = (MainActivity)getActivity();
+			ma.setEditor(ed);
+			ma.setFileRunnable((type&TYPE_HEADER)==0);
+			int tp = type&TYPE_MASK;
+			if (tp == TYPE_C) {// C
 				ed.setLanguage(CLanguage.getInstance());
 				C = "clang";
-			} else {
+			} else if (tp == TYPE_CPP) {
 				ed.setLanguage(CppLanguage.getInstance());
 				C = "clang++";
+			} else {
+				ed.setLanguage(LanguageNonProg.getInstance());
 			}
 		}
+	}
+
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putCharSequence(CS, ed.getText());
+		outState.putCharSequence(FL, fl.getAbsolutePath());
+		outState.putInt(TP, type);
+		outState.putInt(TS, (int)ed.getTextSize());
 	}
 
 	public void save() throws IOException {
         FileWriter fileWriter = new FileWriter(fl);
         fileWriter.write(ed.getText().toString());
+		fileWriter.flush();
         fileWriter.close();
 		lastModified = fl.lastModified();
     }
@@ -223,7 +246,8 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		fr.close();
 		String s = sb.toString();
 		ed.setText(s);
-		ed.getText().setOnTextChangeListener(this);
+		if ((type&TYPE_MASK)!=TYPE_OTHER)
+			ed.getText().setOnTextChangeListener(this);
 		return s;
 	}
 

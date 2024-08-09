@@ -7,7 +7,7 @@ import android.widget.*;
 import android.text.*;
 import cn.rbc.codeeditor.util.*;
 
-public class SearchAction implements ActionMode.Callback, TextWatcher {
+public class SearchAction implements ActionMode.Callback, TextWatcher, TextView.OnEditorActionListener {
 	private MainActivity ma;
 	private EditText e;
 	private Document dp;
@@ -37,6 +37,7 @@ public class SearchAction implements ActionMode.Callback, TextWatcher {
 		} else
 			idx = 0;
 		e.addTextChangedListener(this);
+		e.setOnEditorActionListener(this);
 		e.requestFocus();
 		p1.setCustomView(v);
 		dp = ma.getEditor().getText();
@@ -45,13 +46,18 @@ public class SearchAction implements ActionMode.Callback, TextWatcher {
 	}
 
 	public boolean onActionItemClicked(ActionMode p1, MenuItem p2) {
+		search(p2.getItemId());
+		return false;
+	}
+
+	private void search(int id) {
 		int i;
-		Editable ed = e.getText();
+		CharSequence ed = e.getText();
 		int len = ed.length();
 		if (len==0)
-			return false;
+			return;
 		TextEditor te = ma.getEditor();
-		if (p2.getItemId()==R.id.menu_last) {
+		if (id==R.id.menu_last) {
 			i = rindexDoc(ed, idx-1);
 		} else {
 			i = indexDoc(ed, idx+1);
@@ -64,7 +70,7 @@ public class SearchAction implements ActionMode.Callback, TextWatcher {
 			te.setSelection(i, len);
 			idx = i;
 		}
-		return false;
+		return;
 	}
 
 	public void beforeTextChanged(CharSequence cs, int p1, int p2, int p3) {
@@ -83,6 +89,12 @@ public class SearchAction implements ActionMode.Callback, TextWatcher {
 			idx = i;
 			ma.getEditor().setSelection(i, ed.length());
 		}
+	}
+
+	@Override
+	public boolean onEditorAction(TextView p1, int p2, KeyEvent p3) {
+		search(R.id.menu_next);
+		return true;
 	}
 
 	private int indexDoc(CharSequence cs, int idx) {
@@ -104,8 +116,7 @@ public class SearchAction implements ActionMode.Callback, TextWatcher {
 
 	private int rindexDoc(CharSequence cs, int idx) {
 		int len = cs.length();
-		int i;
-		for (i=idx; i>=0; i--) {
+		for (int i=idx; i>=0; i--) {
 			boolean b = true;
 			for (int k=0;k<len;k++) {
 				if (cs.charAt(k)!=dp.charAt(i+k)) {

@@ -254,7 +254,6 @@ public class TextBuffer implements CharSequence
 				}
 			}
 
-
 		if (offset == targetOffset) {
 			if(lastKnownLine != -1)
 				// cache the lookup entry

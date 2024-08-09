@@ -9,9 +9,9 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 {
 	private final static String TAG = "SettingsActivity";
 
-	private CheckBoxPreference mDarkModePref, mWordWrapPref, mWhitespacePref;
+	private CheckBoxPreference mDarkModePref, mWordWrapPref, mWhitespacePref, mShowHidden;
 	private EditTextPreference mCFlagsPref, mHost, mPort;
-	private ListPreference mEngine;
+	private ListPreference mSizePref, mEngine;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -25,10 +25,14 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 
 		mDarkModePref = (CheckBoxPreference)prefSet
 			.findPreference(getText(R.string.key_dark_mode));
+		mSizePref = (ListPreference)prefSet
+			.findPreference(getText(R.string.key_textsize));
 		mWordWrapPref = (CheckBoxPreference)prefSet
 			.findPreference(getText(R.string.key_wordwrap));
 		mWhitespacePref = (CheckBoxPreference)prefSet
 			.findPreference(getText(R.string.key_whitespace));
+		mShowHidden = (CheckBoxPreference)prefSet
+			.findPreference(getText(R.string.key_show_hidden));
 		mCFlagsPref = (EditTextPreference)prefSet
 			.findPreference(getText(R.string.key_cflags));
 		mEngine = (ListPreference)prefSet
@@ -38,8 +42,6 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 			.findPreference(getText(R.string.key_lsp_host));
 		mPort = (EditTextPreference)prefSet
 			.findPreference(getText(R.string.key_lsp_port));
-		//prefSet.setOnPreferenceChangeListener(this);
-
 		Settings.getInstance(PreferenceManager
 			.getDefaultSharedPreferences(getApplicationContext()));
 
@@ -86,6 +88,8 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 		Settings.dark_mode = mDarkModePref.isChecked();
 		Settings.wordwrap = mWordWrapPref.isChecked();
 		Settings.whitespace = mWhitespacePref.isChecked();
+		Settings.textsize = Integer.parseInt(mSizePref.getValue());
+		Settings.show_hidden = mShowHidden.isChecked();
 		Settings.cflags = mCFlagsPref.getText();
 		Settings.completion = mEngine.getValue();
 		Settings.lsp_host = mHost.getText();
@@ -95,8 +99,10 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 
 	private void updateWidget() {
 		mDarkModePref.setChecked(Settings.dark_mode);
+		mSizePref.setValue(Integer.toString(Settings.textsize));
 		mWordWrapPref.setChecked(Settings.wordwrap);
 		mWhitespacePref.setChecked(Settings.whitespace);
+		mShowHidden.setChecked(Settings.show_hidden);
 		mCFlagsPref.setText(Settings.cflags);
 		mEngine.setValue(Settings.completion);
 		mHost.setText(Settings.lsp_host);

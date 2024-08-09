@@ -2,12 +2,12 @@
     <string name="app_name">TermuC</string>
     <string name="settings">Settings</string>
     <string name="global">Global</string>
-    <string name="dark_mode">Dark Mode</string>
+    <string name="dark_mode">Dark mode</string>
     <string name="editor">Editor</string>
-    <string name="wordwrap">Word Wrap</string>
-    <string name="whitespace">Show Whitespaces</string>
+    <string name="wordwrap">Word wrap</string>
+    <string name="whitespace">Show whitespaces</string>
     <string name="compiler">Compiler</string>
-    <string name="cflags">Compiler Flags</string>
+    <string name="cflags">Compiler flags</string>
     <string name="run">Run</string>
     <string name="undo">Undo</string>
     <string name="redo">Redo</string>
@@ -16,19 +16,21 @@
     <string name="close">Close</string>
 	<string name="no_open_files">No Open Files</string>
 	<string name="analysis">Code Analysis</string>
-	<string name="completion">Auto Completion</string>
+	<string name="completion">Auto completion</string>
 	<string name="engine">Engine</string>
 	<string name="lang_serv">Language Server</string>
 	<string name="local">Local Snippets</string>
 	<string name="none">None</string>
-	<string name="lsp_host">Server Host</string>
-	<string name="lsp_port">Server Port</string>
+	<string name="lsp_host">Server host</string>
+	<string name="lsp_port">Server port</string>
     <string name="file_modified">The file %s has been modified. Do you want to reload it?</string>
 	<string name="confirm_delete">Do you want to delete %s?</string>
 	<string name="new_">New</string>
 	<string name="file">File</string>
 	<string name="folder">Folder</string>
 	<string name="saved">Saved</string>
+	<string name="deleting">Deleting %s</string>
+	<string name="deleted">Deleted</string>
 	<string name="open_failed">Open failed!</string>
 	<string name="browse_files">Browse Files</string>
 	<string name="hint_filename">Name (eg: main.cpp)</string>
@@ -37,6 +39,9 @@
 	<string name="next">Next</string>
 	<string name="prev">Prev</string>
 	<string name="find_completed">Find Completed</string>
+	<string name="file_browser">File Browser</string>
+	<string name="show_hidden">Show hidden files</string>
+	<string name="textsize">Default font size</string>
 	<string-array name="engine">
 		<item>@string/lang_serv</item>
 		<item>@string/local</item>
@@ -47,11 +52,40 @@
 		<item>l</item>
 		<item>n</item>
 	</string-array>
+	<string-array name="sizes">
+		<item>8</item>
+		<item>9</item>
+		<item>10</item>
+		<item>11</item>
+		<item>12</item>
+		<item>13</item>
+		<item>14</item>
+		<item>15</item>
+		<item>16</item>
+		<item>17</item>
+		<item>18</item>
+		<item>19</item>
+		<item>20</item>
+		<item>21</item>
+		<item>22</item>
+		<item>23</item>
+		<item>24</item>
+		<item>25</item>
+		<item>26</item>
+		<item>27</item>
+		<item>28</item>
+		<item>29</item>
+		<item>30</item>
+		<item>31</item>
+		<item>32</item>
+	</string-array>
 	<string name="key_dark_mode" translatable="false">darkmode</string>
+	<string name="key_textsize" translatable="false">textsize</string>
 	<string name="key_wordwrap" translatable="false">wordwrap</string>
 	<string name="key_whitespace" translatable="false">whitespace</string>
 	<string name="key_cflags" translatable="false">cflags</string>
 	<string name="key_completion" translatable="false">completion</string>
 	<string name="key_lsp_host" translatable="false">lsphost</string>
 	<string name="key_lsp_port" translatable="false">lspport</string>
+	<string name="key_show_hidden" translatable="false">showhidden</string>
 </resources>

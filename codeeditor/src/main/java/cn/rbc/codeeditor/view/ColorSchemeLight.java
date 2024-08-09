@@ -33,7 +33,11 @@ public class ColorSchemeLight extends ColorScheme {
 		setColor(Colorable.NUMBER, 0xFFAA2200);
 		//类型
 		setColor(Colorable.TYPE, BLUE_LIGHT); //0xFF2A40FF);
-		//符号
+		//操作符
+		setColor(Colorable.OPERATOR, 0xFF007C1F);
+		//标点
+		setColor(Colorable.NOTE, 0xFF0096FF);
+		//宏
 		setColor(Colorable.SECONDARY, GREY);
 		//光标
 		setColor(Colorable.CARET_DISABLED, 0xFF000000);

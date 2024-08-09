@@ -14,16 +14,19 @@ import java.util.List;
 import static cn.rbc.codeeditor.util.DLog.log;
 import android.util.*;
 import cn.rbc.codeeditor.util.*;
+import java.util.*;
+import android.widget.*;
 
 //*********************************************************************
 //************************ Controller logic ***************************
 //*********************************************************************
-public class TextFieldController implements Tokenizer.LexCallback {
+public class TextFieldController implements Tokenizer.LexCallback, Runnable {
     private final Tokenizer _lexer = new Tokenizer(this);
     public boolean _isInSelectionMode = false;
     private boolean _isInSelectionMode2;
 	public boolean lexing;
     private FreeScrollingTextField field;
+	private List<Pair> mRes;
 
     public TextFieldController(FreeScrollingTextField textField) {
         field = textField;
@@ -50,15 +53,15 @@ public class TextFieldController implements Tokenizer.LexCallback {
     @Override
     //This is usually called from a non-UI thread
     public void lexDone(final List<Pair> results) {
-        field.post(new Runnable() {
-				@Override
-				public void run() {
-					field.hDoc.setSpans(results);
-					lexing = false;
-					field.invalidate();
-				}
-			});
+		mRes = results;
+        field.post(this);
     }
+
+	public void run() {
+		field.hDoc.setSpans(mRes);
+		lexing = false;
+		field.invalidate();
+	}
 
     //- TextFieldController -----------------------------------------------
     //---------------------------- Key presses ----------------------------
@@ -72,9 +75,9 @@ public class TextFieldController implements Tokenizer.LexCallback {
             selectionDelete();
             selectionDeleted = true;
         }
-
-		int pos = field.mCaretPosition;
-		field.hDoc.setTyping(true);
+		FreeScrollingTextField fld = field;
+		int pos = fld.mCaretPosition;
+		fld.hDoc.setTyping(true);
         switch (c) {
             case Language.BACKSPACE:
                 if (selectionDeleted)
@@ -82,28 +85,41 @@ public class TextFieldController implements Tokenizer.LexCallback {
                 if (pos > 0) {
 					//pos--;
 					//char p;
-					int l = pos > 1 && ((c=field.hDoc.charAt(pos-2)) == 0xd83d || c == 0xd83c)? 2 : 1;
+					int l = pos > 1 && ((c = fld.hDoc.charAt(pos - 2)) == 0xd83d || c == 0xd83c) ? 2 : 1;
 					//String s = 
-                    field.hDoc.deleteAt(pos-l, l, System.nanoTime());
+                    fld.hDoc.deleteAt(pos - l, l, System.nanoTime());
                     /*if (pos>0 && field.hDoc.charAt(--pos) == 0xd83d || field.hDoc.charAt(pos) == 0xd83c) {
-                        field.hDoc.deleteAt(pos, System.nanoTime());
-                        moveCaretLeft(true);
-                    }*/
+					 field.hDoc.deleteAt(pos, System.nanoTime());
+					 moveCaretLeft(true);
+					 }*/
 
-                    field.onDel(String.valueOf(c), field.mCaretPosition, 1);
+                    fld.onDel(String.valueOf(c), fld.mCaretPosition, 1);
                     moveCaretLeft(true);
-					if (l==2)
+					if (l == 2)
 						moveCaretLeft(true);
                 }
                 break;
-
             case Language.NEWLINE:
-                if (field.isAutoIndent) {
+                if (fld.isAutoIndent) {
                     char[] indent = createAutoIndent();
                     field.hDoc.insertBefore(indent, pos, System.nanoTime());
                     moveCaret(field.mCaretPosition + indent.length);
 					break;
                 }
+				field.hDoc.insertBefore(new char[]{c}, pos, System.nanoTime());
+                moveCaretRight(true);
+                field.onAdd(String.valueOf(c), pos, 1);
+				break;
+			case Language.TAB:
+				if (fld.isUseSpace()) {
+					int tl = fld.mTabLength;
+					char[] cs = new char[tl - pos % tl];
+					Arrays.fill(cs, ' ');
+					field.hDoc.insertBefore(cs, pos, System.nanoTime());
+					moveCaret(pos + cs.length);
+					field.onAdd(new String(cs), pos, cs.length);
+					break;
+				}
             default:
                 field.hDoc.insertBefore(new char[]{c}, pos, System.nanoTime());
                 moveCaretRight(true);
@@ -122,40 +138,48 @@ public class TextFieldController implements Tokenizer.LexCallback {
      * 创建自动缩进
      */
     private char[] createAutoIndent() {
-        int lineNum = field.hDoc.findLineNumber(field.mCaretPosition);
-        int startOfLine = field.hDoc.getLineOffset(lineNum);
+		Document doc = field.hDoc;
+		int pos = field.mCaretPosition;
+        int lineNum = doc.findLineNumber(pos);
+        int startOfLine = doc.getLineOffset(lineNum);
         int whitespaceCount = 0;
         //查找上一行的空白符个数
-		int i, mL = field.hDoc.getTextLength();
+		int i, mL = doc.getTextLength(), mTL = field.mTabLength;
 		char c;
-        for (i=startOfLine; i<mL;) {
-            c = field.hDoc.charAt(i++);
-            if ((c != ' ' && c != Language.TAB) || startOfLine + whitespaceCount >= field.mCaretPosition)
+        for (i = startOfLine; i < pos;) {
+            c = doc.charAt(i++);
+            if (c != ' ' && c != Language.TAB)
                 break;
             if (c == Language.TAB)
-                whitespaceCount += field.getAutoIndentWidth();
+                whitespaceCount += mTL-whitespaceCount%mTL;
             else if (c == ' ')
                 ++whitespaceCount;
         }
         //寻找最后字符
         int endChar = 0;
-        for (i=startOfLine;i<mL;) {
-            c = field.hDoc.charAt(i++);
+        for (i = startOfLine;i < mL;) {
+            c = doc.charAt(i++);
             if (c == Language.NEWLINE)
                 break;
             endChar = c;
         }
         //最后字符为'{',缩进
         if (endChar == '{')
-            whitespaceCount += field.getAutoIndentWidth();
+            whitespaceCount += field.mAutoIndentWidth;
         if (whitespaceCount < 0)
             return new char[]{Language.NEWLINE};
-
-        char[] indent = new char[1 + whitespaceCount];
-        indent[0] = Language.NEWLINE;
-
-        for (i = 0; i < whitespaceCount; ++i)
-            indent[1 + i] = ' ';
+		char[] indent;
+		if (field.isUseSpace()) {
+			indent = new char[1 + whitespaceCount];
+			indent[0] = Language.NEWLINE;
+			Arrays.fill(indent, 1, indent.length, ' ');
+		} else {
+			int tl = 1 + whitespaceCount / mTL;
+			indent = new char[tl + whitespaceCount % mTL];
+			indent[0] = Language.NEWLINE;
+			Arrays.fill(indent, 1, tl, Language.TAB);
+			Arrays.fill(indent, tl, indent.length, ' ');
+		}
         return indent;
     }
 
@@ -169,11 +193,11 @@ public class TextFieldController implements Tokenizer.LexCallback {
             int newRowLength = field.hDoc.getRowSize(newRow);
 
             if (currColumn < newRowLength)
-                // Position at the same column as old row.
+			// Position at the same column as old row.
                 field.mCaretPosition += currRowLength;
             else
-                // Column does not exist in the new row (new row is too short).
-                // Position at end of new row instead.
+			// Column does not exist in the new row (new row is too short).
+			// Position at end of new row instead.
                 field.mCaretPosition +=
 					currRowLength - currColumn + newRowLength - 1;
             ++field.mCaretRow;
@@ -197,11 +221,11 @@ public class TextFieldController implements Tokenizer.LexCallback {
             int newRowLength = field.hDoc.getRowSize(newRow);
 
             if (currColumn < newRowLength)
-                // Position at the same column as old row.
+			// Position at the same column as old row.
                 field.mCaretPosition -= newRowLength;
             else
-                // Column does not exist in the new row (new row is too short).
-                // Position at end of new row instead.
+			// Column does not exist in the new row (new row is too short).
+			// Position at end of new row instead.
                 field.mCaretPosition -= (currColumn + 1);
             --field.mCaretRow;
 
@@ -353,7 +377,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
 			"Invalid range to select");
 
         if (_isInSelectionMode)
-            // unhighlight previous selection
+		// unhighlight previous selection
             field.invalidateSelectionRows();
         else {
             // unhighlight caret
@@ -375,8 +399,8 @@ public class TextFieldController implements Tokenizer.LexCallback {
         boolean scrolled = field.makeCharVisible(field.mSelectionEdge);
 
         if (scrollToStart)
-            //TODO reduce unnecessary scrolling and write a method to scroll
-            // the beginning of multi-line selections as far left as possible
+		//TODO reduce unnecessary scrolling and write a method to scroll
+		// the beginning of multi-line selections as far left as possible
             scrolled = field.makeCharVisible(field.mSelectionAnchor);
 
         if (!scrolled)
@@ -450,7 +474,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
         if (_isInSelectionMode &&
 			field.mSelectionAnchor < field.mSelectionEdge) {
             CharSequence contents = field.hDoc.subSequence(field.mSelectionAnchor,
-															field.mSelectionEdge - field.mSelectionAnchor);
+														   field.mSelectionEdge - field.mSelectionAnchor);
             cb.setText(contents);
         }
     }
@@ -518,10 +542,10 @@ public class TextFieldController implements Tokenizer.LexCallback {
                 }
 
                 if (isSingleRowSel && !field.hDoc.isWordWrap())
-                    //pasted text only affects current row
+				//pasted text only affects current row
                     field.invalidateRows(invalidateStartRow, invalidateStartRow + 1);
                 else
-                    //TODO invalidate damaged rows only
+				//TODO invalidate damaged rows only
                     field.invalidateFromRow(invalidateStartRow);
             }
         } else {
@@ -603,10 +627,10 @@ public class TextFieldController implements Tokenizer.LexCallback {
                 --invalidateStartRow;
 
             if (isInvalidateSingleRow && !field.hDoc.isWordWrap())
-                //replaced text only affects current row
+			//replaced text only affects current row
                 field.invalidateRows(field.mCaretRow, field.mCaretRow + 1);
             else
-                //TODO invalidate damaged rows only
+			//TODO invalidate damaged rows only
                 field.invalidateFromRow(invalidateStartRow);
         }
     }
@@ -701,10 +725,10 @@ public class TextFieldController implements Tokenizer.LexCallback {
                 --invalidateStartRow;
 
             if (isInvalidateSingleRow && !doc.isWordWrap())
-                //replaced text only affects current row
+			//replaced text only affects current row
                 field.invalidateRows(field.mCaretRow, field.mCaretRow + 1);
             else
-                //TODO invalidate damaged rows only
+			//TODO invalidate damaged rows only
                 field.invalidateFromRow(invalidateStartRow);
         }
     }
@@ -731,7 +755,7 @@ public class TextFieldController implements Tokenizer.LexCallback {
     String getTextAfterCursor(int maxLen) {
         int docLength = field.hDoc.getTextLength();
         if ((field.mCaretPosition + maxLen) > (docLength - 1))
-            //exclude the terminal EOF
+		//exclude the terminal EOF
             return field.hDoc.subSequence(field.mCaretPosition, docLength - field.mCaretPosition - 1).toString();
 
         return field.hDoc.subSequence(field.mCaretPosition, maxLen).toString();

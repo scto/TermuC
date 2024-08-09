@@ -10,6 +10,8 @@ public class ColorSchemeDark extends ColorScheme
 		setColor(Colorable.BACKGROUND, 0xFF2B2B2B);
 		setColor(Colorable.TYPE, 0xFF99CCEE);
 		setColor(Colorable.KEYWORD, 0xFF6AB0E2);
+		setColor(Colorable.NOTE, 0xFF8AB0E2);
+		setColor(Colorable.OPERATOR, 0xFF8AB0E2);
 		setColor(Colorable.SECONDARY, 0xFFAAAAAA);
 		setColor(Colorable.COMMENT, 0xFF50BB50);
 		setColor(Colorable.STRING, 0xFFFF8E8E);

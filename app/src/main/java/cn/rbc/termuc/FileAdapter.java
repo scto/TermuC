@@ -5,7 +5,7 @@ import android.content.*;
 import java.util.*;
 import java.io.*;
 
-public class FileAdapter extends BaseAdapter implements Comparator<File>
+public class FileAdapter extends BaseAdapter implements Comparator<File>, FilenameFilter
 {
 	private Context mCont;
 	private static FileItem parent;
@@ -58,7 +58,7 @@ public class FileAdapter extends BaseAdapter implements Comparator<File>
 		if (parent==null && mNRoot)
 			parent = new FileItem(R.drawable.ic_folder_24, "..");
 		mPath = path;
-		File[] lst = path.listFiles();
+		File[] lst = path.listFiles(Settings.show_hidden ? null : this);
 		if (lst==null)
 			lst = new File[0];
 		Arrays.sort(lst, this);
@@ -76,12 +76,16 @@ public class FileAdapter extends BaseAdapter implements Comparator<File>
 			:ad?-1:1;
 	}
 
+	public boolean accept(File p1, String p2) {
+		return p2.charAt(0) != '.';
+	}
+
 	private static int computeIcon(File f) {
 		if (f.isDirectory())
 			return R.drawable.ic_folder_24;
 		else {
 			String n = f.getName();
-			if (n.endsWith(".c")||n.endsWith(".cpp")
+			if (n.endsWith(".c")||n.endsWith(".cpp")||n.endsWith(".cxx")
 				||n.endsWith(".h")||n.endsWith(".hpp"))
 				return R.drawable.ic_code_24;
 		}

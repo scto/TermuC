@@ -14,10 +14,11 @@ import android.widget.*;
 import android.util.JsonReader;
 import java.util.concurrent.*;
 
-public class Lsp {
+public class Lsp implements Runnable {
 	final static int INITIALIZE = 0, INITIALIZED = 1,
 	OPEN = 2, CLOSE = 3,
-	COMPLETION = 4, FIX = 5, CHANGE = 6, SAVE = 7, NOTI = 8;
+	COMPLETION = 4, FIX = 5, CHANGE = 6, SAVE = 7, NOTI = 8,
+	ERROR = -1;
 	private final static String TAG = "LSP";
 	private final static byte[] CONTENTLEN = "Content-Length: ".getBytes(StandardCharsets.UTF_8);
 	private int tp;
@@ -25,58 +26,63 @@ public class Lsp {
 	private ExecutorService mExecutor;
 	private char[] compTrigs = {};
 	private long mLastReceivedTime;
+	private Handler mRead;
 
-	public void start(final Context mC, final Handler read) {
+	public void start(final Context mC, Handler read) {
 		Utils.run(mC, "/system/bin/nc", new String[]{"-l", "-s", Settings.lsp_host, "-p", Integer.toString(Settings.lsp_port), "clangd", "--header-insertion-decorators=0", "--completion-style=bundled"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
-		sk = new Socket();
 		mExecutor = Executors.newSingleThreadExecutor();
-		new Thread(){
-			public void run() {
-				try{
-					int i=0;
-					for (; !sk.isConnected() && i<20; i++) {
-						Thread.sleep(100L);
-						try {
-							sk.connect(new InetSocketAddress(Settings.lsp_host, Settings.lsp_port));
-						}catch(SocketException s){}
-					}
-					if (i==20)
-						throw new IOException("Connection failed");
-					InputStream is = sk.getInputStream();
-					byte[] b = new byte[16];
+		sk = new Socket();
+		mRead = read;
+		new Thread(this).start();
+	}
+
+	public void run() {
+		try{
+			int i = 0;
+			do {
+				try {
+					sk = new Socket(Settings.lsp_host, Settings.lsp_port);
+				} catch (SocketException s) {
+					Thread.sleep(250L);
+				}
+				i++;
+			} while (i<=20 && !sk.isConnected());
+			if (i>20)
+				throw new IOException("Connection failed");
+			InputStream is = sk.getInputStream();
+			byte[] b = new byte[16];
 			OUTER:	while (true) {
-						for (i=0;i<16;i++) {
-							int t = is.read();
-							if (t==-1)
-								break OUTER;
-							b[i] = (byte)t;
-						}
-						if (Arrays.equals(b, CONTENTLEN)) {
-							int len = 0;
-							while (Character.isDigit(i = is.read()))
-								len = len * 10 + i - 48;
-							mLastReceivedTime = System.currentTimeMillis();
-							is.skip(3L);
-							byte[] strb = new byte[len];
-							for (i=0; i<len; i++)
-								strb[i] = (byte)is.read();
-							InputStream r = new ByteArrayInputStream(strb);
-							JsonReader limitInput = new JsonReader(new InputStreamReader(r, StandardCharsets.UTF_8));
-							Message msg = new Message();
-							msg.what = tp;
-							msg.obj = limitInput;
-							read.sendMessage(msg);
-							//tp = NOTI;
-						}
-					}
-					is.close();
-					mExecutor.shutdown();
-				} catch (Exception ioe) {
-					Log.e(TAG, ioe.getMessage());
-					// HelperUtils.show(Toast.makeText(c, ioe.getMessage(), 1));
+				for (i=0;i<16;i++) {
+					int t = is.read();
+					if (t==-1)
+						break OUTER;
+					b[i] = (byte)t;
+				}
+				if (Arrays.equals(b, CONTENTLEN)) {
+					int len = 0;
+					while (Character.isDigit(i = is.read()))
+						len = len * 10 + i - 48;
+					mLastReceivedTime = System.currentTimeMillis();
+					is.skip(3L);
+					byte[] strb = new byte[len];
+					for (i=0; i<len; i++)
+						strb[i] = (byte)is.read();
+					InputStream r = new ByteArrayInputStream(strb);
+					JsonReader limitInput = new JsonReader(new InputStreamReader(r, StandardCharsets.UTF_8));
+					Message msg = new Message();
+					msg.what = tp;
+					msg.obj = limitInput;
+					mRead.sendMessage(msg);
+					//tp = NOTI;
 				}
 			}
-		}.start();
+			is.close();
+		} catch (Exception ioe) {
+			Log.e(TAG, ioe.getMessage());
+		}
+		Message msg = new Message();
+		msg.what = ERROR;
+		mRead.sendMessage(msg);
 	}
 
 	public long lastReceivedTime() {
@@ -207,17 +213,19 @@ public class Lsp {
 		return true;
 	}
 
-	public synchronized void formatting(File fl, int tabSize) {
+	public synchronized void formatting(File fl, int tabSize, boolean useSpace) {
 		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":")
 		.append(JSONObject.quote(Uri.fromFile(fl).toString()))
 		.append("},\"options\":{\"tabSize\":")
 		.append(tabSize)
-		.append(",\"insertSpaces\":true}}");
+		.append(",\"insertSpaces\":")
+		.append(useSpace)
+		.append("}}");
 		Log.d(TAG, sb.toString());
 		mExecutor.execute(new Send("textDocument/formatting", sb.toString(), true));
 	}
 
-	public synchronized void rangeFormatting(File fl, Range range, int tabSize) {
+	public synchronized void rangeFormatting(File fl, Range range, int tabSize, boolean useSpace) {
 		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":")
 			.append(JSONObject.quote(Uri.fromFile(fl).toString()))
 			.append("},\"range\":{\"start\":{\"line\":")
@@ -230,7 +238,9 @@ public class Lsp {
 			.append(range.enc)
 			.append("}},\"options\":{\"tabSize\":")
 			.append(tabSize)
-			.append(",\"insertSpaces\":true}}");
+			.append(",\"insertSpaces\":")
+			.append(useSpace)
+			.append("}}");
 		Log.d(TAG, sb.toString());
 		mExecutor.execute(new Send("textDocument/rangeFormatting", sb.toString(), true));
 	}

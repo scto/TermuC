@@ -20,7 +20,7 @@ public abstract class ColorScheme {
         FOREGROUND, BACKGROUND, SELECTION_FOREGROUND, SELECTION_BACKGROUND,
         CARET_FOREGROUND, CARET_BACKGROUND, CARET_DISABLED, LINE_HIGHLIGHT,
         NON_PRINTING_GLYPH, COMMENT, KEYWORD, NAME, NUMBER, STRING,
-        SECONDARY, TYPE
+        SECONDARY, TYPE, NOTE, OPERATOR
     }
 
     protected HashMap<Colorable, Integer> _colors = generateDefaultColors();
@@ -66,9 +66,14 @@ public abstract class ColorScheme {
             case Tokenizer.NUMBER:
                 element = Colorable.NUMBER;
                 break;
+			case Tokenizer.NOTE:
+				element = Colorable.NOTE;
+				break;
+			case Tokenizer.OPERATOR:
+				element = Colorable.OPERATOR;
+				break;
             case Tokenizer.SINGLE_SYMBOL_LINE_A: //fall-through
             case Tokenizer.SINGLE_SYMBOL_WORD:
-            case Tokenizer.OPERATOR:
                 element = Colorable.SECONDARY;
                 break;
             case Tokenizer.SINGLE_SYMBOL_LINE_B: //类型

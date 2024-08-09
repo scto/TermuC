@@ -48,6 +48,13 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 			case Lsp.INITIALIZE:
 				ma.lsp.initialized();
 				break;
+			case Lsp.ERROR:
+				for (Fragment f:ma.mFmgr.getFragments()) {
+					TextEditor te = (TextEditor)f.getView();
+					te.getText().setDiag(null);
+					te.invalidate();
+				}
+				return;
 			case Lsp.CLOSE:
 				return;
 		}
@@ -124,7 +131,6 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								if (jr.peek()==BEGIN_ARRAY) {
 									jr.beginArray();
 									tmp2 = new ArrayList<Edit>();
-									//tmpi = ma.getEditor().getCaretPosition();
 								} else
 									jr.beginObject();
 								stack.push(n);
@@ -135,7 +141,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 									jr.close();
 									TextEditor te = (TextEditor)ma.mFmgr.findFragmentByTag(tag).getView();
 									ArrayList<ErrSpan> a = (ArrayList<ErrSpan>)tmp1;
-									a.sort(this);
+									Collections.sort(a, this);
 									te.getText().setDiag(a);
 									te.invalidate();
 									break LOOP;
