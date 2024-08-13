@@ -25,9 +25,10 @@ public class MainActivity extends Activity implements
 	AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener,
 	DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 
+	public final static int SETTING = 0;
+	private final static String PWD = "p", SHOWLIST = "l", FILES = "o";
     private ArrayAdapter<String> hda;
 	private FileAdapter adp;
-	FragmentManager mFmgr;
 	private EditFragment lastFrag = null;
 	private boolean byhand = true, inited = false;
     private View keys, showlist;
@@ -41,11 +42,11 @@ public class MainActivity extends Activity implements
 	private String transStr;
 	private Dialog transDlg;
 	private static MainHandler hand;
-	public static Lsp lsp;
+	static Lsp lsp;
 
 	private void envInit() {
 		Settings.getInstance(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
-		pwd = new File(getPreferences(MODE_PRIVATE).getString("pwd", Utils.ROOT.getPath()));
+		pwd = new File(getPreferences(MODE_PRIVATE).getString(PWD, Utils.ROOT.getPath()));
 		if (lsp==null) {
 			hand = new MainHandler(this);
 			lsp = new Lsp();
@@ -57,18 +58,21 @@ public class MainActivity extends Activity implements
 	private void showFrag(Fragment frag) {
 		if (frag == lastFrag)
 			return;
-		FragmentTransaction mTans = mFmgr.beginTransaction();
+		FragmentTransaction mTans = getFragmentManager().beginTransaction();
 		if (lastFrag != null)
 			mTans.hide(lastFrag);
 		mTans.show(frag).commit();
 		lastFrag = (EditFragment)frag;
-		_appmenu.findItem(R.id.run).setEnabled(lastFrag.type<2);
 	}
 
 	public boolean onNavigationItemSelected(int p1, long p2) {
 		if (byhand)
-			showFrag(mFmgr.findFragmentByTag(hda.getItem(p1)));
+			showFrag(getFragmentManager().findFragmentByTag(hda.getItem(p1)));
 		return false;
+	}
+
+	String getTag(int idx) {
+		return hda.getItem(idx);
 	}
 
     @Override
@@ -78,21 +82,14 @@ public class MainActivity extends Activity implements
 			setTheme(android.R.style.Theme_Holo);
         super.onCreate(savedInstanceState);
 		getWindow().getDecorView().getViewTreeObserver().addOnGlobalLayoutListener(this);
-		mFmgr = getFragmentManager();
-		hda = new ArrayAdapter<>(new ContextThemeWrapper(getBaseContext(), android.R.style.Theme_Holo), R.layout.header_dropdown_item);
+		hda = new HeaderAdapter(new ContextThemeWrapper(getBaseContext(), android.R.style.Theme_Holo), R.layout.header_dropdown_item);
 		Resources.Theme rt = getResources().newTheme();
 		rt.applyStyle(android.R.style.Theme_Holo, true);
 		hda.setDropDownViewTheme(rt);
 		ab = getActionBar();
 		// ab.setHomeButtonEnabled(true);
         ab.setListNavigationCallbacks(hda, this);
-
 		setContentView(R.layout.activity_main);
-		requestPermissions(new String[]{
-			android.Manifest.permission.READ_EXTERNAL_STORAGE,
-			android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-			android.Manifest.permission.MANAGE_EXTERNAL_STORAGE
-		}, PackageManager.PERMISSION_GRANTED);
         showlist = findViewById(R.id.show_list);
 		keys = findViewById(R.id.keys);
 		subc = findViewById(R.id.subcontainer);
@@ -106,6 +103,12 @@ public class MainActivity extends Activity implements
 		l.setOnItemClickListener(this);
 		l.setOnItemLongClickListener(this);
 		mSearchAction = new SearchAction(this);
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
+			requestPermissions(new String[]{
+				android.Manifest.permission.READ_EXTERNAL_STORAGE,
+				android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+				android.Manifest.permission.MANAGE_EXTERNAL_STORAGE
+				}, PackageManager.PERMISSION_GRANTED);
     }
 
 	@Override
@@ -152,7 +155,7 @@ public class MainActivity extends Activity implements
 			if (pwd.isFile()) {
 				_it = pwd.getAbsolutePath();
 				int _i = hda.getCount(), _tp = -1;
-				if (mFmgr.findFragmentByTag(_it)!=null) {
+				if (getFragmentManager().findFragmentByTag(_it)!=null) {
 					for (_i--; -1<_i && !_it.equals(hda.getItem(_i)); _i--);
 				} else {
 					if (_it.endsWith(".c"))
@@ -173,7 +176,7 @@ public class MainActivity extends Activity implements
 							inited = true;
 						}
 						EditFragment ef = new EditFragment(pwd.getPath(), _tp);
-						FragmentTransaction mts = mFmgr.beginTransaction()
+						FragmentTransaction mts = getFragmentManager().beginTransaction()
 							.add(R.id.editFrag, ef, _it);
 						if (lastFrag!=null)
 							mts.hide(lastFrag);
@@ -269,8 +272,9 @@ public class MainActivity extends Activity implements
 				int sd = ab.getSelectedNavigationIndex();
 				String _t = hda.getItem(ab.getSelectedNavigationIndex());
 				hda.remove(_t);
-				FragmentTransaction mTans = mFmgr.beginTransaction();
-				mTans.remove(mFmgr.findFragmentByTag(_t));
+				FragmentManager fm = getFragmentManager();
+				FragmentTransaction mTans = fm.beginTransaction();
+				mTans.remove(fm.findFragmentByTag(_t));
 				int cnt = hda.getCount();
 				if (hda.getCount() == 0) {
 					ab.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
@@ -281,7 +285,7 @@ public class MainActivity extends Activity implements
 				} else {
 					if (cnt == sd)
 						sd--;
-					lastFrag = (EditFragment)mFmgr.findFragmentByTag(hda.getItem(sd));
+					lastFrag = (EditFragment)fm.findFragmentByTag(hda.getItem(sd));
 					mTans.show(lastFrag);
 				}
 				mTans.commit();
@@ -289,7 +293,7 @@ public class MainActivity extends Activity implements
 				break;
 			case R.id.settings:
 				Intent it = new Intent(this, SettingsActivity.class);
-				startActivity(it);
+				startActivityForResult(it, SETTING);
 				break;
         }
         return true;
@@ -326,16 +330,20 @@ public class MainActivity extends Activity implements
     @Override
     protected void onRestoreInstanceState(Bundle bundle) {
         super.onRestoreInstanceState(bundle);
-        pwd = new File(bundle.getString("pwd"));
+        pwd = new File(bundle.getString(PWD));
 		int i = 0, j = 0;
-		for (Fragment f:getFragmentManager().getFragments()) {
-			hda.add(f.getTag());
-			if (!f.isHidden()) {
-				j = i;
-				codeEditor = (TextEditor)f.getView();
+		List<String> files = bundle.getStringArrayList(FILES);
+		if (files != null) {
+			FragmentManager fm = getFragmentManager();
+			for (String s:bundle.getStringArrayList(FILES)) {
+				hda.add(s);
+				Fragment f = fm.findFragmentByTag(s);
+				if (!f.isHidden()) {
+					j = i;
+					codeEditor = (TextEditor)f.getView();
+				}
+				i++;
 			}
-			i++;
-		}
 		if (!hda.isEmpty()) {
 			_appmenu.clear();
 			getMenuInflater().inflate(R.menu.main, _appmenu);
@@ -346,14 +354,19 @@ public class MainActivity extends Activity implements
 			ab.setSelectedNavigationItem(j);
 			byhand = true;
 		}
+		}
 		if (subc!=null)
-			subc.setVisibility(bundle.getInt("showList"));
+			subc.setVisibility(bundle.getInt(SHOWLIST));
     }
 
     @Override
     public void onSaveInstanceState(Bundle bundle) {
-        bundle.putString("pwd", pwd.getPath());
-		bundle.putInt("showList", subc.getVisibility());
+        bundle.putString(PWD, pwd.getPath());
+		bundle.putInt(SHOWLIST, subc.getVisibility());
+		ArrayList<String> al = new ArrayList<>(hda.getCount());
+		for (int i=0,l=hda.getCount();i<l;i++)
+			al.add(hda.getItem(i));
+		bundle.putStringArrayList(FILES, al);
         super.onSaveInstanceState(bundle);
     }
 
@@ -367,7 +380,7 @@ public class MainActivity extends Activity implements
 		new Thread(this).start();
 	}
 
-	public void run(){
+	public void run() {
 		final boolean ok = Utils.removeFiles(new File(pwd, transStr));
 		runOnUiThread(new Runnable(){
 				public void run(){
@@ -383,13 +396,21 @@ public class MainActivity extends Activity implements
 	@Override
 	protected void onResume() {
 		super.onResume();
-		// Apply Prefs for Edits
 		refresh();
-		for (Fragment f:mFmgr.getFragments()) {
-			TextEditor ed = (TextEditor)f.getView();
-			ed.setWordWrap(Settings.wordwrap);
-			ed.setShowNonPrinting(Settings.whitespace);
-			ed.setFormatter("s".equals(Settings.completion)?(EditFragment)f:null);
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode==SETTING && resultCode==RESULT_OK) {
+			FragmentManager fm = getFragmentManager();
+			for (int i=getActionBar().getNavigationItemCount()-1;i>=0;i--) {
+				Fragment f = fm.findFragmentByTag(hda.getItem(i));
+				TextEditor ed = (TextEditor)f.getView();
+				ed.setFormatter("s".equals(Settings.completion)?(EditFragment)f:null);
+				ed.setWordWrap(Settings.wordwrap);
+				ed.setShowNonPrinting(Settings.whitespace);
+			}
 		}
 	}
 
@@ -436,7 +457,7 @@ public class MainActivity extends Activity implements
 
     @Override
     protected void onStop() {
-        getPreferences(MODE_PRIVATE).edit().putString("pwd", pwd.getPath()).commit();
+        getPreferences(MODE_PRIVATE).edit().putString(PWD, pwd.getPath()).commit();
         super.onStop();
     }
 

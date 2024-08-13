@@ -13,6 +13,9 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 	private EditTextPreference mCFlagsPref, mHost, mPort;
 	private ListPreference mSizePref, mEngine;
 
+	private boolean mWrap, mSpace;
+	private String mComp;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		if (Settings.dark_mode)
@@ -45,14 +48,16 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 		Settings.getInstance(PreferenceManager
 			.getDefaultSharedPreferences(getApplicationContext()));
 
-		updateWidget();
+		mWrap = Settings.wordwrap;
+		mSpace = Settings.whitespace;
+		mComp = Settings.completion;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 			case android.R.id.home:
-				finish();
+				onBackPressed();
 				break;
 		}
 		return true;
@@ -68,6 +73,15 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 				HelperUtils.show(Toast.makeText(this, "敬请期待\nComing soon", Toast.LENGTH_SHORT));
 		}
 		return true;
+	}
+
+	@Override
+	public void onBackPressed() {
+		setResult(mWrap == mWordWrapPref.isChecked()
+				  && mSpace == mWhitespacePref.isChecked()
+				  && mComp.equals(mEngine.getValue())
+				  ? RESULT_CANCELED : RESULT_OK);
+		super.onBackPressed();
 	}
 
 	@Override

@@ -93,16 +93,17 @@ public class Lsp implements Runnable {
 		StringBuilder s = new StringBuilder("{\"jsonrpc\":\"2.0\"");
 		if (req)
 			s.append(",\"id\":0");
-		return s.append(",\"method\":\"").append(m)
-		.append("\",\"params\":").append(JSONObject.wrap(p))
-		.append("}").toString();
+		s.append(",\"method\":\"");s.append(m);
+		s.append("\",\"params\":");s.append(JSONObject.wrap(p));
+		s.append("}");
+		return s.toString();
 	}
 
 	public void initialize() {
 		tp = INITIALIZE;
-		StringBuilder sb = new StringBuilder("{\"processId\":")
-		.append(android.os.Process.myPid())
-		.append(",\"initializationOptions\":{\"fallbackFlags\":[\"-Wall\"]}}");
+		StringBuilder sb = new StringBuilder("{\"processId\":");
+		sb.append(android.os.Process.myPid());
+		sb.append(",\"initializationOptions\":{\"fallbackFlags\":[\"-Wall\"]}}");
 		mExecutor.execute(new Send("initialize", sb.toString(), true));
 	}
 
@@ -134,58 +135,57 @@ public class Lsp implements Runnable {
 	}
 
 	public void didOpen(File f, String lang, String ct) {
-		StringBuilder m = new StringBuilder("{\"textDocument\":{\"uri\":")
-		.append(JSONObject.quote(Uri.fromFile(f).toString()))
-		.append(",\"languageId\":\"").append(lang)
-		.append("\",\"version\":0,\"text\":")
-		.append(JSONObject.quote(ct))
-		.append("}}");
+		StringBuilder m = new StringBuilder("{\"textDocument\":{\"uri\":");
+		m.append(JSONObject.quote(Uri.fromFile(f).toString()));
+		m.append(",\"languageId\":\"");m.append(lang);
+		m.append("\",\"version\":0,\"text\":");
+		m.append(JSONObject.quote(ct));
+		m.append("}}");
 		//tp = OPEN;
 		mExecutor.execute(new Send("textDocument/didOpen", m.toString(), false));
 	}
 
 	public void didSave(File f) {
-		String s = new StringBuilder("{\"textDocument\":{\"uri\":")
-		.append(JSONObject.quote(Uri.fromFile(f).toString()))
-		.append("}}").toString();
+		StringBuilder s = new StringBuilder("{\"textDocument\":{\"uri\":");
+		s.append(JSONObject.quote(Uri.fromFile(f).toString()));
+		s.append("}}");
 		//tp = SAVE;
-		mExecutor.execute(new Send("textDocument/didSave", s, false));
+		mExecutor.execute(new Send("textDocument/didSave", s.toString(), false));
 	}
 
 	public synchronized void didChange(File f, int version, String text) {
-		String sb = new StringBuilder("{\"textDocument\":{\"uri\":")
-		.append(JSONObject.quote(Uri.fromFile(f).toString()))
-		.append(",\"version\":")
-		.append(version)
-		.append("},\"contentChanges\":[{\"text\":")
-		.append(JSONObject.quote(text))
-		.append("}]}").toString();
-		mExecutor.execute(new Send("textDocument/didChange", sb, false));
+		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":");
+		sb.append(JSONObject.quote(Uri.fromFile(f).toString()));
+		sb.append(",\"version\":");
+		sb.append(version);
+		sb.append("},\"contentChanges\":[{\"text\":");
+		sb.append(JSONObject.quote(text));
+		sb.append("}]}").toString();
+		mExecutor.execute(new Send("textDocument/didChange", sb.toString(), false));
 	}
 
 	public synchronized void didChange(File f, int version, List<Range> chs) {
-		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":")
-		.append(JSONObject.quote(Uri.fromFile(f).toString()))
-		.append(",\"version\":")
-		.append(version)
-		.append("},\"contentChanges\":[");
+		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":");
+		sb.append(JSONObject.quote(Uri.fromFile(f).toString()));
+		sb.append(",\"version\":");
+		sb.append(version);
+		sb.append("},\"contentChanges\":[");
 		for (int i=0,j=chs.size(); i<j; i++) {
 			Range c = chs.get(i);
-			sb.append("{\"range\":{\"start\":{\"line\":")
-			.append(c.stl)
-			.append(",\"character\":")
-			.append(c.stc)
-			.append("},\"end\":{\"line\":")
-			.append(c.enl)
-			.append(",\"character\":")
-			.append(c.enc)
-			.append("}},\"text\":")
-			.append(JSONObject.quote(c.msg))
-			.append("},");
+			sb.append("{\"range\":{\"start\":{\"line\":");
+			sb.append(c.stl);
+			sb.append(",\"character\":");
+			sb.append(c.stc);
+			sb.append("},\"end\":{\"line\":");
+			sb.append(c.enl);
+			sb.append(",\"character\":");
+			sb.append(c.enc);
+			sb.append("}},\"text\":");
+			sb.append(JSONObject.quote(c.msg));
+			sb.append("},");
 		}
 		sb.setCharAt(sb.length()-1, ']');
 		sb.append('}');
-		Log.d(TAG, sb.toString());
 		//tp = CHANGE;
 		mExecutor.execute(new Send("textDocument/didChange", sb.toString(), false));
 	}
@@ -194,54 +194,55 @@ public class Lsp implements Runnable {
 		byte b = isCompTrig(tgc);
 		if (b==0)
 			return false;
-		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":")
-		.append(JSONObject.quote(Uri.fromFile(f).toString()))
-		.append("},\"position\":{\"line\":")
-		.append(l)
-		.append(",\"character\":")
-		.append(c)
-		.append("},\"context\":{\"triggerKind\":")
-		.append(b);
-		if (b==2)
-			sb.append(",\"triggerCharacter\":\"")
-			.append(tgc)
-			.append('"');
+		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":");
+		sb.append(JSONObject.quote(Uri.fromFile(f).toString()));
+		sb.append("},\"position\":{\"line\":");
+		sb.append(l);
+		sb.append(",\"character\":");
+		sb.append(c);
+		sb.append("},\"context\":{\"triggerKind\":");
+		sb.append(b);
+		if (b==2) {
+			sb.append(",\"triggerCharacter\":\"");
+			sb.append(tgc);
+			sb.append('"');
+		}
 		sb.append("}}");
 		tp = COMPLETION;
-		Log.d(TAG, sb.toString());
+		//Log.d(TAG, sb.toString());
 		mExecutor.execute(new Send("textDocument/completion", sb.toString(), true));
 		return true;
 	}
 
 	public synchronized void formatting(File fl, int tabSize, boolean useSpace) {
-		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":")
-		.append(JSONObject.quote(Uri.fromFile(fl).toString()))
-		.append("},\"options\":{\"tabSize\":")
-		.append(tabSize)
-		.append(",\"insertSpaces\":")
-		.append(useSpace)
-		.append("}}");
-		Log.d(TAG, sb.toString());
+		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":");
+		sb.append(JSONObject.quote(Uri.fromFile(fl).toString()));
+		sb.append("},\"options\":{\"tabSize\":");
+		sb.append(tabSize);
+		sb.append(",\"insertSpaces\":");
+		sb.append(useSpace);
+		sb.append("}}");
+		//Log.d(TAG, sb.toString());
 		mExecutor.execute(new Send("textDocument/formatting", sb.toString(), true));
 	}
 
 	public synchronized void rangeFormatting(File fl, Range range, int tabSize, boolean useSpace) {
-		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":")
-			.append(JSONObject.quote(Uri.fromFile(fl).toString()))
-			.append("},\"range\":{\"start\":{\"line\":")
-			.append(range.stl)
-			.append(",\"character\":")
-			.append(range.stc)
-			.append("},\"end\":{\"line\":")
-			.append(range.enl)
-			.append(",\"character\":")
-			.append(range.enc)
-			.append("}},\"options\":{\"tabSize\":")
-			.append(tabSize)
-			.append(",\"insertSpaces\":")
-			.append(useSpace)
-			.append("}}");
-		Log.d(TAG, sb.toString());
+		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":");
+		sb.append(JSONObject.quote(Uri.fromFile(fl).toString()));
+		sb.append("},\"range\":{\"start\":{\"line\":");
+		sb.append(range.stl);
+		sb.append(",\"character\":");
+		sb.append(range.stc);
+		sb.append("},\"end\":{\"line\":");
+		sb.append(range.enl);
+		sb.append(",\"character\":");
+		sb.append(range.enc);
+		sb.append("}},\"options\":{\"tabSize\":");
+		sb.append(tabSize);
+		sb.append(",\"insertSpaces\":");
+		sb.append(useSpace);
+		sb.append("}}");
+		//Log.d(TAG, sb.toString());
 		mExecutor.execute(new Send("textDocument/rangeFormatting", sb.toString(), true));
 	}
 
@@ -264,7 +265,7 @@ public class Lsp implements Runnable {
 					sk.connect(new InetSocketAddress(Settings.lsp_host, Settings.lsp_port));
 				OutputStream ow = sk.getOutputStream();
 				ow.write(CONTENTLEN);
-				ow.write(new StringBuilder().append(s.length).append("\r\n\r\n").toString().getBytes(StandardCharsets.UTF_8));
+				ow.write((s.length+"\r\n\r\n").getBytes(StandardCharsets.UTF_8));
 				ow.write(s);
 				ow.flush();
 			} catch (IOException ioe) {

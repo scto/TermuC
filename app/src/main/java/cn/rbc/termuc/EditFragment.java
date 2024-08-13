@@ -108,7 +108,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter, Run
 			} else {
 				range.stl = text.findRowNumber(start);
 				range.stc = text.getRowOffset(range.stl);
-				range.enl = text.findRowNumber(start);
+				range.enl = text.findRowNumber(end);
 				range.enc = text.getRowOffset(range.enl);
 			}
 			range.stc = start - range.stc;

@@ -36,7 +36,6 @@ import android.graphics.*;
 public class AutoPanelAdapter extends BaseAdapter  {
 
     final static int PADDING = 20;
-    private int _h;
     private Flag _abort;
     private DisplayMetrics dm;
     private ArrayList<ListItem> listItems;
@@ -44,6 +43,7 @@ public class AutoPanelAdapter extends BaseAdapter  {
     private Context _context;
     private AutoCompletePanel mAutoComplete;
     private FreeScrollingTextField mTextFiled;
+	private LayoutInflater mInflater;
 
     public AutoPanelAdapter(Context context, AutoCompletePanel panel, FreeScrollingTextField textField) {
         _context = context;
@@ -53,6 +53,7 @@ public class AutoPanelAdapter extends BaseAdapter  {
         listItems = new ArrayList<>();
         dm = context.getResources().getDisplayMetrics();
         bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.icon_method);
+		mInflater = LayoutInflater.from(context);
     }
 
     public void abort() {
@@ -78,7 +79,7 @@ public class AutoPanelAdapter extends BaseAdapter  {
     public View getView(int i, View view, ViewGroup viewGroup) {
         View tempView = null;
         if (view == null) {
-            View rootView = LayoutInflater.from(_context).inflate(R.layout.auto_panel_item, null);
+            View rootView = mInflater.inflate(R.layout.auto_panel_item, null);
             tempView = rootView;
         } else {
             tempView = view;
@@ -138,15 +139,8 @@ public class AutoPanelAdapter extends BaseAdapter  {
      *
      * @return
      */
-    public int getItemHeight() {
-        if (_h != 0)
-            return _h;
-        LayoutInflater inflater = LayoutInflater.from(_context);
-        View rootView = inflater.inflate(R.layout.auto_panel_item, null);
-        rootView.measure(0, 0);
-        _h = rootView.getMeasuredHeight();
-
-        return _h;
+    public View getItemView() {
+        return mInflater.inflate(R.layout.auto_panel_item, null);
     }
 
     /**
@@ -202,11 +196,11 @@ public class AutoPanelAdapter extends BaseAdapter  {
 						//it.bitmap = itemText.contains("(") ? bitmap : null;
                     }
                     int y = mTextFiled.getCaretY() + mTextFiled.rowHeight() / 2 - mTextFiled.getScrollY();
-                    mAutoComplete.setHeight(getItemHeight() * Math.min(2, results.count));
+                  //  mAutoComplete.setHeight(getItemHeight() * Math.min(3, results.count));
 
-                    mAutoComplete.setHorizontalOffset(PADDING);
+                  //  mAutoComplete.setHorizontalOffset(PADDING);
                     mAutoComplete.setWidth(mTextFiled.getWidth() - PADDING * 2);
-                    mAutoComplete.setVerticalOffset(y - mTextFiled.getHeight());//_textField.getCaretY()-_textField.getScrollY()-_textField.getHeight());
+                   // mAutoComplete.setVerticalOffset(y - mTextFiled.getHeight());//_textField.getCaretY()-_textField.getScrollY()-_textField.getHeight());
                     notifyDataSetChanged();
                     mAutoComplete.show();
                 } else {

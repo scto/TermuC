@@ -49,8 +49,9 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 				ma.lsp.initialized();
 				break;
 			case Lsp.ERROR:
-				for (Fragment f:ma.mFmgr.getFragments()) {
-					TextEditor te = (TextEditor)f.getView();
+				FragmentManager fm = ma.getFragmentManager();
+				for (int i=ma.getActionBar().getNavigationItemCount()-1;i>=0;i--) {
+					TextEditor te = (TextEditor)fm.findFragmentByTag(ma.getTag(i)).getView();
 					te.getText().setDiag(null);
 					te.invalidate();
 				}
@@ -64,7 +65,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 			Deque<String> stack = new ArrayDeque<>();
 			int sl = 0, sc = 0, el = 0, ec = 0;
 			Object tmp1 = null, tmp2 = null, tmp3 = null;
-	LOOP:	while (true) {
+			while (true) {
 				switch (jr.peek()) {
 					case NAME:
 						String n = jr.nextName();
@@ -105,7 +106,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 									sb.append(jr.nextString());
 								jr.close();
 								ma.lsp.setCompTrigs(sb.toString().toCharArray());
-								break LOOP;
+								return;
 							case RNG:
 								jr.beginObject();
 								while (jr.hasNext()) {
@@ -139,12 +140,15 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								if (DG.equals(stack.peek())) {
 									String tag = Uri.parse(jr.nextString()).getPath();
 									jr.close();
-									TextEditor te = (TextEditor)ma.mFmgr.findFragmentByTag(tag).getView();
+									Fragment f = ma.getFragmentManager().findFragmentByTag(tag);
+									if (f==null)
+										return;
+									TextEditor te = (TextEditor)f.getView();
 									ArrayList<ErrSpan> a = (ArrayList<ErrSpan>)tmp1;
 									Collections.sort(a, this);
 									te.getText().setDiag(a);
 									te.invalidate();
-									break LOOP;
+									return;
 								}
 								break;
 							case TEDIT:
@@ -226,7 +230,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								break;
 							case IT:
 								ma.getEditor().getAutoCompletePanel().update((ArrayList<ListItem>)tmp1);
-								break LOOP;
+								return;
 							//case DG:
 							case RESU:
 								jr.close();
@@ -246,12 +250,12 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								doc.endBatchEdit();
 								te.moveCaret(mc);
 								te.mCtrlr.determineSpans();
-								break LOOP;
+								return;
 						}
 						break;
 					case END_DOCUMENT:
 						jr.close();
-						break LOOP;
+						return;
 					default:
 						jr.skipValue();
 				}

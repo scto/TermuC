@@ -159,11 +159,11 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
         int endChar = 0;
         for (i = startOfLine;i < mL;) {
             c = doc.charAt(i++);
-            if (c == Language.NEWLINE)
+            if (c == Language.NEWLINE || c == Language.EOF)
                 break;
             endChar = c;
         }
-        //最后字符为'{',缩进
+		//最后字符为'{',缩进
         if (endChar == '{')
             whitespaceCount += field.mAutoIndentWidth;
         if (whitespaceCount < 0)

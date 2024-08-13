@@ -15,8 +15,8 @@ public class Settings
 		KEY_LSP_HOST = "lsphost",
 		KEY_LSP_PORT = "lspport";
 
-	private static SharedPreferences mSharedPref = null;
-	private static Settings mInstance = null;
+	private static SharedPreferences mSharedPref;
+	private static Settings mInstance;
 	private static int mRefCount = 0;
 
 	public static boolean dark_mode, wordwrap, whitespace, show_hidden;
@@ -38,17 +38,17 @@ public class Settings
     }
 
 	public static void writeBack() {
-        mSharedPref.edit()
-		.putBoolean(KEY_DARKMODE, dark_mode)
-		.putBoolean(KEY_WORDWRAP, wordwrap)
-		.putBoolean(KEY_WHITESPACE, whitespace)
-		.putBoolean(KEY_SHOW_HIDDEN, show_hidden)
-		.putInt(KEY_TEXTSIZE, textsize)
-		.putString(KEY_CFLAGS, cflags)
-		.putString(KEY_COMPLETION, completion)
-		.putString(KEY_LSP_HOST, lsp_host)
-		.putString(KEY_LSP_PORT, Integer.toString(lsp_port))
-		.commit();
+        SharedPreferences.Editor ed = mSharedPref.edit();
+		ed.putBoolean(KEY_DARKMODE, dark_mode);
+		ed.putBoolean(KEY_WORDWRAP, wordwrap);
+		ed.putBoolean(KEY_WHITESPACE, whitespace);
+		ed.putBoolean(KEY_SHOW_HIDDEN, show_hidden);
+		ed.putInt(KEY_TEXTSIZE, textsize);
+		ed.putString(KEY_CFLAGS, cflags);
+		ed.putString(KEY_COMPLETION, completion);
+		ed.putString(KEY_LSP_HOST, lsp_host);
+		ed.putString(KEY_LSP_PORT, Integer.toString(lsp_port));
+		ed.commit();
 	}
 
     public static void releaseInstance() {
@@ -59,14 +59,15 @@ public class Settings
     }
 
     private void initConfs() {
-        dark_mode = mSharedPref.getBoolean(KEY_DARKMODE, false);
-		textsize = mSharedPref.getInt(KEY_TEXTSIZE, 14);
-        wordwrap = mSharedPref.getBoolean(KEY_WORDWRAP, true);
-		whitespace = mSharedPref.getBoolean(KEY_WHITESPACE, false);
-		show_hidden = mSharedPref.getBoolean(KEY_SHOW_HIDDEN, true);
-        cflags = mSharedPref.getString(KEY_CFLAGS, "-lm -Wall");
-		completion = mSharedPref.getString(KEY_COMPLETION, "s");
-		lsp_host = mSharedPref.getString(KEY_LSP_HOST, "127.0.0.1");
-		lsp_port = Integer.parseInt(mSharedPref.getString(KEY_LSP_PORT, "48455"));
+		SharedPreferences sp = mSharedPref;
+        dark_mode = sp.getBoolean(KEY_DARKMODE, false);
+		textsize = sp.getInt(KEY_TEXTSIZE, 14);
+        wordwrap = sp.getBoolean(KEY_WORDWRAP, true);
+		whitespace = sp.getBoolean(KEY_WHITESPACE, false);
+		show_hidden = sp.getBoolean(KEY_SHOW_HIDDEN, true);
+        cflags = sp.getString(KEY_CFLAGS, "-lm -Wall");
+		completion = sp.getString(KEY_COMPLETION, "s");
+		lsp_host = sp.getString(KEY_LSP_HOST, "127.0.0.1");
+		lsp_port = Integer.parseInt(sp.getString(KEY_LSP_PORT, "48455"));
     }
 }

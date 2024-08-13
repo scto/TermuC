@@ -1,31 +1,28 @@
 package cn.rbc.termuc;
 import android.widget.*;
 import android.view.*;
+import android.content.*;
+import java.io.*;
+import android.text.*;
 
-public class HeaderAdapter extends BaseAdapter
+public class HeaderAdapter extends ArrayAdapter<String> implements SpinnerAdapter
 {
-
-	@Override
-	public int getCount() {
-		// TODO: Implement this method
-		return 0;
+	public HeaderAdapter(Context context, int id) {
+		super(context, id);
 	}
 
 	@Override
-	public View getView(int p1, View p2, ViewGroup p3) {
-		// TODO: Implement this method
-		return null;
+	public View getView(int position, View convertView, ViewGroup parent) {
+		View v = super.getView(position, convertView, parent);
+		if (v instanceof TextView) {
+			TextView tv = (TextView)v;
+			tv.setText(new File(tv.getText().toString()).getName());
+		}
+		return v;
 	}
 
 	@Override
-	public Object getItem(int p1) {
-		// TODO: Implement this method
-		return null;
-	}
-
-	@Override
-	public long getItemId(int p1) {
-		// TODO: Implement this method
-		return 0;
+	public View getDropDownView(int position, View convertView, ViewGroup parent) {
+		return super.getView(position, convertView, parent);
 	}
 }
