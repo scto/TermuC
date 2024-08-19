@@ -1,62 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    android:title="@string/settings"
-	android:persistent="false">
+    android:title="@string/settings">
 	<PreferenceCategory
 		android:title="@string/global">
 		<CheckBoxPreference
-			android:key="@string/key_dark_mode"
+			android:key="darkmode"
 			android:title="@string/dark_mode"
+			android:defaultValue="false"
 			/>
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/editor">
 		<ListPreference
-			android:persistent="false"
 			android:key="textsize"
 			android:title="@string/textsize"
 			android:entries="@array/sizes"
 			android:entryValues="@array/sizes"
+			android:defaultValue="14"
 			/>
 		<CheckBoxPreference
-			android:key="@string/key_wordwrap"
+			android:key="wordwrap"
 			android:title="@string/wordwrap"
+			android:defaultValue="true"
 			/>
 		<CheckBoxPreference
-			android:key="@string/key_whitespace"
+			android:key="whitespace"
 			android:title="@string/whitespace"
+			android:defaultValue="false"
 			/>
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/file_browser">
 		<CheckBoxPreference
-			android:key="@string/key_show_hidden"
+			android:key="showhidden"
 			android:title="@string/show_hidden"
+			android:defaultValue="true"
 			/>
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/compiler">
+		<Preference
+			android:key="checkapp"
+			android:title="@string/check_app"
+			/>
 		<EditTextPreference
-			android:key="@string/key_cflags"
+			android:key="cflags"
 			android:title="@string/cflags"
+			android:defaultValue="-lm -Wall"
 			/>
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/analysis">
 		<ListPreference
-			android:key="@string/key_completion"
+			android:key="completion"
 			android:title="@string/completion"
 			android:entries="@array/engine"
 			android:entryValues="@array/v_engine"
+			android:defaultValue="s"
 			/>
 		<EditTextPreference
-			android:key="@string/key_lsp_host"
+			android:key="lsphost"
 			android:title="@string/lsp_host"
+			android:inputType="textUri"
+			android:defaultValue="127.0.0.1"
 			/>
 		<EditTextPreference
-			android:key="@string/key_lsp_port"
+			android:key="lspport"
 			android:title="@string/lsp_port"
 			android:inputType="numberDecimal"
+			android:defaultValue="48455"
 			/>
 	</PreferenceCategory>
 </PreferenceScreen>

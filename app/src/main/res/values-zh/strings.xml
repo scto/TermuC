@@ -42,4 +42,10 @@
 	<string name="file_browser">文件浏览器</string>
 	<string name="show_hidden">显示隐藏文件</string>
 	<string name="textsize">默认字号</string>
+	<string name="check_app">检测&amp;安装 Termux</string>
+	<string name="installed">已安装</string>
+	<string name="install_app">安装 Termux</string>
+	<string name="confirm_install">未检测到 Termux，是否现在安装？</string>
+	<string name="no_remind">不再提醒</string>
+	<string name="install_via">安装途径</string>
 </resources>

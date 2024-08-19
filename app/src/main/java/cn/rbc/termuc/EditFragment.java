@@ -45,12 +45,12 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter, Run
 		final MainActivity ma = (MainActivity)getActivity();
 		TextEditor editor = new TextEditor(ma);
 		ed = editor;
-		if (Settings.dark_mode)
+		if (Application.dark_mode)
 			editor.setColorScheme(ColorSchemeDark.getInstance());
 		DisplayMetrics dm = getResources().getDisplayMetrics();
-		editor.setTextSize((int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, Settings.textsize, dm));
-		editor.setWordWrap(Settings.wordwrap);
-		editor.setShowNonPrinting(Settings.whitespace);
+		editor.setTextSize((int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, Application.textsize, dm));
+		editor.setWordWrap(Application.wordwrap);
+		editor.setShowNonPrinting(Application.whitespace);
 		editor.setLayoutParams(new FrameLayout.LayoutParams(
 								   FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 		if (savedInstanceState!=null) {
@@ -77,7 +77,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter, Run
 			fnf.printStackTrace();
 			HelperUtils.show(Toast.makeText(ma, R.string.open_failed, Toast.LENGTH_SHORT));
 		}
-		if ((type&TYPE_MASK)!=TYPE_OTHER && "s".equals(Settings.completion))
+		if ((type&TYPE_MASK)!=TYPE_OTHER && "s".equals(Application.completion))
 			editor.setFormatter(this);
 		lastModified = fl.lastModified();
 		return editor;

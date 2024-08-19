@@ -12,7 +12,9 @@
 		android:id="@+id/file_icon"
 		android:layout_width="48dp"
 		android:layout_height="48dp"
-		android:scaleType="center"/>
+		android:paddingRight="4dp"
+		android:paddingLeft="4dp"
+		android:scaleType="centerInside"/>
 
 	<TextView
 		android:id="@+id/file_name"

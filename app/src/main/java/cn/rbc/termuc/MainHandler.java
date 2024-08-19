@@ -33,12 +33,12 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 	TG = "triggerCharacters",
 	URI = "uri";
 
-	public MainHandler(MainActivity ma) {
+	MainHandler(MainActivity ma) {
 		super();
 		this.ma = ma;
 	}
 
-	public void updateActivity(MainActivity ma) {
+	void updateActivity(MainActivity ma) {
 		this.ma = ma;
 	}
 

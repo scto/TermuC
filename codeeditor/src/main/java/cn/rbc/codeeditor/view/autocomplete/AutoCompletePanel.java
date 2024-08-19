@@ -160,27 +160,6 @@ public class AutoCompletePanel implements OnItemClickListener {
             _autoCompletePanel.setHeight(height);
         }
     }
-	/*
-	 public void setHorizontalOffset(int horizontal) {
-	 horizontal = Math.min(horizontal, _textField.getWidth() / 2);
-	 if (_horizontal != horizontal) {
-	 _horizontal = horizontal;
-	 _autoCompletePanel.setHorizontalOffset(horizontal);
-	 }
-	 }
-
-	 void setVerticalOffset(int verticalOffset) {
-	 //verticalOffset=Math.min(verticalOffset,_textField.getWidth()/2);
-	 int max = 0 - _autoCompletePanel.getHeight();
-	 if (verticalOffset > max) {
-	 _textField.scrollBy(0, verticalOffset - max);
-	 verticalOffset = max;
-	 }
-	 if (_verticalOffset != verticalOffset) {
-	 _verticalOffset = verticalOffset;
-	 _autoCompletePanel.setVerticalOffset(verticalOffset);
-	 }
-	 }*/
 
     public void update(CharSequence constraint) {
         _adapter.restart();

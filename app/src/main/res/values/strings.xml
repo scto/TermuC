@@ -42,6 +42,12 @@
 	<string name="file_browser">File Browser</string>
 	<string name="show_hidden">Show hidden files</string>
 	<string name="textsize">Default font size</string>
+	<string name="check_app">Check &amp; install Termux</string>
+	<string name="installed">Installed</string>
+	<string name="install_app">Install Termux</string>
+	<string name="confirm_install">Termux is not detected. Do you want install it now?</string>
+	<string name="no_remind">Never remind</string>
+	<string name="install_via">Install via</string>
 	<string-array name="engine">
 		<item>@string/lang_serv</item>
 		<item>@string/local</item>
@@ -79,7 +85,7 @@
 		<item>31</item>
 		<item>32</item>
 	</string-array>
-	<string name="key_dark_mode" translatable="false">darkmode</string>
+	<!--string name="key_dark_mode" translatable="false">darkmode</string>
 	<string name="key_textsize" translatable="false">textsize</string>
 	<string name="key_wordwrap" translatable="false">wordwrap</string>
 	<string name="key_whitespace" translatable="false">whitespace</string>
@@ -88,4 +94,5 @@
 	<string name="key_lsp_host" translatable="false">lsphost</string>
 	<string name="key_lsp_port" translatable="false">lspport</string>
 	<string name="key_show_hidden" translatable="false">showhidden</string>
+	<string name="key_checkapp" translatable="false">checkapp</string-->
 </resources>

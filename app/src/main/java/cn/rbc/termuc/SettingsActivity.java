@@ -5,7 +5,8 @@ import android.view.*;
 import cn.rbc.codeeditor.util.*;
 import android.widget.*;
 
-public class SettingsActivity extends PreferenceActivity implements Preference.OnPreferenceChangeListener
+public class SettingsActivity extends PreferenceActivity
+implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener
 {
 	private final static String TAG = "SettingsActivity";
 
@@ -13,44 +14,33 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 	private EditTextPreference mCFlagsPref, mHost, mPort;
 	private ListPreference mSizePref, mEngine;
 
-	private boolean mWrap, mSpace;
+	private boolean mDark, mWrap, mSpace;
 	private String mComp;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		if (Settings.dark_mode)
+		if (Application.dark_mode)
 			setTheme(android.R.style.Theme_Holo);
 		super.onCreate(savedInstanceState);
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		addPreferencesFromResource(R.xml.settings);
 
-		PreferenceScreen prefSet = getPreferenceScreen();
-
-		mDarkModePref = (CheckBoxPreference)prefSet
-			.findPreference(getText(R.string.key_dark_mode));
-		mSizePref = (ListPreference)prefSet
-			.findPreference(getText(R.string.key_textsize));
-		mWordWrapPref = (CheckBoxPreference)prefSet
-			.findPreference(getText(R.string.key_wordwrap));
-		mWhitespacePref = (CheckBoxPreference)prefSet
-			.findPreference(getText(R.string.key_whitespace));
-		mShowHidden = (CheckBoxPreference)prefSet
-			.findPreference(getText(R.string.key_show_hidden));
-		mCFlagsPref = (EditTextPreference)prefSet
-			.findPreference(getText(R.string.key_cflags));
-		mEngine = (ListPreference)prefSet
-			.findPreference(getText(R.string.key_completion));
+		mDarkModePref = (CheckBoxPreference)findPreference(Application.KEY_DARKMODE);
+		mSizePref = (ListPreference)findPreference(Application.KEY_TEXTSIZE);
+		mWordWrapPref = (CheckBoxPreference)findPreference(Application.KEY_WORDWRAP);
+		mWhitespacePref = (CheckBoxPreference)findPreference(Application.KEY_WHITESPACE);
+		mShowHidden = (CheckBoxPreference)findPreference(Application.KEY_SHOW_HIDDEN);
+		mCFlagsPref = (EditTextPreference)findPreference(Application.KEY_CFLAGS);
+		mEngine = (ListPreference)findPreference(Application.KEY_COMPLETION);
 		mEngine.setOnPreferenceChangeListener(this);
-		mHost = (EditTextPreference)prefSet
-			.findPreference(getText(R.string.key_lsp_host));
-		mPort = (EditTextPreference)prefSet
-			.findPreference(getText(R.string.key_lsp_port));
-		Settings.getInstance(PreferenceManager
-			.getDefaultSharedPreferences(getApplicationContext()));
+		mHost = (EditTextPreference)findPreference(Application.KEY_LSP_HOST);
+		mPort = (EditTextPreference)findPreference(Application.KEY_LSP_PORT);
+		findPreference(Application.KEY_CHECKAPP).setOnPreferenceClickListener(this);
 
-		mWrap = Settings.wordwrap;
-		mSpace = Settings.whitespace;
-		mComp = Settings.completion;
+		mDark = Application.dark_mode;
+		mWrap = Application.wordwrap;
+		mSpace = Application.whitespace;
+		mComp = Application.completion;
 	}
 
 	@Override
@@ -60,6 +50,12 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 				onBackPressed();
 				break;
 		}
+		return true;
+	}
+
+	@Override
+	public boolean onPreferenceClick(Preference p1) {
+		Application.testApp(this, true);
 		return true;
 	}
 
@@ -77,52 +73,31 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
 
 	@Override
 	public void onBackPressed() {
-		setResult(mWrap == mWordWrapPref.isChecked()
+		setResult(mDark != mDarkModePref.isChecked()
+				  ? RESULT_FIRST_USER : 
+				  (mWrap == mWordWrapPref.isChecked()
 				  && mSpace == mWhitespacePref.isChecked()
-				  && mComp.equals(mEngine.getValue())
+				  && mComp.equals(mEngine.getValue()))
 				  ? RESULT_CANCELED : RESULT_OK);
 		super.onBackPressed();
 	}
 
 	@Override
-	protected void onResume() {
-		super.onResume();
-		updateWidget();
-	}
-
-	@Override
 	protected void onDestroy() {
-		Settings.releaseInstance();
 		super.onDestroy();
 	}
 
 	@Override
 	protected void onPause() {
+		Application.dark_mode = mDarkModePref.isChecked();
+		Application.wordwrap = mWordWrapPref.isChecked();
+		Application.whitespace = mWhitespacePref.isChecked();
+		Application.textsize = Integer.parseInt(mSizePref.getValue());
+		Application.show_hidden = mShowHidden.isChecked();
+		Application.cflags = mCFlagsPref.getText();
+		Application.completion = mEngine.getValue();
+		Application.lsp_host = mHost.getText();
+		Application.lsp_port = Integer.parseInt(mPort.getText());
 		super.onPause();
-		Settings.dark_mode = mDarkModePref.isChecked();
-		Settings.wordwrap = mWordWrapPref.isChecked();
-		Settings.whitespace = mWhitespacePref.isChecked();
-		Settings.textsize = Integer.parseInt(mSizePref.getValue());
-		Settings.show_hidden = mShowHidden.isChecked();
-		Settings.cflags = mCFlagsPref.getText();
-		Settings.completion = mEngine.getValue();
-		Settings.lsp_host = mHost.getText();
-		Settings.lsp_port = Integer.parseInt(mPort.getText());
-		Settings.writeBack();
-	}
-
-	private void updateWidget() {
-		mDarkModePref.setChecked(Settings.dark_mode);
-		mSizePref.setValue(Integer.toString(Settings.textsize));
-		mWordWrapPref.setChecked(Settings.wordwrap);
-		mWhitespacePref.setChecked(Settings.whitespace);
-		mShowHidden.setChecked(Settings.show_hidden);
-		mCFlagsPref.setText(Settings.cflags);
-		mEngine.setValue(Settings.completion);
-		mHost.setText(Settings.lsp_host);
-		mPort.setText(Integer.toString(Settings.lsp_port));
-		boolean b = "s".equals(Settings.completion);
-		mHost.setEnabled(b);
-		mPort.setEnabled(b);
 	}
 }

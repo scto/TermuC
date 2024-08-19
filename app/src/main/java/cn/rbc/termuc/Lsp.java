@@ -29,7 +29,7 @@ public class Lsp implements Runnable {
 	private Handler mRead;
 
 	public void start(final Context mC, Handler read) {
-		Utils.run(mC, "/system/bin/nc", new String[]{"-l", "-s", Settings.lsp_host, "-p", Integer.toString(Settings.lsp_port), "clangd", "--header-insertion-decorators=0", "--completion-style=bundled"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
+		Utils.run(mC, "/system/bin/toybox", new String[]{"nc", "-l", "-s", Application.lsp_host, "-p", Integer.toString(Application.lsp_port), "clangd", "--header-insertion-decorators=0", "--completion-style=bundled"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
 		mExecutor = Executors.newSingleThreadExecutor();
 		sk = new Socket();
 		mRead = read;
@@ -41,7 +41,7 @@ public class Lsp implements Runnable {
 			int i = 0;
 			do {
 				try {
-					sk = new Socket(Settings.lsp_host, Settings.lsp_port);
+					sk = new Socket(Application.lsp_host, Application.lsp_port);
 				} catch (SocketException s) {
 					Thread.sleep(250L);
 				}
@@ -260,9 +260,9 @@ public class Lsp implements Runnable {
 		public void run() {
 			try {
 				if (sk==null || sk.isClosed())
-					sk = new Socket(Settings.lsp_host, Settings.lsp_port);
+					sk = new Socket(Application.lsp_host, Application.lsp_port);
 				else if (!sk.isConnected())
-					sk.connect(new InetSocketAddress(Settings.lsp_host, Settings.lsp_port));
+					sk.connect(new InetSocketAddress(Application.lsp_host, Application.lsp_port));
 				OutputStream ow = sk.getOutputStream();
 				ow.write(CONTENTLEN);
 				ow.write((s.length+"\r\n\r\n").getBytes(StandardCharsets.UTF_8));

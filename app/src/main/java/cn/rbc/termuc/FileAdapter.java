@@ -58,7 +58,7 @@ public class FileAdapter extends BaseAdapter implements Comparator<File>, Filena
 		if (parent==null && mNRoot)
 			parent = new FileItem(R.drawable.ic_folder_24, "..");
 		mPath = path;
-		File[] lst = path.listFiles(Settings.show_hidden ? null : this);
+		File[] lst = path.listFiles(Application.show_hidden ? null : this);
 		if (lst==null)
 			lst = new File[0];
 		Arrays.sort(lst, this);
