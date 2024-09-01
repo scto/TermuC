@@ -2,13 +2,11 @@ apply plugin: 'com.android.application'
 
 android {
     namespace 'cn.rbc.termuc'
-    compileSdkVersion 30
-    buildToolsVersion "30.0.2"
-
+    compileSdk 34
     defaultConfig {
         applicationId "cn.rbc.termuc"
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 29
         versionCode 3
         versionName "0.1.2"
     }
@@ -20,8 +18,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = 1.8
-        targetCompatibility = 1.8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     lintOptions {
         checkReleaseBuilds false
