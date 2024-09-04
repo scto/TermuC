@@ -422,10 +422,8 @@ public abstract class FreeScrollingTextField extends View
     }
 
     public void replaceText(int from, int charCount, String text) {
-        hDoc.beginBatchEdit();
         mCtrlr.replaceText(from, charCount, text);
         mCtrlr.stopTextComposing();
-        hDoc.endBatchEdit();
     }
 
     public int getLength() {

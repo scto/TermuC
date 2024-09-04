@@ -29,7 +29,7 @@ public class Lsp implements Runnable {
 	private Handler mRead;
 
 	public void start(final Context mC, Handler read) {
-		Utils.run(mC, "/system/bin/toybox", new String[]{"nc", "-l", "-s", Application.lsp_host, "-p", Integer.toString(Application.lsp_port), "clangd", "--header-insertion-decorators=0", "--completion-style=bundled"}, Environment.getExternalStorageDirectory().getAbsolutePath(), true);
+		Utils.run(mC, "/system/bin/toybox", new String[]{"nc", "-l", "-s", Application.lsp_host, "-p", Integer.toString(Application.lsp_port), "clangd", "--header-insertion-decorators=0"}, Utils.ROOT.getAbsolutePath(), true);
 		mExecutor = Executors.newSingleThreadExecutor();
 		sk = new Socket();
 		mRead = read;

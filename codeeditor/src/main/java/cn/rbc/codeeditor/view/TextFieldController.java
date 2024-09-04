@@ -492,12 +492,10 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
 
 		Document doc = field.hDoc;
 		doc.setTyping(true);
-        doc.beginBatchEdit();
         selectionDelete();
 
         doc.insertBefore(text.toCharArray(), field.mCaretPosition, System.nanoTime());
         field.onAdd(text, field.mCaretPosition, text.length());
-        doc.endBatchEdit();
 
         field.mCaretPosition += text.length();
         updateCaretRow();

@@ -22,14 +22,15 @@ import android.content.pm.*;
 import android.app.AlertDialog.Builder;
 import android.util.ArrayMap;
 import android.graphics.drawable.*;
+import android.provider.*;
 
 public class MainActivity extends Activity implements
 ActionBar.OnNavigationListener, OnGlobalLayoutListener,
 AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener,
 DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 
-	public final static int SETTING = 0;
-	public final static String PWD = "p", SHOWLIST = "l", FILES = "o", TESTAPP = "t";
+	public final static int SETTING = 0, ACCESS_FILE = 1;
+	public final static String PWD = "p", SHOWLIST = "l", FILES = "o", TESTAPP = "t", INITAPP = "i";
     private ArrayAdapter<String> hda;
 	private FileAdapter adp;
 	private EditFragment lastFrag = null;
@@ -106,16 +107,21 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 		l.setOnItemClickListener(this);
 		l.setOnItemLongClickListener(this);
 		mSearchAction = new SearchAction(this);
-		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+		int sdk = android.os.Build.VERSION.SDK_INT;
+		if (sdk >= android.os.Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+			Intent it = new Intent();
+			it.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+			it.setData(Uri.parse("package:"+getPackageName()));
+			startActivityForResult(it, ACCESS_FILE);
+		} else if (sdk >= android.os.Build.VERSION_CODES.M)
 			requestPermissions(new String[]{
 								   android.Manifest.permission.READ_EXTERNAL_STORAGE,
-								   android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-								   android.Manifest.permission.MANAGE_EXTERNAL_STORAGE
+								   android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 							   }, PackageManager.PERMISSION_GRANTED);
-		}
-		if (!pref.getBoolean(TESTAPP, true))
-			return;
-		Application.testApp(this, false);
+		if (pref.getBoolean(TESTAPP, true))
+			Utils.testApp(this, false);
+		if (pref.getBoolean(INITAPP, true))
+			Utils.initBack(this, false);
     }
 
 	@Override
@@ -123,9 +129,10 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 		if (requestCode == PackageManager.PERMISSION_GRANTED
 			&& grantResults[0] == requestCode
-			&& grantResults[1] == requestCode
-			&& grantResults[2] == requestCode)
+			&& grantResults[1] == requestCode)
 			refresh();
+		else
+			toast(getText(R.string.request_failed));
 	}
 
     private void refresh() {
@@ -412,7 +419,8 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		if (requestCode == SETTING) {
+		switch (requestCode) {
+			case SETTING:
 			if (resultCode == RESULT_OK) {
 				FragmentManager fm = getFragmentManager();
 				for (int i=getActionBar().getNavigationItemCount() - 1;i >= 0;i--) {
@@ -425,6 +433,13 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 			} else if (resultCode == RESULT_FIRST_USER) {
 				recreate();
 			}
+			break;
+			case ACCESS_FILE:
+				if (resultCode == RESULT_OK)
+					refresh();
+				else
+					toast(getText(R.string.request_failed));
+				break;
 		}
 	}
 

@@ -43,6 +43,10 @@
 			android:key="checkapp"
 			android:title="@string/check_app"
 			/>
+		<Preference
+			android:key="initapp"
+			android:title="@string/init_termux"
+			/>
 		<EditTextPreference
 			android:key="cflags"
 			android:title="@string/cflags"

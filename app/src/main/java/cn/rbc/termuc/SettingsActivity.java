@@ -36,6 +36,7 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 		mHost = (EditTextPreference)findPreference(Application.KEY_LSP_HOST);
 		mPort = (EditTextPreference)findPreference(Application.KEY_LSP_PORT);
 		findPreference(Application.KEY_CHECKAPP).setOnPreferenceClickListener(this);
+		findPreference(Application.KEY_INITAPP).setOnPreferenceClickListener(this);
 
 		mDark = Application.dark_mode;
 		mWrap = Application.wordwrap;
@@ -55,7 +56,10 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 
 	@Override
 	public boolean onPreferenceClick(Preference p1) {
-		Application.testApp(this, true);
+		if (Application.KEY_CHECKAPP.equals(p1.getKey()))
+			Utils.testApp(this, true);
+		else
+			Utils.initBack(this, true);
 		return true;
 	}
 

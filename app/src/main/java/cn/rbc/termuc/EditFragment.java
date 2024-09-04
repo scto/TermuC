@@ -16,7 +16,7 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 
 public class EditFragment extends Fragment
-implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter, Runnable
+implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 {
 	public final static int TYPE_C = 1;
 	public final static int TYPE_CPP = 2;
@@ -119,7 +119,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter, Run
 	}
 
 	private int mVer;
-	private long mSendTime;
+	//private long mSendTime;
 
 	public void onChanged(CharSequence c, int start, int ver, boolean ins, boolean typ) {
 		TextEditor editor = ed;
@@ -151,29 +151,26 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter, Run
 		}
 		range.msg = (String)c;
 		changes.add(range);
-		//lastStr = (String)c;
-		//if (lastVer != ver) {
+		//HelperUtils.show(Toast.makeText(getContext()), text.isBatchEdit(), 
+		//if (text.isBatchEdit())
 		Lsp lsp = MainActivity.lsp;
 		lsp.didChange(fl, ver, changes);
-		//lastStart = s;
-		//lastVer = ver;
 		// when inserting text and typing, call for completion
 		if (ins && typ && c.length()==1)
 			lsp.completionTry(fl, range.enl, range.enc+1, c.charAt(0));
 		changes.clear();
 		mVer = ver;
-		mSendTime = System.currentTimeMillis();
-		editor.postDelayed(this, 1000L);
-		//}
+		//mSendTime = System.currentTimeMillis();
+		//editor.postDelayed(this, 1000L);
 	}
-
+/*
 	public void run() {
 		Lsp lsp = MainActivity.lsp;
 		if (lsp.lastReceivedTime()<mSendTime) {
 			lsp.didChange(fl, mVer, ed.getText().toString());
 		}
 	}
-
+*/
 	@Override
 	public void onResume() {
 		super.onResume();

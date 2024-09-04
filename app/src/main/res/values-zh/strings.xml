@@ -48,4 +48,9 @@
 	<string name="confirm_install">未检测到 Termux，是否现在安装？</string>
 	<string name="no_remind">不再提醒</string>
 	<string name="install_via">安装途径</string>
+	<string name="init_termux">初始化 Termux</string>
+	<string name="init_inform">为完成配置，请复制指令并跳转 Termux 粘贴运行。\n运行时需要在所有系统设置页面手动为 Termux 配置权限。</string>
+	<string name="copy_jump">复制并跳转</string>
+	<string name="initialized">已配置</string>
+	<string name="request_failed">申请权限失败</string>
 </resources>
