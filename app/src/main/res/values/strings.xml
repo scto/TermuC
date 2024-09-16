@@ -44,6 +44,7 @@
 	<string name="textsize">Default font size</string>
 	<string name="check_app">Check &amp; install Termux</string>
 	<string name="installed">Installed</string>
+	<string name="no_install">Not installed</string>
 	<string name="install_app">Install Termux</string>
 	<string name="confirm_install">Termux is not detected. Do you want install it now?</string>
 	<string name="no_remind">Never remind</string>

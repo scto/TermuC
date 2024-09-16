@@ -141,6 +141,8 @@ public class Utils {
 	}
 
 	public static void initBack(Activity ctx, boolean manually) {
+		try {
+			ctx.getPackageManager().getPackageInfo("com.termux", PackageManager.GET_GIDS);
 		Builder bd = new Builder(ctx);
 		bd.setTitle(R.string.init_termux);
 		bd.setMessage(R.string.init_inform);
@@ -150,6 +152,10 @@ public class Utils {
 		if (!manually)
 			bd.setNeutralButton(R.string.initialized, it);
 		bd.create().show();
+		} catch (PackageManager.NameNotFoundException nne) {
+			if (manually)
+			HelperUtils.show(Toast.makeText(ctx, R.string.no_install, Toast.LENGTH_SHORT));
+		}
 	}
 
 	public static void copyJump(Context ctx) {

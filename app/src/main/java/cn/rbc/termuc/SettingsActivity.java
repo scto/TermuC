@@ -37,6 +37,7 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 		mPort = (EditTextPreference)findPreference(Application.KEY_LSP_PORT);
 		findPreference(Application.KEY_CHECKAPP).setOnPreferenceClickListener(this);
 		findPreference(Application.KEY_INITAPP).setOnPreferenceClickListener(this);
+		onPreferenceChange(mEngine, mEngine.getValue());
 
 		mDark = Application.dark_mode;
 		mWrap = Application.wordwrap;
@@ -69,8 +70,6 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 			boolean enable = "s".equals(p2);
 			mHost.setEnabled(enable);
 			mPort.setEnabled(enable);
-			if (!enable)
-				HelperUtils.show(Toast.makeText(this, "敬请期待\nComing soon", Toast.LENGTH_SHORT));
 		}
 		return true;
 	}

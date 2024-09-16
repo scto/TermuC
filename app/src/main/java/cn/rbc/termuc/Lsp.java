@@ -13,6 +13,7 @@ import cn.rbc.codeeditor.util.*;
 import android.widget.*;
 import android.util.JsonReader;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
 
 public class Lsp implements Runnable {
 	final static int INITIALIZE = 0, INITIALIZED = 1,
@@ -28,12 +29,22 @@ public class Lsp implements Runnable {
 	private long mLastReceivedTime;
 	private Handler mRead;
 
-	public void start(final Context mC, Handler read) {
+	public void start(Context mC, Handler read) {
 		Utils.run(mC, "/system/bin/toybox", new String[]{"nc", "-l", "-s", Application.lsp_host, "-p", Integer.toString(Application.lsp_port), "clangd", "--header-insertion-decorators=0"}, Utils.ROOT.getAbsolutePath(), true);
 		mExecutor = Executors.newSingleThreadExecutor();
 		sk = new Socket();
 		mRead = read;
 		new Thread(this).start();
+	}
+
+	public void end() {
+		try {
+			sk.close();
+		} catch(IOException ioe) {}
+	}
+
+	public boolean isEnded() {
+		return sk.isClosed();
 	}
 
 	public void run() {
@@ -49,6 +60,7 @@ public class Lsp implements Runnable {
 			} while (i<=20 && !sk.isConnected());
 			if (i>20)
 				throw new IOException("Connection failed");
+			initialize();
 			InputStream is = sk.getInputStream();
 			byte[] b = new byte[16];
 			OUTER:	while (true) {
@@ -59,6 +71,8 @@ public class Lsp implements Runnable {
 					b[i] = (byte)t;
 				}
 				if (Arrays.equals(b, CONTENTLEN)) {
+					Message msg = new Message();
+					msg.what = tp;
 					int len = 0;
 					while (Character.isDigit(i = is.read()))
 						len = len * 10 + i - 48;
@@ -69,11 +83,8 @@ public class Lsp implements Runnable {
 						strb[i] = (byte)is.read();
 					InputStream r = new ByteArrayInputStream(strb);
 					JsonReader limitInput = new JsonReader(new InputStreamReader(r, StandardCharsets.UTF_8));
-					Message msg = new Message();
-					msg.what = tp;
 					msg.obj = limitInput;
 					mRead.sendMessage(msg);
-					//tp = NOTI;
 				}
 			}
 			is.close();
@@ -99,7 +110,7 @@ public class Lsp implements Runnable {
 		return s.toString();
 	}
 
-	public void initialize() {
+	private void initialize() {
 		tp = INITIALIZE;
 		StringBuilder sb = new StringBuilder("{\"processId\":");
 		sb.append(android.os.Process.myPid());
@@ -141,7 +152,7 @@ public class Lsp implements Runnable {
 		m.append("\",\"version\":0,\"text\":");
 		m.append(JSONObject.quote(ct));
 		m.append("}}");
-		//tp = OPEN;
+		tp = OPEN;
 		mExecutor.execute(new Send("textDocument/didOpen", m.toString(), false));
 	}
 
@@ -149,7 +160,7 @@ public class Lsp implements Runnable {
 		StringBuilder s = new StringBuilder("{\"textDocument\":{\"uri\":");
 		s.append(JSONObject.quote(Uri.fromFile(f).toString()));
 		s.append("}}");
-		//tp = SAVE;
+		tp = SAVE;
 		mExecutor.execute(new Send("textDocument/didSave", s.toString(), false));
 	}
 
@@ -161,6 +172,7 @@ public class Lsp implements Runnable {
 		sb.append("},\"contentChanges\":[{\"text\":");
 		sb.append(JSONObject.quote(text));
 		sb.append("}]}").toString();
+		tp = CHANGE;
 		mExecutor.execute(new Send("textDocument/didChange", sb.toString(), false));
 	}
 
@@ -186,7 +198,7 @@ public class Lsp implements Runnable {
 		}
 		sb.setCharAt(sb.length()-1, ']');
 		sb.append('}');
-		//tp = CHANGE;
+		tp = CHANGE;
 		mExecutor.execute(new Send("textDocument/didChange", sb.toString(), false));
 	}
 

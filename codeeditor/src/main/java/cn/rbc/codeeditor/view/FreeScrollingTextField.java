@@ -519,17 +519,17 @@ public abstract class FreeScrollingTextField extends View
 				break;
 		}
 		mAutoCompletePanel._off = cursorPosition - curr;
-		/*
 		char ch = text.charAt(0);
-		if (isAutoCompeted && cursorPosition - curr > 0 && Character.isLetterOrDigit(ch))
+		if (isAutoCompeted)
+			if (cursorPosition - curr > 0 && Character.isLetterOrDigit(ch)) {
 			//是否开启代码提示
 			// log("subSequence:"+hDoc.subSequence(curr, caretPosition - curr));
 			// if (isAutoCompeted) {
 			// Log.i("AutoCompete", text+" "+cursorPosition+" "+curr);
 			mAutoCompletePanel.update(hDoc.subSequence(curr, cursorPosition - curr));
 			// }
-		else
-			mAutoCompletePanel.dismiss();*/
+			} else
+				mAutoCompletePanel.dismiss();
 	}
 
     private void resetView() {
@@ -638,8 +638,6 @@ public abstract class FreeScrollingTextField extends View
             isLayout = right > 0;
 			if (!mCtrlr.lexing)
 				invalidate();
-           // mAutoCompletePanel.setWidth(getWidth() / 2);
-            //mAutoCompletePanel.setHeight(getHeight() / 2);
         }
         super.onLayout(changed, left, top, right, bottom);
     }
@@ -2042,6 +2040,9 @@ public abstract class FreeScrollingTextField extends View
         isAutoCompeted = enable;
     }
 
+	public boolean isAutoComplete() {
+		return isAutoCompeted;
+	}
     /**
      * Enable/disable long-pressing capitalization.
      * When enabled, a long-press on a hardware key capitalizes that letter.

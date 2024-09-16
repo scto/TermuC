@@ -106,6 +106,14 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 									sb.append(jr.nextString());
 								jr.close();
 								ma.lsp.setCompTrigs(sb.toString().toCharArray());
+								// what == Lsp.INITIALIZE
+								FragmentManager fm = ma.getFragmentManager();
+								for (int i=ma.getActionBar().getNavigationItemCount()-1;i>=0;i--) {
+									EditFragment ef = (EditFragment)fm.findFragmentByTag(ma.getTag(i));
+									int tp = ef.type;
+									if (tp != EditFragment.TYPE_OTHER)
+										ma.lsp.didOpen(ef.getFile(), tp==EditFragment.TYPE_CPP?"cpp":"c", ((TextEditor)ef.getView()).getText().toString());
+								}
 								return;
 							case RNG:
 								jr.beginObject();

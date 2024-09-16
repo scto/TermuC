@@ -1,0 +1,3 @@
+• Introduce a simple wizard for initializing
+• Update opening files menu
+• Support local snippets

@@ -14,6 +14,7 @@ import android.content.*;
 import android.content.res.*;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.app.AlertDialog.Builder;
 
 public class EditFragment extends Fragment
 implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
@@ -71,14 +72,17 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 				editor.setLanguage(LanguageNonProg.getInstance());
 			}
 			ma.setEditor(editor);
-			if (tp != TYPE_OTHER)
+			if (tp != TYPE_OTHER && "s".equals(Application.completion))
 				MainActivity.lsp.didOpen(fl, tp==TYPE_CPP?"cpp":"c", s);
 		} catch(IOException fnf) {
 			fnf.printStackTrace();
 			HelperUtils.show(Toast.makeText(ma, R.string.open_failed, Toast.LENGTH_SHORT));
 		}
-		if ((type&TYPE_MASK)!=TYPE_OTHER && "s".equals(Application.completion))
-			editor.setFormatter(this);
+		if ((type&TYPE_MASK)!=TYPE_OTHER) {
+			if ("s".equals(Application.completion))
+				editor.setFormatter(this);
+			editor.setAutoComplete("l".equals(Application.completion));
+		}
 		lastModified = fl.lastModified();
 		return editor;
 	}
@@ -89,7 +93,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 
 	@Override
 	public int createAutoIndent(CharSequence text) {
-		return 0;
+		return 4;
 	}
 
 	@Override
@@ -119,7 +123,6 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 	}
 
 	private int mVer;
-	//private long mSendTime;
 
 	public void onChanged(CharSequence c, int start, int ver, boolean ins, boolean typ) {
 		TextEditor editor = ed;
@@ -151,8 +154,6 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		}
 		range.msg = (String)c;
 		changes.add(range);
-		//HelperUtils.show(Toast.makeText(getContext()), text.isBatchEdit(), 
-		//if (text.isBatchEdit())
 		Lsp lsp = MainActivity.lsp;
 		lsp.didChange(fl, ver, changes);
 		// when inserting text and typing, call for completion
@@ -160,29 +161,20 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 			lsp.completionTry(fl, range.enl, range.enc+1, c.charAt(0));
 		changes.clear();
 		mVer = ver;
-		//mSendTime = System.currentTimeMillis();
-		//editor.postDelayed(this, 1000L);
 	}
-/*
-	public void run() {
-		Lsp lsp = MainActivity.lsp;
-		if (lsp.lastReceivedTime()<mSendTime) {
-			lsp.didChange(fl, mVer, ed.getText().toString());
-		}
-	}
-*/
+
 	@Override
 	public void onResume() {
 		super.onResume();
 		long mLast = fl.lastModified();
 		if (mLast>lastModified) {
 			lastModified = mLast;
-			new AlertDialog.Builder(getContext())
-			.setTitle(fl.getName())
-			.setMessage(getString(R.string.file_modified, fl.getName()))
-			.setPositiveButton(android.R.string.ok, this)
-			.setNegativeButton(android.R.string.cancel, null)
-			.create().show();
+			Builder bd = new Builder(getContext());
+			bd.setTitle(fl.getName());
+			bd.setMessage(getString(R.string.file_modified, fl.getName()));
+			bd.setPositiveButton(android.R.string.ok, this);
+			bd.setNegativeButton(android.R.string.cancel, null);
+			bd.create().show();
 		}
 	}
 
@@ -243,7 +235,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		fr.close();
 		String s = sb.toString();
 		ed.setText(s);
-		if ((type&TYPE_MASK)!=TYPE_OTHER)
+		if ((type&TYPE_MASK)!=TYPE_OTHER && "s".equals(Application.completion))
 			ed.getText().setOnTextChangeListener(this);
 		return s;
 	}

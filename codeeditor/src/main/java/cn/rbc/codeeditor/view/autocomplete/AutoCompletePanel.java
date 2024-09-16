@@ -27,7 +27,6 @@ import cn.rbc.codeeditor.util.*;
 public class AutoCompletePanel implements OnItemClickListener {
 
     public static Language _globalLanguage = LanguageNonProg.getInstance();
-	// public CharSequence _constraint;
     public int _off;
     private FreeScrollingTextField _textField;
     private Context _context;
@@ -121,31 +120,39 @@ public class AutoCompletePanel implements OnItemClickListener {
 	}
 
     public void select(int pos) {
-		Deque<Edit> edits = _adapter.getItem(pos).edits;
-		Document doc = _textField.getText();
-		doc.beginBatchEdit();
-		doc.setTyping(false);
-		Edit it = edits.pollFirst();
-		int mc = it.start + it.text.length();
-		long tp = System.nanoTime();
-		doc.deleteAt(it.start, it.len, tp);
-		doc.insertBefore(it.text.toCharArray(), it.start, tp);
-		while (!edits.isEmpty()) {
-			it = edits.pop();
-			int st = it.start, l = it.len;
-			String tx = it.text;
-			doc.deleteAt(st, l, tp);
-			doc.insertBefore(tx.toCharArray(), st, tp);
-			if (st + l <= mc)
-				mc += tx.length() - l;
-			else if (st < mc)
-				mc = st + tx.length();
+		ListItem itm = _adapter.getItem(pos);
+		Deque<Edit> edits = itm.edits;
+		if (edits.isEmpty()) {
+			String text = itm.label;
+			int idx = text.indexOf('(');
+			if (idx >= 0)
+				text = text.substring(0, idx+1);
+			_textField.replaceText(_textField.getCaretPosition()-_off, _off, text);
+		} else {
+			Document doc = _textField.getText();
+			doc.beginBatchEdit();
+			doc.setTyping(false);
+			Edit it = edits.pollFirst();
+			int mc = it.start + it.text.length();
+			long tp = System.nanoTime();
+			doc.deleteAt(it.start, it.len, tp);
+			doc.insertBefore(it.text.toCharArray(), it.start, tp);
+			while (!edits.isEmpty()) {
+				it = edits.pop();
+				int st = it.start, l = it.len;
+				String tx = it.text;
+				doc.deleteAt(st, l, tp);
+				doc.insertBefore(tx.toCharArray(), st, tp);
+				if (st + l <= mc)
+					mc += tx.length() - l;
+				else if (st < mc)
+					mc = st + tx.length();
+			}
+			doc.endBatchEdit();
+			FreeScrollingTextField tf = _textField;
+			tf.moveCaret(mc);
+			tf.mCtrlr.determineSpans();
 		}
-		doc.endBatchEdit();
-		FreeScrollingTextField tf = _textField;
-		tf.moveCaret(mc);
-		tf.mCtrlr.determineSpans();
-        //_textField.replaceText(_textField.getCaretPosition() - _off, _off, text);
         _adapter.abort();
         dismiss();
     }
@@ -211,7 +218,6 @@ public class AutoCompletePanel implements OnItemClickListener {
 											  Gravity.TOP);
         }
 		_list.setSelection(0);
-		//_autoCompletePanel.getListView().setFadingEdgeLength(0);
 		isShow = true;
     }
 
@@ -220,7 +226,6 @@ public class AutoCompletePanel implements OnItemClickListener {
 			_autoCompletePanel.dismiss();
         }
 		isShow = false;
-		//HelperUtils.show(Toast.makeText(_textField.getContext(), String.valueOf(isShow), 1));
     }
 
     public boolean isShow() {

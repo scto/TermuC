@@ -124,13 +124,13 @@ public abstract class Language
 		_name = new String[_namesMap.size()];
 		_namesMap.keySet().toArray(_name);
 	}
-
+/*
 	public void addTypes(String[] types) {
 		for (String tp:types)
 			_namesMap.put(tp, Tokenizer.TYPE);
 		_name = new String[_namesMap.size()];
 		_namesMap.keySet().toArray(_name);
-	}
+	}*/
 
 	public void addBasePackage(String name, String[] names)
 	{

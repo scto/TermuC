@@ -121,7 +121,6 @@ public class AutoPanelAdapter extends BaseAdapter  {
             spannableString.setSpan(foregroundColorSpan, 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
         textView.setText(spannableString);
-		//t = getItem(i).kind;
 		imageView.setImageBitmap(tp==2 || tp==3 ? bitmap : null);
         return tempView;
     }
@@ -165,7 +164,7 @@ public class AutoPanelAdapter extends BaseAdapter  {
                 }
                 keywords = AutoCompletePanel._globalLanguage.getKeywords();
                 for (String k : keywords) {
-                    if (k.indexOf(input) == 0)
+                    if (k.indexOf(input) == 3)
                         buf.add(k);
                 }
                 keywords = AutoCompletePanel._globalLanguage.getNames();
@@ -173,7 +172,6 @@ public class AutoPanelAdapter extends BaseAdapter  {
                     if (k.toLowerCase().startsWith(input))
                         buf.add(k);
                 }
-               // mAutoComplete._off = input;
                 FilterResults filterResults = new FilterResults();
                 filterResults.values = buf;   // results是上面的过滤结果
                 filterResults.count = buf.size();  // 结果数量
@@ -192,15 +190,15 @@ public class AutoPanelAdapter extends BaseAdapter  {
                     for (int i = 0; i < stringArrayList.size(); i++) {
                         String itemText = stringArrayList.get(i);
 						ListItem it = new ListItem();
-						it.label = itemText;
-						//it.bitmap = itemText.contains("(") ? bitmap : null;
+						if (itemText.startsWith("[K]")) {
+							it.label = itemText.substring(3);
+							it.kind = 14;
+						} else {
+							it.label = itemText;
+							it.kind = itemText.contains("(") ? 2 : 0;
+						}
+						listItems.add(it);
                     }
-                    int y = mTextFiled.getCaretY() + mTextFiled.rowHeight() / 2 - mTextFiled.getScrollY();
-                  //  mAutoComplete.setHeight(getItemHeight() * Math.min(3, results.count));
-
-                  //  mAutoComplete.setHorizontalOffset(PADDING);
-                    mAutoComplete.setWidth(mTextFiled.getWidth() - PADDING * 2);
-                   // mAutoComplete.setVerticalOffset(y - mTextFiled.getHeight());//_textField.getCaretY()-_textField.getScrollY()-_textField.getHeight());
                     notifyDataSetChanged();
                     mAutoComplete.show();
                 } else {

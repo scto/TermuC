@@ -12,7 +12,7 @@
 	<PreferenceCategory
 		android:title="@string/editor">
 		<ListPreference
-			android:key="textsize"
+			android:key="fontsize"
 			android:title="@string/textsize"
 			android:entries="@array/sizes"
 			android:entryValues="@array/sizes"

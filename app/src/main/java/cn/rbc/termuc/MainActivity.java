@@ -34,7 +34,7 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
     private ArrayAdapter<String> hda;
 	private FileAdapter adp;
 	private EditFragment lastFrag = null;
-	private boolean byhand = true, inited = false, transZ;
+	private boolean byhand = true, transZ;
     private View keys, showlist;
     private File pwd;
     private TextView pwdpth, msgEmpty, transTxV;
@@ -120,7 +120,7 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 							   }, PackageManager.PERMISSION_GRANTED);
 		if (pref.getBoolean(TESTAPP, true))
 			Utils.testApp(this, false);
-		if (pref.getBoolean(INITAPP, true))
+		else if (pref.getBoolean(INITAPP, true))
 			Utils.initBack(this, false);
     }
 
@@ -185,10 +185,6 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 					else
 						_i = -1;
 					if (_tp != -1) {
-						if (!inited) {
-							lsp.initialize();
-							inited = true;
-						}
 						EditFragment ef = new EditFragment(pwd.getPath(), _tp);
 						FragmentTransaction mts = getFragmentManager().beginTransaction()
 							.add(R.id.editFrag, ef, _it);
@@ -348,15 +344,16 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
     protected void onRestoreInstanceState(Bundle bundle) {
         super.onRestoreInstanceState(bundle);
         pwd = new File(bundle.getString(PWD));
-		int i = 0, j = 0;
+		int i = 0, j = 0, _tp = 0;
 		List<String> files = bundle.getStringArrayList(FILES);
 		if (files != null) {
 			FragmentManager fm = getFragmentManager();
 			for (String s:bundle.getStringArrayList(FILES)) {
 				hda.add(s);
-				Fragment f = fm.findFragmentByTag(s);
+				EditFragment f = (EditFragment)fm.findFragmentByTag(s);
 				if (!f.isHidden()) {
 					j = i;
+					_tp = f.type;
 					codeEditor = (TextEditor)f.getView();
 				}
 				i++;
@@ -370,6 +367,7 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 				byhand = false;
 				ab.setSelectedNavigationItem(j);
 				byhand = true;
+				setFileRunnable((_tp & EditFragment.TYPE_HEADER) == 0);
 			}
 		}
 		if (subc != null)
@@ -422,13 +420,21 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 		switch (requestCode) {
 			case SETTING:
 			if (resultCode == RESULT_OK) {
+				boolean s = "s".equals(Application.completion);
 				FragmentManager fm = getFragmentManager();
 				for (int i=getActionBar().getNavigationItemCount() - 1;i >= 0;i--) {
 					Fragment f = fm.findFragmentByTag(hda.getItem(i));
 					TextEditor ed = (TextEditor)f.getView();
-					ed.setFormatter("s".equals(Application.completion) ?(EditFragment)f: null);
+					ed.setFormatter(s?(EditFragment)f: null);
+					ed.setAutoComplete("l".equals(Application.completion));
 					ed.setWordWrap(Application.wordwrap);
 					ed.setShowNonPrinting(Application.whitespace);
+				}
+				if (s) {
+					if (lsp.isEnded())
+						lsp.start(this, hand);
+				} else if (!lsp.isEnded()) {
+					lsp.end();
 				}
 			} else if (resultCode == RESULT_FIRST_USER) {
 				recreate();

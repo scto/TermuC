@@ -19,7 +19,7 @@ public class Application extends android.app.Application
 		KEY_DARKMODE = "darkmode",
 		KEY_WORDWRAP = "wordwrap",
 		KEY_WHITESPACE = "whitespace",
-		KEY_TEXTSIZE = "textsize",
+		KEY_TEXTSIZE = "fontsize",
 		KEY_SHOW_HIDDEN = "showhidden",
 		KEY_CHECKAPP = "checkapp",
 		KEY_INITAPP = "initapp",
