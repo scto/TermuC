@@ -484,11 +484,13 @@ public abstract class FreeScrollingTextField extends View
 	public void onDel(CharSequence text, int cursorPosition, int delCount) {
 		isTextChanged = true;
 		if (delCount <= mCaretSpan.first)
-			mCaretSpan.first -= 1;
+			mCaretSpan.first--;
 		mAutoCompletePanel.dismiss();
 	}
 
 	public void onNewLine(CharSequence adds) {
+		isTextChanged = true;
+		mCaretSpan.first++;
 		mAutoCompletePanel.dismiss();
 	}
 

@@ -6,17 +6,6 @@
 		ad:icon="@drawable/ic_play_24"
 		ad:alphabeticShortcut="r"
 		ad:alphabeticModifiers="CTRL"/>
-	<!--item
-		ad:title="Run..."
-		ad:showAsAction="always"
-		ad:visible="false">
-		<menu>
-			<item ad:id="@+id/sub_run"
-				ad:title="run"/>
-			<item ad:id="@+id/sub_dbg"
-				ad:title="debug"/>
-		</menu>
-	</item-->
 	<item
 		ad:id="@+id/undo"
 		ad:title="@string/undo"
@@ -47,7 +36,4 @@
 	<item
 		ad:id="@+id/settings"
 		ad:title="@string/settings"/>
-	<!--item
-	ad:id="@+id/test"
-	ad:title="测试"/-->
 </menu>

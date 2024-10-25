@@ -15,7 +15,6 @@ import android.content.res.*;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.app.AlertDialog.Builder;
-import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -209,7 +208,6 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 			} else if (tp == TYPE_CPP) {
 				ed.setLanguage(CppLanguage.getInstance());
 				C = "clang++";
-				
 			} else {
 				ed.setLanguage(LanguageNonProg.getInstance());
 			}
