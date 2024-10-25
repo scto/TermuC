@@ -5,7 +5,7 @@ import android.content.*;
 import java.util.*;
 import java.io.*;
 
-public class FileAdapter extends BaseAdapter implements Comparator<File>, FilenameFilter
+public class FileAdapter extends BaseAdapter implements Comparator<File>, FileFilter
 {
 	private Context mCont;
 	private static FileItem parent;
@@ -13,11 +13,17 @@ public class FileAdapter extends BaseAdapter implements Comparator<File>, Filena
 	private boolean mNRoot;
 	private File mPath;
 	private LayoutInflater mInflater;
+	private FileFilter mFilter;
 
 	public FileAdapter(Context context, File path) {
+		this(context, path, null);
+	}
+
+	public FileAdapter(Context context, File path, FileFilter filter) {
 		super();
 		mCont = context;
 		mInflater = LayoutInflater.from(context);
+		mFilter = filter;
 		setPath(path);
 	}
 
@@ -47,7 +53,6 @@ public class FileAdapter extends BaseAdapter implements Comparator<File>, Filena
 			//convert.setTag();
 		FileItem fitm = getItem(pos);
 		int icon = fitm.icon;
-		//if (icon != -1)
 		((ImageView)convert.findViewById(R.id.file_icon)).setImageResource(icon);
 		((TextView)convert.findViewById(R.id.file_name)).setText(fitm.name);
 		return convert;
@@ -58,7 +63,7 @@ public class FileAdapter extends BaseAdapter implements Comparator<File>, Filena
 		if (parent==null && mNRoot)
 			parent = new FileItem(R.drawable.ic_folder_24, "..");
 		mPath = path;
-		File[] lst = path.listFiles(Application.show_hidden ? null : this);
+		File[] lst = path.listFiles(this);
 		if (lst==null)
 			lst = new File[0];
 		Arrays.sort(lst, this);
@@ -76,8 +81,9 @@ public class FileAdapter extends BaseAdapter implements Comparator<File>, Filena
 			:ad?-1:1;
 	}
 
-	public boolean accept(File p1, String p2) {
-		return p2.charAt(0) != '.';
+	public boolean accept(File p1) {
+		FileFilter ff;
+		return (Application.show_hidden || p1.getName().charAt(0) != '.') && ((ff=mFilter)==null || ff.accept(p1));
 	}
 
 	private static int computeIcon(File f) {

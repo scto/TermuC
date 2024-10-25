@@ -12,6 +12,13 @@
 	<PreferenceCategory
 		android:title="@string/editor">
 		<ListPreference
+			android:key="font"
+			android:title="@string/font"
+			android:entries="@array/fonts"
+			android:entryValues="@array/v_fonts"
+			android:defaultValue="m"
+			/>
+		<ListPreference
 			android:key="fontsize"
 			android:title="@string/textsize"
 			android:entries="@array/sizes"

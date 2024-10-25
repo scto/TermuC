@@ -24,7 +24,7 @@ public class LinearSearchStrategy implements SearchStrategy {
                            boolean isCaseSensitive, boolean isWholeWord) {
 
         // search towards end of doc first...
-        int foundOffset = find(src, target, start, src.getTextLength(),
+        int foundOffset = find(src, target, start, src.length(),
                 isCaseSensitive, isWholeWord);
         // ...then from beginning of doc
         if (foundOffset < 0) {
@@ -45,12 +45,12 @@ public class LinearSearchStrategy implements SearchStrategy {
             TextWarriorException.fail("TextBuffer.find: Invalid start position");
             start = 0;
         }
-        if (end > src.getTextLength()) {
+        if (end > src.length()) {
             TextWarriorException.fail("TextBuffer.find: Invalid end position");
-            end = src.getTextLength();
+            end = src.length();
         }
 
-        end = Math.min(end, src.getTextLength() - target.length() + 1);
+        end = Math.min(end, src.length() - target.length() + 1);
         int offset = start;
         while (offset < end) {
             if (equals(src, target, offset, isCaseSensitive) &&
@@ -78,7 +78,7 @@ public class LinearSearchStrategy implements SearchStrategy {
                 isCaseSensitive, isWholeWord);
         // ...then from end of doc
         if (foundOffset < 0) {
-            foundOffset = findBackwards(src, target, src.getTextLength() - 1, start,
+            foundOffset = findBackwards(src, target, src.length() - 1, start,
                     isCaseSensitive, isWholeWord);
         }
 
@@ -92,15 +92,15 @@ public class LinearSearchStrategy implements SearchStrategy {
         if (target.length() == 0) {
             return -1;
         }
-        if (start >= src.getTextLength()) {
+        if (start >= src.length()) {
             TextWarriorException.fail("Invalid start position given to TextBuffer.find");
-            start = src.getTextLength() - 1;
+            start = src.length() - 1;
         }
         if (end < -1) {
             TextWarriorException.fail("Invalid end position given to TextBuffer.find");
             end = -1;
         }
-        int offset = Math.min(start, src.getTextLength() - target.length());
+        int offset = Math.min(start, src.length() - target.length());
         while (offset > end) {
             if (equals(src, target, offset, isCaseSensitive) &&
                     (!isWholeWord || isSandwichedByWhitespace(src, offset, target.length()))) {
@@ -126,7 +126,7 @@ public class LinearSearchStrategy implements SearchStrategy {
         _unitsDone = 0;
 
         final char[] replacement = replacementText.toCharArray();
-        int foundIndex = find(src, searchText, 0, src.getTextLength(),
+        int foundIndex = find(src, searchText, 0, src.length(),
                 isCaseSensitive, isWholeWord);
         long timestamp = System.nanoTime();
 
@@ -145,7 +145,7 @@ public class LinearSearchStrategy implements SearchStrategy {
                     src,
                     searchText,
                     foundIndex + replacementText.length(),
-                    src.getTextLength(),
+                    src.length(),
                     isCaseSensitive,
                     isWholeWord);
         }
@@ -157,7 +157,7 @@ public class LinearSearchStrategy implements SearchStrategy {
 
     protected boolean equals(Document src, String target,
                              int srcOffset, boolean isCaseSensitive) {
-        if ((src.getTextLength() - srcOffset) < target.length()) {
+        if ((src.length() - srcOffset) < target.length()) {
             //compared range in src must at least be as long as target
             return false;
         }
@@ -190,7 +190,7 @@ public class LinearSearchStrategy implements SearchStrategy {
         boolean startWithWhitespace = (start == 0) || charSet.isWhitespace(src.charAt(start - 1));
 
         int end = start + length;
-        boolean endWithWhitespace = (end == src.getTextLength()) || charSet.isWhitespace(src.charAt(end));
+        boolean endWithWhitespace = (end == src.length()) || charSet.isWhitespace(src.charAt(end));
 
         return (startWithWhitespace && endWithWhitespace);
     }

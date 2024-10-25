@@ -4,11 +4,17 @@
     <string name="global">通用</string>
     <string name="dark_mode">暗主题</string>
     <string name="editor">编辑器</string>
+	<string name="font">字体</string>
+	<string name="sans">无衬线</string>
+	<string name="serif">衬线</string>
+	<string name="monospace">等宽</string>
+	<string name="custom">自定义</string>
     <string name="wordwrap">自动换行</string>
     <string name="whitespace">显示空白符号</string>
     <string name="compiler">编译器</string>
     <string name="cflags">编译选项</string>
     <string name="run">运行</string>
+	<string name="debug">调试</string>
     <string name="undo">撤销</string>
     <string name="redo">重做</string>
     <string name="save">保存</string>
@@ -54,4 +60,5 @@
 	<string name="copy_jump">复制并跳转</string>
 	<string name="initialized">已配置</string>
 	<string name="request_failed">申请权限失败</string>
+	<string name="select_font">选择字体文件</string>
 </resources>

@@ -58,9 +58,10 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
     }
 
 	public void run() {
-		field.hDoc.setSpans(mRes);
+		FreeScrollingTextField fd = field;
+		fd.hDoc.setSpans(mRes);
 		lexing = false;
-		field.invalidate();
+		fd.invalidate();
 	}
 
     //- TextFieldController -----------------------------------------------
@@ -83,51 +84,45 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
                 if (selectionDeleted)
                     break;
                 if (pos > 0) {
-					//pos--;
-					//char p;
 					int l = pos > 1 && ((c = fld.hDoc.charAt(pos - 2)) == 0xd83d || c == 0xd83c) ? 2 : 1;
-					//String s = 
+					String s = (String)fld.hDoc.subSequence(pos-l,l);
                     fld.hDoc.deleteAt(pos - l, l, System.nanoTime());
-                    /*if (pos>0 && field.hDoc.charAt(--pos) == 0xd83d || field.hDoc.charAt(pos) == 0xd83c) {
-					 field.hDoc.deleteAt(pos, System.nanoTime());
-					 moveCaretLeft(true);
-					 }*/
-
-                    fld.onDel(String.valueOf(c), fld.mCaretPosition, 1);
+                    fld.onDel(s, fld.mCaretPosition, l);
                     moveCaretLeft(true);
 					if (l == 2)
 						moveCaretLeft(true);
                 }
                 break;
             case Language.NEWLINE:
+				char[] ind;
                 if (fld.isAutoIndent) {
-                    char[] indent = createAutoIndent();
-                    field.hDoc.insertBefore(indent, pos, System.nanoTime());
-                    moveCaret(field.mCaretPosition + indent.length);
-					break;
-                }
-				field.hDoc.insertBefore(new char[]{c}, pos, System.nanoTime());
-                moveCaretRight(true);
-                field.onAdd(String.valueOf(c), pos, 1);
+                    ind = createAutoIndent();
+                    fld.hDoc.insertBefore(ind, pos, System.nanoTime());
+                    moveCaret(fld.mCaretPosition + ind.length);
+                } else {
+					fld.hDoc.insertBefore((ind=new char[]{c}), pos, System.nanoTime());
+                	moveCaretRight(true);
+				}
+                field.onNewLine(new String(ind));
 				break;
 			case Language.TAB:
 				if (fld.isUseSpace()) {
 					int tl = fld.mTabLength;
 					char[] cs = new char[tl - pos % tl];
 					Arrays.fill(cs, ' ');
-					field.hDoc.insertBefore(cs, pos, System.nanoTime());
+					fld.hDoc.insertBefore(cs, pos, System.nanoTime());
 					moveCaret(pos + cs.length);
-					field.onAdd(new String(cs), pos, cs.length);
+					fld.onAdd(new String(cs), pos, cs.length);
 					break;
 				}
             default:
-                field.hDoc.insertBefore(new char[]{c}, pos, System.nanoTime());
+                fld.hDoc.insertBefore(new char[]{c}, pos, System.nanoTime());
                 moveCaretRight(true);
-                field.onAdd(String.valueOf(c), pos, 1);
+                fld.onAdd(String.valueOf(c), pos, 1);
                 break;
         }
 
-        field.setEdited(true);
+        fld.setEdited(true);
         determineSpans();
 		//tc
     }
@@ -138,13 +133,14 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
      * 创建自动缩进
      */
     private char[] createAutoIndent() {
-		Document doc = field.hDoc;
-		int pos = field.mCaretPosition;
+		FreeScrollingTextField fld = field;
+		Document doc = fld.hDoc;
+		int pos = fld.mCaretPosition;
         int lineNum = doc.findLineNumber(pos);
         int startOfLine = doc.getLineOffset(lineNum);
         int whitespaceCount = 0;
         //查找上一行的空白符个数
-		int i, mL = doc.getTextLength(), mTL = field.mTabLength;
+		int i, mTL = fld.mTabLength;
 		char c;
         for (i = startOfLine; i < pos;) {
             c = doc.charAt(i++);
@@ -157,7 +153,7 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
         }
         //寻找最后字符
         int endChar = 0;
-        for (i = startOfLine;i < mL;) {
+        for (i = startOfLine;i < pos;) {
             c = doc.charAt(i++);
             if (c == Language.NEWLINE || c == Language.EOF)
                 break;
@@ -165,11 +161,11 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
         }
 		//最后字符为'{',缩进
         if (endChar == '{')
-            whitespaceCount += field.mAutoIndentWidth;
+            whitespaceCount += fld.mAutoIndentWidth;
         if (whitespaceCount < 0)
             return new char[]{Language.NEWLINE};
 		char[] indent;
-		if (field.isUseSpace()) {
+		if (fld.isUseSpace()) {
 			indent = new char[1 + whitespaceCount];
 			indent[0] = Language.NEWLINE;
 			Arrays.fill(indent, 1, indent.length, ' ');
@@ -184,57 +180,59 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
     }
 
     public void moveCaretDown() {
-        if (!field.caretOnLastRowOfFile()) {
-            int currCaret = field.mCaretPosition;
-            int currRow = field.mCaretRow;
+		FreeScrollingTextField fld = field;
+        if (!fld.caretOnLastRowOfFile()) {
+            int currCaret = fld.mCaretPosition;
+            int currRow = fld.mCaretRow;
             int newRow = currRow + 1;
-            int currColumn = field.getColumn(currCaret);
-            int currRowLength = field.hDoc.getRowSize(currRow);
-            int newRowLength = field.hDoc.getRowSize(newRow);
+            int currColumn = fld.getColumn(currCaret);
+            int currRowLength = fld.hDoc.getRowSize(currRow);
+            int newRowLength = fld.hDoc.getRowSize(newRow);
 
             if (currColumn < newRowLength)
 			// Position at the same column as old row.
-                field.mCaretPosition += currRowLength;
+                fld.mCaretPosition += currRowLength;
             else
 			// Column does not exist in the new row (new row is too short).
 			// Position at end of new row instead.
-                field.mCaretPosition +=
+                fld.mCaretPosition +=
 					currRowLength - currColumn + newRowLength - 1;
-            ++field.mCaretRow;
+            ++fld.mCaretRow;
 
-            updateSelectionRange(currCaret, field.mCaretPosition);
-            if (!field.focusCaret())
-                field.invalidateRows(currRow, newRow + 1);
+            updateSelectionRange(currCaret, fld.mCaretPosition);
+            if (!fld.focusCaret())
+                fld.invalidateRows(currRow, newRow + 1);
             // 拖动yoyo球滚动时，保证yoyo球的坐标与光标一致
-            field.crtLis.updateCaret(field.mCaretPosition);
-            field.mRowListener.onRowChanged(newRow);
+            fld.crtLis.updateCaret(fld.mCaretPosition);
+            fld.mRowListener.onRowChanged(newRow);
             stopTextComposing();
         }
     }
 
     public void moveCaretUp() {
-        if (!field.caretOnFirstRowOfFile()) {
-            int currCaret = field.mCaretPosition;
-            int currRow = field.mCaretRow;
+		FreeScrollingTextField fld = field;
+        if (!fld.caretOnFirstRowOfFile()) {
+            int currCaret = fld.mCaretPosition;
+            int currRow = fld.mCaretRow;
             int newRow = currRow - 1;
-            int currColumn = field.getColumn(currCaret);
-            int newRowLength = field.hDoc.getRowSize(newRow);
+            int currColumn = fld.getColumn(currCaret);
+            int newRowLength = fld.hDoc.getRowSize(newRow);
 
             if (currColumn < newRowLength)
 			// Position at the same column as old row.
-                field.mCaretPosition -= newRowLength;
+                fld.mCaretPosition -= newRowLength;
             else
 			// Column does not exist in the new row (new row is too short).
 			// Position at end of new row instead.
-                field.mCaretPosition -= (currColumn + 1);
-            --field.mCaretRow;
+                fld.mCaretPosition -= (currColumn + 1);
+            --fld.mCaretRow;
 
-            updateSelectionRange(currCaret, field.mCaretPosition);
-            if (!field.focusCaret())
-                field.invalidateRows(newRow, currRow + 1);
+            updateSelectionRange(currCaret, fld.mCaretPosition);
+            if (!fld.focusCaret())
+                fld.invalidateRows(newRow, currRow + 1);
             // 拖动yoyo球滚动时，保证yoyo球的坐标与光标一致
-            field.crtLis.updateCaret(field.mCaretPosition);
-            field.mRowListener.onRowChanged(newRow);
+            fld.crtLis.updateCaret(fld.mCaretPosition);
+            fld.mRowListener.onRowChanged(newRow);
             stopTextComposing();
         }
     }
@@ -244,18 +242,19 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
      *                 a result of entering text
      */
     public void moveCaretRight(boolean isTyping) {
-        if (!field.caretOnEOF()) {
-            int originalRow = field.mCaretRow;
-            ++field.mCaretPosition;
+		FreeScrollingTextField fld = field;
+        if (!fld.caretOnEOF()) {
+            int originalRow = fld.mCaretRow;
+            int pos = ++fld.mCaretPosition;
             updateCaretRow();
-            updateSelectionRange(field.mCaretPosition - 1, field.mCaretPosition);
-            if (!field.focusCaret())
-                field.invalidateRows(originalRow, field.mCaretRow + 1);
+            updateSelectionRange(pos - 1, pos);
+            if (!fld.focusCaret())
+                fld.invalidateRows(originalRow, fld.mCaretRow + 1);
 
             if (!isTyping)
                 stopTextComposing();
             // 拖动yoyo球滚动时，保证yoyo球的坐标与光标一致
-            field.crtLis.updateCaret(field.mCaretPosition);
+            fld.crtLis.updateCaret(pos);
         }
     }
 
@@ -264,38 +263,41 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
      *                 a result of deleting text
      */
     public void moveCaretLeft(boolean isTyping) {
-        if (field.mCaretPosition > 0) {
-            int originalRow = field.mCaretRow;
-            --field.mCaretPosition;
+		FreeScrollingTextField fld = field;
+        if (fld.mCaretPosition > 0) {
+            int originalRow = fld.mCaretRow;
+            int pos = --fld.mCaretPosition;
             updateCaretRow();
-            updateSelectionRange(field.mCaretPosition + 1, field.mCaretPosition);
-            if (!field.focusCaret())
-                field.invalidateRows(field.mCaretRow, originalRow + 1);
+            updateSelectionRange(pos + 1, pos);
+            if (!fld.focusCaret())
+                fld.invalidateRows(fld.mCaretRow, originalRow + 1);
 
             if (!isTyping)
                 stopTextComposing();
             // 拖动yoyo球滚动时，保证yoyo球的坐标与光标一致
-            field.crtLis.updateCaret(field.mCaretPosition);
+            fld.crtLis.updateCaret(pos);
         }
     }
 
     public void moveCaret(int i) {
-        if (i < 0 || i >= field.hDoc.getTextLength()) {
+		FreeScrollingTextField fld = field;
+        if (i < 0 || i >= fld.hDoc.length()) {
             TextWarriorException.fail("Invalid caret position");
             return;
         }
-        updateSelectionRange(field.mCaretPosition, i);
+        updateSelectionRange(fld.mCaretPosition, i);
 
-        field.mCaretPosition = i;
+        fld.mCaretPosition = i;
         updateAfterCaretJump();
     }
 
     private void updateAfterCaretJump() {
-        int oldRow = field.mCaretRow;
+		FreeScrollingTextField fld = field;
+        int oldRow = fld.mCaretRow;
         updateCaretRow();
-        if (!field.focusCaret()) {
-            field.invalidateRows(oldRow, oldRow + 1); //old caret row
-            field.invalidateCaretRow(); //new caret row
+        if (!fld.focusCaret()) {
+            fld.invalidateRows(oldRow, oldRow + 1); //old caret row
+            fld.invalidateCaretRow(); //new caret row
         }
         stopTextComposing();
     }
@@ -305,22 +307,25 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
      * mTextFiledl.mCaretPosition, in order to to recalculate the new row the caret is on.
      */
     void updateCaretRow() {
-        int newRow = field.hDoc.findRowNumber(field.mCaretPosition);
-        if (field.mCaretRow != newRow) {
-            field.mCaretRow = newRow;
-            field.mRowListener.onRowChanged(newRow);
+		FreeScrollingTextField fld = field;
+        int newRow = fld.hDoc.findRowNumber(fld.mCaretPosition);
+        if (fld.mCaretRow != newRow) {
+            fld.mCaretRow = newRow;
+            fld.mRowListener.onRowChanged(newRow);
         }
     }
 
     public void stopTextComposing() {
-        InputMethodManager im = (InputMethodManager) field.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+		FreeScrollingTextField fld = field;
+        InputMethodManager im = (InputMethodManager) fld.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         // This is an overkill way to inform the InputMethod that the caret
         // might have changed position and it should re-evaluate the
         // caps mode to use.
         im.restartInput(field);
+		TextFieldInputConnection tf = fld.mInputConnection;
 
-        if (field.mInputConnection != null && field.mInputConnection.isComposingStarted())
-            field.mInputConnection.resetComposingState();
+        if (tf != null && tf.isComposingStarted())
+            tf.resetComposingState();
     }
 
     //- TextFieldController -----------------------------------------------
@@ -339,16 +344,13 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
         if (mode == _isInSelectionMode)
             return;
 
-        if (mode) {
-            field.mSelectionAnchor = field.mCaretPosition;
-            field.mSelectionEdge = field.mCaretPosition;
-        } else {
-            field.mSelectionAnchor = -1;
-            field.mSelectionEdge = -1;
-        }
-        _isInSelectionMode = mode;
-        _isInSelectionMode2 = mode;
-        field.selLis.onSelectionChanged(mode, field.getSelectionStart(), field.getSelectionEnd());
+		FreeScrollingTextField fld = field;
+        if (mode)
+            fld.mSelectionEdge = fld.mSelectionAnchor = fld.mCaretPosition;
+        else
+            fld.mSelectionEdge = fld.mSelectionAnchor = -1;
+        _isInSelectionMode = _isInSelectionMode2 = mode;
+        fld.selLis.onSelectionChanged(mode, fld.getSelectionStart(), fld.getSelectionEnd());
     }
 
     public final boolean isSelectText2() {
@@ -372,39 +374,38 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
      */
 
     public void setSelectionRange(int beginPosition, int numChars, boolean scrollToStart, boolean mode) {
+		FreeScrollingTextField fld = field;
         TextWarriorException.assertVerbose(
-			(beginPosition >= 0) && numChars <= (field.hDoc.getTextLength() - 1) && numChars >= 0,
+			(beginPosition >= 0) && numChars <= (fld.hDoc.length() - 1) && numChars >= 0,
 			"Invalid range to select");
 
         if (_isInSelectionMode)
 		// unhighlight previous selection
-            field.invalidateSelectionRows();
+            fld.invalidateSelectionRows();
         else {
             // unhighlight caret
-            field.invalidateCaretRow();
+            fld.invalidateCaretRow();
             if (mode)
                 setSelectText(true);
             else
                 _isInSelectionMode = true;
         }
 
-        field.mSelectionAnchor = beginPosition;
-        field.mSelectionEdge = field.mSelectionAnchor + numChars;
+        fld.mCaretPosition = fld.mSelectionEdge = (fld.mSelectionAnchor=beginPosition) + numChars;
 
-        field.mCaretPosition = field.mSelectionEdge;
         stopTextComposing();
         updateCaretRow();
         if (mode)
-            field.selLis.onSelectionChanged(isSelectText(), field.mSelectionAnchor, field.mSelectionEdge);
-        boolean scrolled = field.makeCharVisible(field.mSelectionEdge);
+            fld.selLis.onSelectionChanged(isSelectText(), fld.mSelectionAnchor, fld.mSelectionEdge);
+        boolean scrolled = fld.makeCharVisible(fld.mSelectionEdge);
 
         if (scrollToStart)
 		//TODO reduce unnecessary scrolling and write a method to scroll
 		// the beginning of multi-line selections as far left as possible
-            scrolled = field.makeCharVisible(field.mSelectionAnchor);
+            scrolled = fld.makeCharVisible(fld.mSelectionAnchor);
 
         if (!scrolled)
-            field.invalidateSelectionRows();
+            fld.invalidateSelectionRows();
     }
 
     /**
@@ -416,11 +417,12 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
      */
     public void focusSelection(boolean start) {
         if (_isInSelectionMode) {
-            if (start && field.mCaretPosition != field.mSelectionAnchor) {
-                field.mCaretPosition = field.mSelectionAnchor;
+			FreeScrollingTextField fld = field;
+            if (start && fld.mCaretPosition != fld.mSelectionAnchor) {
+                fld.mCaretPosition = fld.mSelectionAnchor;
                 updateAfterCaretJump();
-            } else if (!start && field.mCaretPosition != field.mSelectionEdge) {
-                field.mCaretPosition = field.mSelectionEdge;
+            } else if (!start && fld.mCaretPosition != fld.mSelectionEdge) {
+                fld.mCaretPosition = fld.mSelectionEdge;
                 updateAfterCaretJump();
             }
         }
@@ -437,18 +439,19 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
         if (!_isInSelectionMode)
             return;
 
-        if (oldCaretPosition < field.mSelectionEdge) {
-            if (newCaretPosition > field.mSelectionEdge) {
-                field.mSelectionAnchor = field.mSelectionEdge;
-                field.mSelectionEdge = newCaretPosition;
+		FreeScrollingTextField fld = field;
+        if (oldCaretPosition < fld.mSelectionEdge) {
+            if (newCaretPosition > fld.mSelectionEdge) {
+                fld.mSelectionAnchor = fld.mSelectionEdge;
+                fld.mSelectionEdge = newCaretPosition;
             } else
-                field.mSelectionAnchor = newCaretPosition;
+                fld.mSelectionAnchor = newCaretPosition;
 
-        } else if (newCaretPosition < field.mSelectionAnchor) {
-            field.mSelectionEdge = field.mSelectionAnchor;
-            field.mSelectionAnchor = newCaretPosition;
+        } else if (newCaretPosition < fld.mSelectionAnchor) {
+            fld.mSelectionEdge = fld.mSelectionAnchor;
+            fld.mSelectionAnchor = newCaretPosition;
         } else
-            field.mSelectionEdge = newCaretPosition;
+            fld.mSelectionEdge = newCaretPosition;
     }
 
     //- TextFieldController -----------------------------------------------
@@ -471,10 +474,11 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
      */
     public void copy(ClipboardManager cb) {
         //TODO catch OutOfMemoryError
+		FreeScrollingTextField fld = field;
         if (_isInSelectionMode &&
-			field.mSelectionAnchor < field.mSelectionEdge) {
-            CharSequence contents = field.hDoc.subSequence(field.mSelectionAnchor,
-														   field.mSelectionEdge - field.mSelectionAnchor);
+			fld.mSelectionAnchor < fld.mSelectionEdge) {
+            CharSequence contents = fld.hDoc.subSequence(fld.mSelectionAnchor,
+														   fld.mSelectionEdge - fld.mSelectionAnchor);
             cb.setText(contents);
         }
     }
@@ -490,17 +494,18 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
         if (text == null)
             return;
 
-		Document doc = field.hDoc;
+		FreeScrollingTextField fd = field;
+		Document doc = fd.hDoc;
 		doc.setTyping(true);
         selectionDelete();
 
-        doc.insertBefore(text.toCharArray(), field.mCaretPosition, System.nanoTime());
-        field.onAdd(text, field.mCaretPosition, text.length());
+        doc.insertBefore(text.toCharArray(), fd.mCaretPosition, System.nanoTime());
+        fd.onAdd(text, fd.mCaretPosition, text.length());
 
-        field.mCaretPosition += text.length();
+        fd.mCaretPosition += text.length();
         updateCaretRow();
 
-        field.setEdited(true);
+        fd.setEdited(true);
         determineSpans();
 		//tc
         stopTextComposing();
@@ -516,39 +521,41 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
     public void selectionDelete() {
         if (!_isInSelectionMode)
             return;
-
-        int totalChars = field.mSelectionEdge - field.mSelectionAnchor;
+		FreeScrollingTextField fd = field;
+        int totalChars = fd.mSelectionEdge - fd.mSelectionAnchor;
 
         if (totalChars > 0) {
-            int originalRow = field.hDoc.findRowNumber(field.mSelectionAnchor);
-            int originalOffset = field.hDoc.getRowOffset(originalRow);
-            boolean isSingleRowSel = field.hDoc.findRowNumber(field.mSelectionEdge) == originalRow;
-            field.hDoc.deleteAt(field.mSelectionAnchor, totalChars, System.nanoTime());
-            field.onDel("", field.mCaretPosition, totalChars);
-            field.mCaretPosition = field.mSelectionAnchor;
+			Document doc = fd.hDoc;
+            int originalRow = doc.findRowNumber(fd.mSelectionAnchor);
+            int originalOffset = doc.getRowOffset(originalRow);
+            boolean isSingleRowSel = doc.findRowNumber(fd.mSelectionEdge) == originalRow;
+			CharSequence st = doc.subSequence(fd.mSelectionAnchor, totalChars);
+            doc.deleteAt(fd.mSelectionAnchor, totalChars, System.nanoTime());
+            fd.onDel(st, fd.mCaretPosition, totalChars);
+            fd.mCaretPosition = fd.mSelectionAnchor;
             updateCaretRow();
-            field.setEdited(true);
+            fd.setEdited(true);
             setSelectText(false);
             stopTextComposing();
 
             if (!field.focusCaret()) {
                 int invalidateStartRow = originalRow;
                 //invalidate previous row too if its wrapping changed
-                if (field.hDoc.isWordWrap() &&
-					originalOffset != field.hDoc.getRowOffset(originalRow)) {
+                if (doc.isWordWrap() &&
+					originalOffset != doc.getRowOffset(originalRow)) {
                     --invalidateStartRow;
                 }
 
-                if (isSingleRowSel && !field.hDoc.isWordWrap())
+                if (isSingleRowSel && !doc.isWordWrap())
 				//pasted text only affects current row
-                    field.invalidateRows(invalidateStartRow, invalidateStartRow + 1);
+                    fd.invalidateRows(invalidateStartRow, invalidateStartRow + 1);
                 else
 				//TODO invalidate damaged rows only
-                    field.invalidateFromRow(invalidateStartRow);
+                    fd.invalidateFromRow(invalidateStartRow);
             }
         } else {
             setSelectText(false);
-            field.invalidateCaretRow();
+            fd.invalidateCaretRow();
         }
     }
 
@@ -556,80 +563,81 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
         int invalidateStartRow, originalOffset;
         boolean isInvalidateSingleRow = true;
         boolean dirty = false;
+		FreeScrollingTextField fld = field;
         //delete selection
         if (_isInSelectionMode) {
-            invalidateStartRow = field.hDoc.findRowNumber(field.mSelectionAnchor);
-            originalOffset = field.hDoc.getRowOffset(invalidateStartRow);
+            invalidateStartRow = fld.hDoc.findRowNumber(fld.mSelectionAnchor);
+            originalOffset = fld.hDoc.getRowOffset(invalidateStartRow);
 
-            int totalChars = field.mSelectionEdge - field.mSelectionAnchor;
+            int totalChars = fld.mSelectionEdge - fld.mSelectionAnchor;
 
             if (totalChars > 0) {
-                field.mCaretPosition = field.mSelectionAnchor;
-                field.hDoc.deleteAt(field.mSelectionAnchor, totalChars, System.nanoTime());
+                fld.mCaretPosition = fld.mSelectionAnchor;
+                fld.hDoc.deleteAt(fld.mSelectionAnchor, totalChars, System.nanoTime());
 
-                if (invalidateStartRow != field.mCaretRow)
+                if (invalidateStartRow != fld.mCaretRow)
                     isInvalidateSingleRow = false;
                 dirty = true;
             }
 
             setSelectText(false);
         } else {
-            invalidateStartRow = field.mCaretRow;
-            originalOffset = field.hDoc.getRowOffset(field.mCaretRow);
+            invalidateStartRow = fld.mCaretRow;
+            originalOffset = fld.hDoc.getRowOffset(fld.mCaretRow);
         }
 
         //delete requested chars
         if (charCount > 0) {
-            int delFromRow = field.hDoc.findRowNumber(from);
+            int delFromRow = fld.hDoc.findRowNumber(from);
             if (delFromRow < invalidateStartRow) {
                 invalidateStartRow = delFromRow;
-                originalOffset = field.hDoc.getRowOffset(delFromRow);
+                originalOffset = fld.hDoc.getRowOffset(delFromRow);
             }
 
-            if (invalidateStartRow != field.mCaretRow)
+            if (invalidateStartRow != fld.mCaretRow)
                 isInvalidateSingleRow = false;
 
-            field.mCaretPosition = from;
-            field.hDoc.deleteAt(from, charCount, System.nanoTime());
+            fld.mCaretPosition = from;
+            fld.hDoc.deleteAt(from, charCount, System.nanoTime());
             dirty = true;
         }
 
         //insert
         if (text != null && text.length() > 0) {
-            int insFromRow = field.hDoc.findRowNumber(from);
+            int insFromRow = fld.hDoc.findRowNumber(from);
             if (insFromRow < invalidateStartRow) {
                 invalidateStartRow = insFromRow;
-                originalOffset = field.hDoc.getRowOffset(insFromRow);
+                originalOffset = fld.hDoc.getRowOffset(insFromRow);
             }
-            field.hDoc.insertBefore(text.toString().toCharArray(), field.mCaretPosition, System.nanoTime());
-            field.mCaretPosition += text.length();
+            fld.hDoc.insertBefore(text.toString().toCharArray(), fld.mCaretPosition, System.nanoTime());
+            fld.mCaretPosition += text.length();
             dirty = true;
         }
 
         if (dirty) {
-            field.setEdited(true);
+            fld.setEdited(true);
             determineSpans();
-			field.focusCaret();
+			fld.focusCaret();
 			return;
         }
 
-        int originalRow = field.mCaretRow;
+        int originalRow = fld.mCaretRow;
         updateCaretRow();
-        if (originalRow != field.mCaretRow)
+        if (originalRow != fld.mCaretRow)
             isInvalidateSingleRow = false;
 
-        if (!field.focusCaret()) {
+        if (!fld.focusCaret()) {
             //invalidate previous row too if its wrapping changed
-            if (field.hDoc.isWordWrap() &&
-				originalOffset != field.hDoc.getRowOffset(invalidateStartRow))
+            if (fld.hDoc.isWordWrap() &&
+				originalOffset != fld.hDoc.getRowOffset(invalidateStartRow))
                 --invalidateStartRow;
 
-            if (isInvalidateSingleRow && !field.hDoc.isWordWrap())
+            if (isInvalidateSingleRow && !fld.hDoc.isWordWrap())
 			//replaced text only affects current row
-                field.invalidateRows(field.mCaretRow, field.mCaretRow + 1);
+                fld.invalidateRows(fld.mCaretRow, fld.mCaretRow + 1);
             else
 			//TODO invalidate damaged rows only
-                field.invalidateFromRow(invalidateStartRow);
+                fld.invalidateFromRow(invalidateStartRow);
         }
     }
 
@@ -648,28 +656,29 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
         boolean isInvalidateSingleRow = true;
         boolean dirty = false;
 
-		Document doc = field.hDoc;
+		FreeScrollingTextField fld = field;
+		Document doc = fld.hDoc;
 		doc.setTyping(true);
         //delete selection
         if (_isInSelectionMode) {
-            invalidateStartRow = doc.findRowNumber(field.mSelectionAnchor);
+            invalidateStartRow = doc.findRowNumber(fld.mSelectionAnchor);
             originalOffset = doc.getRowOffset(invalidateStartRow);
 
-            int totalChars = field.mSelectionEdge - field.mSelectionAnchor;
+            int totalChars = fld.mSelectionEdge - fld.mSelectionAnchor;
 
             if (totalChars > 0) {
-                field.mCaretPosition = field.mSelectionAnchor;
-                doc.deleteAt(field.mSelectionAnchor, totalChars, System.nanoTime());
+                fld.mCaretPosition = fld.mSelectionAnchor;
+                doc.deleteAt(fld.mSelectionAnchor, totalChars, System.nanoTime());
 
-                if (invalidateStartRow != field.mCaretRow)
+                if (invalidateStartRow != fld.mCaretRow)
                     isInvalidateSingleRow = false;
                 dirty = true;
             }
 
             setSelectText(false);
         } else {
-            invalidateStartRow = field.mCaretRow;
-            originalOffset = doc.getRowOffset(field.mCaretRow);
+            invalidateStartRow = fld.mCaretRow;
+            originalOffset = doc.getRowOffset(fld.mCaretRow);
         }
 
         //delete requested chars
@@ -680,10 +689,10 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
                 originalOffset = doc.getRowOffset(delFromRow);
             }
 
-            if (invalidateStartRow != field.mCaretRow)
+            if (invalidateStartRow != fld.mCaretRow)
                 isInvalidateSingleRow = false;
 
-            field.mCaretPosition = from;
+            fld.mCaretPosition = from;
             doc.deleteAt(from, charCount, System.nanoTime());
             dirty = true;
         }
@@ -697,26 +706,24 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
             }
 
             log("inserted text:" + text);
-            doc.insertBefore(text.toCharArray(), field.mCaretPosition, System.nanoTime());
-            field.mCaretPosition += text.length();
+            doc.insertBefore(text.toCharArray(), fld.mCaretPosition, System.nanoTime());
+            fld.mCaretPosition += text.length();
             dirty = true;
-
-        }
-
-        field.onAdd(text, field.mCaretPosition, text.length() - charCount);
+        	fld.onAdd(text, fld.mCaretPosition, text.length() - charCount);
+		}
         if (dirty) {
-            field.setEdited(true);
+            fld.setEdited(true);
             determineSpans();
-			field.focusCaret();
+			fld.focusCaret();
 			return;
         }
 
-        int originalRow = field.mCaretRow;
+        int originalRow = fld.mCaretRow;
         updateCaretRow();
-        if (originalRow != field.mCaretRow)
+        if (originalRow != fld.mCaretRow)
             isInvalidateSingleRow = false;
 
-        if (!field.focusCaret()) {
+        if (!fld.focusCaret()) {
             //invalidate previous row too if its wrapping changed
             if (doc.isWordWrap() &&
 				originalOffset != doc.getRowOffset(invalidateStartRow))
@@ -724,10 +731,10 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
 
             if (isInvalidateSingleRow && !doc.isWordWrap())
 			//replaced text only affects current row
-                field.invalidateRows(field.mCaretRow, field.mCaretRow + 1);
+                fld.invalidateRows(fld.mCaretRow, fld.mCaretRow + 1);
             else
 			//TODO invalidate damaged rows only
-                field.invalidateFromRow(invalidateStartRow);
+                fld.invalidateFromRow(invalidateStartRow);
         }
     }
 
@@ -740,29 +747,32 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
      * text composing to the IME.
      */
     void deleteAroundComposingText(int left, int right) {
-        int start = field.mCaretPosition - left;
+		FreeScrollingTextField fld = field;
+        int start = fld.mCaretPosition - left;
         if (start < 0)
             start = 0;
-        int end = field.mCaretPosition + right;
-        int docLength = field.hDoc.getTextLength();
+        int end = fld.mCaretPosition + right;
+        int docLength = fld.hDoc.length();
         if (end > docLength - 1) //exclude the terminal EOF
             end = docLength - 1;
         replaceComposingText(start, end - start, "");
     }
 
     String getTextAfterCursor(int maxLen) {
-        int docLength = field.hDoc.getTextLength();
-        if ((field.mCaretPosition + maxLen) > (docLength - 1))
+		FreeScrollingTextField fld = field;
+        int docLength = fld.hDoc.length();
+        if ((fld.mCaretPosition + maxLen) > (docLength - 1))
 		//exclude the terminal EOF
-            return field.hDoc.subSequence(field.mCaretPosition, docLength - field.mCaretPosition - 1).toString();
+            return fld.hDoc.subSequence(fld.mCaretPosition, docLength - fld.mCaretPosition - 1).toString();
 
-        return field.hDoc.subSequence(field.mCaretPosition, maxLen).toString();
+        return fld.hDoc.subSequence(fld.mCaretPosition, maxLen).toString();
     }
 
     String getTextBeforeCursor(int maxLen) {
-        int start = field.mCaretPosition - maxLen;
+		FreeScrollingTextField fld = field;
+        int start = fld.mCaretPosition - maxLen;
         if (start < 0)
             start = 0;
-        return field.hDoc.subSequence(start, field.mCaretPosition - start).toString();
+        return fld.hDoc.subSequence(start, fld.mCaretPosition - start).toString();
     }
 }//end inner controller class

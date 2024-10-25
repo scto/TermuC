@@ -28,8 +28,11 @@
             </intent-filter>
         </activity>
 		<activity
-				android:label="@string/settings"
-				android:name=".SettingsActivity"/>
+			android:label="@string/settings"
+			android:name=".SettingsActivity"/>
+		<activity
+			android:icon="@android:drawable/ic_menu_close_clear_cancel"
+			android:name=".FileActivity"/>
     </application>
 
 </manifest>

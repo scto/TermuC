@@ -24,7 +24,6 @@ public class CharSeqReader extends Reader {
 				char c = src.charAt(offset++);
 				chars[i++] = c;
 			} catch (Exception e) {
-
 			}
 		}
 		if (len <= 0)

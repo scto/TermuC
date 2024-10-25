@@ -23,6 +23,8 @@ import android.app.AlertDialog.Builder;
 import android.util.ArrayMap;
 import android.graphics.drawable.*;
 import android.provider.*;
+import cn.rbc.codeeditor.common.*;
+import android.graphics.*;
 
 public class MainActivity extends Activity implements
 ActionBar.OnNavigationListener, OnGlobalLayoutListener,
@@ -151,10 +153,14 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 				showlist.setVisibility(View.GONE);
 				subc.setVisibility(View.GONE);
 				keys.setVisibility(View.VISIBLE);
+				_appmenu.findItem(R.id.run).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+				_appmenu.findItem(R.id.redo).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
 				return;
 			}
 			showlist.setVisibility(View.VISIBLE);
 			keys.setVisibility(View.GONE);
+			_appmenu.findItem(R.id.run).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+			_appmenu.findItem(R.id.redo).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -233,6 +239,7 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 		bd.setMessage(getString(R.string.confirm_delete, transStr));
 		bd.setNegativeButton(android.R.string.cancel, null);
 		bd.setPositiveButton(android.R.string.ok, this);
+		transZ = false;
 		bd.create().show();
 		return true;
 	}
@@ -245,22 +252,15 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         switch (menuItem.getItemId()) {
             case R.id.run:
-                try {
-                    lastFrag.save();
-					if ((lastFrag.type & EditFragment.TYPE_MASK) != EditFragment.TYPE_OTHER)
-						lsp.didSave(lastFrag.getFile());
-					StringBuilder sb = new StringBuilder(lastFrag.getC());
-					sb.append(" \"");
-					sb.append(Utils.escape(lastFrag.getFile().getAbsolutePath()));
-					sb.append("\" ");
-					sb.append(Application.cflags);
-					sb.append(" -o $TMPDIR/m && $TMPDIR/m && echo -n \"\nPress any key to exit...\" && read");
-                    Utils.run(this, new StringBuilder(Utils.PREF).append("/usr/bin/bash").toString(), new String[]{"-c",
-								  sb.toString()},
-							  pwd.getPath(), false);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+				int bs = codeEditor.getText().getMarksCount();
+				transZ = true;
+				if (bs==0) 
+					onClick(null, 0);
+				else {
+					Builder bd = new AlertDialog.Builder(this);
+					bd.setItems(R.array.runs, this);
+					bd.create().show();
+				}
 				break;
 			case R.id.undo:
                 codeEditor.undo();
@@ -387,12 +387,44 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 
 	@Override
 	public void onClick(DialogInterface di, int id) {
-		ProgressDialog pd = new ProgressDialog(MainActivity.this);
-		pd.setMessage(getString(R.string.deleting, transStr));
-		pd.setIndeterminate(true);
-		pd.show();
-		transDlg = pd;
-		new Thread(this).start();
+		if (transZ) {
+			try {
+				lastFrag.save();
+				if ((lastFrag.type & EditFragment.TYPE_MASK) != EditFragment.TYPE_OTHER)
+					lsp.didSave(lastFrag.getFile());
+				StringBuilder sb = new StringBuilder(lastFrag.getC());
+				sb.append(" \"");
+				sb.append(Utils.escape(lastFrag.getFile().getAbsolutePath()));
+				sb.append("\" ");
+				sb.append(Application.cflags);
+				if (id!=0 && Application.cflags.indexOf("-g")==-1)
+					sb.append(" -g");
+				sb.append(" -o $TMPDIR/m && ");
+				if (id==0)
+					sb.append("$TMPDIR/m && echo -n \"\nPress any key to exit...\" && read");
+				else {
+					sb.append("gdb -q ");
+					String fn = lastFrag.getFile().getName();
+					Document dc = codeEditor.getText();
+					id = dc.getMarksCount();
+					for (int i=0;i<id;i++)
+						sb.append(String.format("-ex 'b %s:%d' ", fn, dc.getMark(i)));
+					sb.append("-ex r $TMPDIR/m");
+				}
+				Utils.run(this, new StringBuilder(Utils.PREF).append("/usr/bin/bash").toString(), new String[]{"-c",
+							  sb.toString()},
+						  pwd.getPath(), false);
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+			}
+		} else {
+			ProgressDialog pd = new ProgressDialog(MainActivity.this);
+			pd.setMessage(getString(R.string.deleting, transStr));
+			pd.setIndeterminate(true);
+			pd.show();
+			transDlg = pd;
+			new Thread(this).start();
+		}
 	}
 
 	public void run() {
@@ -422,11 +454,13 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 			if (resultCode == RESULT_OK) {
 				boolean s = "s".equals(Application.completion);
 				FragmentManager fm = getFragmentManager();
+				Typeface tf = Application.typeface();
 				for (int i=getActionBar().getNavigationItemCount() - 1;i >= 0;i--) {
 					Fragment f = fm.findFragmentByTag(hda.getItem(i));
 					TextEditor ed = (TextEditor)f.getView();
 					ed.setFormatter(s?(EditFragment)f: null);
 					ed.setAutoComplete("l".equals(Application.completion));
+					ed.setTypeface(tf);
 					ed.setWordWrap(Application.wordwrap);
 					ed.setShowNonPrinting(Application.whitespace);
 				}

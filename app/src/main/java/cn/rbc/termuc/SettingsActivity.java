@@ -4,18 +4,20 @@ import android.os.*;
 import android.view.*;
 import cn.rbc.codeeditor.util.*;
 import android.widget.*;
+import android.content.*;
+import android.graphics.*;
 
 public class SettingsActivity extends PreferenceActivity
 implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener
 {
-	private final static String TAG = "SettingsActivity";
+	private final static String TAG = "SettingsActivity", FT = "f";
 
 	private CheckBoxPreference mDarkModePref, mWordWrapPref, mWhitespacePref, mShowHidden;
 	private EditTextPreference mCFlagsPref, mHost, mPort;
-	private ListPreference mSizePref, mEngine;
+	private ListPreference mFontPref, mSizePref, mEngine;
 
 	private boolean mDark, mWrap, mSpace;
-	private String mComp;
+	private String mComp, mFont, tpFont;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +28,8 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 		addPreferencesFromResource(R.xml.settings);
 
 		mDarkModePref = (CheckBoxPreference)findPreference(Application.KEY_DARKMODE);
+		mFontPref = (ListPreference)findPreference(Application.KEY_FONT);
+		mFontPref.setOnPreferenceChangeListener(this);
 		mSizePref = (ListPreference)findPreference(Application.KEY_TEXTSIZE);
 		mWordWrapPref = (CheckBoxPreference)findPreference(Application.KEY_WORDWRAP);
 		mWhitespacePref = (CheckBoxPreference)findPreference(Application.KEY_WHITESPACE);
@@ -43,6 +47,7 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 		mWrap = Application.wordwrap;
 		mSpace = Application.whitespace;
 		mComp = Application.completion;
+		mFont = tpFont = Application.font;
 	}
 
 	@Override
@@ -70,15 +75,36 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 			boolean enable = "s".equals(p2);
 			mHost.setEnabled(enable);
 			mPort.setEnabled(enable);
+		} else if (p1.compareTo(mFontPref)==0) {
+			if ("c".equals(p2)) {
+				Intent it = new Intent(this, FileActivity.class);
+				it.putExtra(FileActivity.FN,
+					getPreferenceManager().getSharedPreferences().getString(Application.KEY_MYFONT, null));
+				startActivityForResult(it, 0);
+				return false;
+			}
+			tpFont = (String)p2;
 		}
 		return true;
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode==0 && resultCode==RESULT_OK) {
+			SharedPreferences.Editor edt = getPreferenceManager().getSharedPreferences().edit();
+			edt.putString(Application.KEY_MYFONT, tpFont = data.getStringExtra(FileActivity.FN));
+			edt.commit();
+			mFontPref.setValue("c");
+		}
 	}
 
 	@Override
 	public void onBackPressed() {
 		setResult(mDark != mDarkModePref.isChecked()
 				  ? RESULT_FIRST_USER : 
-				  (mWrap == mWordWrapPref.isChecked()
+				  (mFont == tpFont
+				  && mWrap == mWordWrapPref.isChecked()
 				  && mSpace == mWhitespacePref.isChecked()
 				  && mComp.equals(mEngine.getValue()))
 				  ? RESULT_CANCELED : RESULT_OK);
@@ -86,8 +112,15 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 	}
 
 	@Override
-	protected void onDestroy() {
-		super.onDestroy();
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putString(FT, tpFont);
+	}
+
+	@Override
+	protected void onRestoreInstanceState(Bundle state) {
+		super.onRestoreInstanceState(state);
+		tpFont = state.getString(FT);
 	}
 
 	@Override
@@ -95,6 +128,7 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 		Application.dark_mode = mDarkModePref.isChecked();
 		Application.wordwrap = mWordWrapPref.isChecked();
 		Application.whitespace = mWhitespacePref.isChecked();
+		Application.font = tpFont;
 		Application.textsize = Integer.parseInt(mSizePref.getValue());
 		Application.show_hidden = mShowHidden.isChecked();
 		Application.cflags = mCFlagsPref.getText();

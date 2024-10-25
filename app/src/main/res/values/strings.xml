@@ -4,11 +4,17 @@
     <string name="global">Global</string>
     <string name="dark_mode">Dark mode</string>
     <string name="editor">Editor</string>
+	<string name="font">Font</string>
+	<string name="sans">Sans Serif</string>
+	<string name="serif">Serif</string>
+	<string name="monospace">Monospace</string>
+	<string name="custom">Custom</string>
     <string name="wordwrap">Word wrap</string>
     <string name="whitespace">Show whitespaces</string>
     <string name="compiler">Compiler</string>
     <string name="cflags">Compiler flags</string>
     <string name="run">Run</string>
+	<string name="debug">Debug</string>
     <string name="undo">Undo</string>
     <string name="redo">Redo</string>
     <string name="save">Save</string>
@@ -54,6 +60,11 @@
 	<string name="copy_jump">Copy &amp; jump</string>
 	<string name="initialized">Initialized</string>
 	<string name="request_failed">Request permissions failed</string>
+	<string name="select_font">Select font file</string>
+	<string-array name="runs">
+		<item>@string/run</item>
+		<item>@string/debug</item>
+	</string-array>
 	<string-array name="engine">
 		<item>@string/lang_serv</item>
 		<item>@string/local</item>
@@ -63,6 +74,18 @@
 		<item>s</item>
 		<item>l</item>
 		<item>n</item>
+	</string-array>
+	<string-array name="fonts">
+		<item>@string/sans</item>
+		<item>@string/serif</item>
+		<item>@string/monospace</item>
+		<item>@string/custom</item>
+	</string-array>
+	<string-array name="v_fonts">
+		<item>n</item>
+		<item>s</item>
+		<item>m</item>
+		<item>c</item>
 	</string-array>
 	<string-array name="sizes">
 		<item>8</item>

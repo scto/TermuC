@@ -8,7 +8,7 @@
  * of this program(EOF)            | 16
  * ---------------------------------
  *
- * The figure illustrates the convention for counting characters.
+ * The figure illustrates the convention for counting characters
  * Rows 36 to 39 of a hypothetical text file are shown.
  * The 0th char of the file is off-screen.
  * Assume the first char on screen is the 257th char.
@@ -45,14 +45,11 @@ import android.text.InputType;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
 import android.text.method.CharacterPickerDialog;
-import android.util.AttributeSet;
 import android.util.SparseArray;
+import android.util.SparseIntArray;
+import android.util.AttributeSet;
 import android.util.TypedValue;
-import android.util.Log;
-import android.view.KeyCharacterMap;
-import android.view.KeyEvent;
-import android.view.MotionEvent;
-import android.view.View;
+import android.view.*;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
@@ -60,23 +57,12 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EdgeEffect;
 import android.widget.OverScroller;
 
-import cn.rbc.codeeditor.common.OnCaretScrollListener;
-import cn.rbc.codeeditor.common.OnRowChangedListener;
-import cn.rbc.codeeditor.common.OnSelectionChangedListener;
-import cn.rbc.codeeditor.common.OnTextChangeListener;
+import cn.rbc.codeeditor.common.*;
 import cn.rbc.codeeditor.lang.Language;
-import cn.rbc.codeeditor.util.Document;
-import cn.rbc.codeeditor.util.HelperUtils;
-import cn.rbc.codeeditor.util.Pair;
-import cn.rbc.codeeditor.util.TextWarriorException;
+import cn.rbc.codeeditor.util.*;
 import cn.rbc.codeeditor.view.autocomplete.AutoCompletePanel;
 import cn.rbc.codeeditor.view.ColorScheme.Colorable;
 
-import java.util.List;
-import android.util.SparseIntArray;
-import cn.rbc.codeeditor.util.*;
-import android.view.*;
-import android.widget.*;
 import java.util.*;
 
 /**
@@ -246,7 +232,8 @@ public abstract class FreeScrollingTextField extends View
      * Max amount that can be scrolled horizontally based on the longest line
      * displayed on screen so far
      */
-    private int mTopOffset, mLeftOffset;
+    private int mTopOffset;
+	protected int mLeftOffset;
     private int mLineMaxWidth, xExtent;
     private int mAlphaWidth, mSpaceWidth;
 	private int mSizeMax, mSizeMin;
@@ -406,16 +393,16 @@ public abstract class FreeScrollingTextField extends View
         mZoomFactor = pix / BASE_TEXT_SIZE_PIXELS;
         mTextPaint.setTextSize(pix);
 		mLineBrush.setTextSize(pix);
-        if (hDoc.isWordWrap())
+		chrAdvs.clear();
+        mSpaceWidth = (int) mTextPaint.measureText(" ");
+		mAlphaWidth = getCharAdvance('a');
+		if (hDoc.isWordWrap())
             hDoc.analyzeWordWrap();
         mCtrlr.updateCaretRow();
-		chrAdvs.clear();
-		mAlphaWidth = getCharAdvance('a');
 		mLineBrush.setStrokeWidth(mAlphaWidth*.15f);
         float x = (getScrollX() + cx) * mAlphaWidth / oldWidth - cx;
         float y = (getScrollY() + cy) * rowHeight() / oldHeight - cy;
-        mSpaceWidth = (int) mTextPaint.measureText(" ");
-		scrollTo((int)x, (int)y);
+        scrollTo((int)x, (int)y);
 		xExtent = 0;
 		invalidate();
 		return true;
@@ -427,7 +414,7 @@ public abstract class FreeScrollingTextField extends View
     }
 
     public int getLength() {
-        return hDoc.getTextLength();
+        return hDoc.length();
     }
 
     @Override
@@ -494,12 +481,6 @@ public abstract class FreeScrollingTextField extends View
 			mClipboardPanel.hide();
 	}
 
-	public void onNewLine(String s, int caretPosition, int pos) {
-		isTextChanged = true;
-		mCaretSpan.first += 1;
-		mAutoCompletePanel.dismiss();
-	}
-
 	public void onDel(CharSequence text, int cursorPosition, int delCount) {
 		isTextChanged = true;
 		if (delCount <= mCaretSpan.first)
@@ -507,10 +488,14 @@ public abstract class FreeScrollingTextField extends View
 		mAutoCompletePanel.dismiss();
 	}
 
+	public void onNewLine(CharSequence adds) {
+		mAutoCompletePanel.dismiss();
+	}
+
 	public void onAdd(CharSequence text, int cursorPosition, int addCount) {
 		isTextChanged = true;
 		mCaretSpan.first += addCount;
-		if (text.length() == 0) return;
+		if (addCount == 0) return;
 		//找到空格或者其他
 		int curr = cursorPosition;
 		for (; curr > 0; curr--) {
@@ -520,16 +505,17 @@ public abstract class FreeScrollingTextField extends View
 		}
 		mAutoCompletePanel._off = cursorPosition - curr;
 		char ch = text.charAt(0);
-		if (isAutoCompeted)
-			if (cursorPosition - curr > 0 && Character.isLetterOrDigit(ch)) {
+		if (isAutoCompeted) {
+			if (cursorPosition - curr > 0 && Character.isLetterOrDigit(ch))
 			//是否开启代码提示
 			// log("subSequence:"+hDoc.subSequence(curr, caretPosition - curr));
 			// if (isAutoCompeted) {
 			// Log.i("AutoCompete", text+" "+cursorPosition+" "+curr);
 			mAutoCompletePanel.update(hDoc.subSequence(curr, cursorPosition - curr));
 			// }
-			} else
+			else
 				mAutoCompletePanel.dismiss();
+		}
 	}
 
     private void resetView() {
@@ -744,7 +730,7 @@ public abstract class FreeScrollingTextField extends View
             return;
         int currLineNum = 1 + (isWordWrap() ? hDoc.findLineNumber(currIndex) : currRowNum);
         int lastLineNum = 0;
-        mLeftOffset = isShowLineNumbers ? (int) mTextPaint.measureText(" "+hDoc.getRowCount()) : 0;
+        mLeftOffset = isShowLineNumbers ? (int) mTextPaint.measureText("  "+hDoc.getLineCount()) : 0;
 
         int paintX = 0;
         int paintY = getPaintBaseline(currRowNum);
@@ -779,11 +765,10 @@ public abstract class FreeScrollingTextField extends View
         //----------------------------------------------
         // start painting!
         //----------------------------------------------
-
 		boolean showLN = isShowLineNumbers && mLeftOffset >= getScrollX();
 		int endRowNum = Math.min(hDoc.getRowCount(), getEndPaintRow(canvas));
-		int mWidth = canvas.getClipBounds().right;
-		int mL = hDoc.getTextLength();
+		int width = canvas.getClipBounds().right;
+		int mL = hDoc.length();
 		int rowheight = rowHeight();
 
 		int idx, diagLen;
@@ -806,23 +791,50 @@ public abstract class FreeScrollingTextField extends View
 			}
 			diag = diagList.get(idx++);
 		}
-
-		doOptionHighlightRow(canvas);
-
+		int mHt = 1 + hDoc.findLineNumber(mCaretPosition);
+		int mI = hDoc.findMark(currLineNum);
+		if (mI<0)
+			mI = ~mI;
 		// row by row
 		int rowEnd = 0;
         for (m=-1; currRowNum <= endRowNum && currIndex < mL; currRowNum++) {
-			if (showLN && currLineNum != lastLineNum) {
+			if (currLineNum != lastLineNum) {
+				if (showLN) {
+				ColorScheme.Colorable ca;
+				if (mI<hDoc.getMarksCount()&&hDoc.getMark(mI)==currLineNum) {
+					mLineBrush.setColor(0xffa00000);
+					canvas.drawRect(0, rowheight*currRowNum, mLeftOffset-(mSpaceWidth>>1), rowheight*(currRowNum+1), mLineBrush);
+					ca = ColorScheme.Colorable.SELECTION_FOREGROUND;
+					mI++;
+				} else if (hDoc.isInMarkGap(currLineNum))
+					ca = ColorScheme.Colorable.STRING;
+				else
+					ca = ColorScheme.Colorable.NON_PRINTING_GLYPH;
+				mLineBrush.setColor(mColorScheme.getColor(ca));
                 String num = String.valueOf(currLineNum);
 				int padx = (int) (mLeftOffset - mTextPaint.measureText(num) - mSpaceWidth);
 				lastLineNum = currLineNum;
-                drawLineNum(canvas, num, padx, paintY);
+                canvas.drawText(num, padx, paintY, mLineBrush);
+			}
+				if (currLineNum == mHt && isHighlightRow && !mCtrlr.isSelectText()) {
+					int eRow = currRowNum + 1, rows = hDoc.getRowCount();
+					while (eRow <= endRowNum && (eRow!=rows && hDoc.charAt(hDoc.getRowOffset(eRow)-1)!=Language.NEWLINE))
+						eRow++;
+					int orc = mTextPaint.getColor();
+					mTextPaint.setColor(mColorScheme.getColor(ColorScheme.Colorable.LINE_HIGHLIGHT));
+					canvas.drawRect(mLeftOffset,
+									rowheight * currRowNum,
+									width,
+									rowheight * eRow,
+									mTextPaint);
+					mTextPaint.setColor(orc);
+				}
             }
             paintX = mLeftOffset;
 
 			int i = rowEnd;
 			// char by char
-			// TODO: Rendering span by span
+			// TODO rendering span by span
             for (rowEnd+=hDoc.getRowSize(currRowNum); i < rowEnd; i++) {
                 // check if formatting changes are needed
                 if (reachedNextSpan(currIndex, nextSpan)) {
@@ -841,7 +853,7 @@ public abstract class FreeScrollingTextField extends View
 					nextSpan = spanIndex<spanSize ? spans.get(spanIndex++) : null;
                 }
 
-				if (paintX < mWidth) {
+				if (paintX < width) {
 					int x = paintX;
 					char c = hDoc.charAt(currIndex);
 					if (mCtrlr.inSelectionRange(currIndex))
@@ -865,7 +877,7 @@ public abstract class FreeScrollingTextField extends View
 							|| diag.stl < currLineNum && diag.enl >= currLineNum && x==mLeftOffset))
 							m = x;
 						boolean end, flow = false;
-						if (m >= 0 && ((end = diag.enl==currLineNum && diag.enc==i+1)|| (flow = i+1==rowEnd) || paintX >= mWidth)) {
+						if (m >= 0 && ((end = diag.enl==currLineNum && diag.enc==i+1)|| (flow = i+1==rowEnd) || paintX >= width)) {
 							mLineBrush.setColor(ColorScheme.DIAG[diag.severity]);
 							canvas.drawLine(m, paintY, paintX, paintY, mLineBrush);
 							m = flow ? mLeftOffset : -1;
@@ -902,23 +914,6 @@ public abstract class FreeScrollingTextField extends View
             canvas.drawLine(left, getScrollY(), left, getScrollY() + getHeight(), mTextPaint);
         }
         //drawScrollBars(canvas);
-    }
-
-    /**
-     * Underline the caret row if the option for highlighting it is set
-     * 高亮当前行
-     */
-    private void doOptionHighlightRow(Canvas canvas) {
-        if (isHighlightRow && !mCtrlr.isSelectText()) {
-            int y = getPaintBaseline(mCaretRow);
-            int originalColor = mTextPaint.getColor();
-            mTextPaint.setColor(mColorScheme.getColor(Colorable.LINE_HIGHLIGHT));
-
-            //Math.max(xExtent, getContentWidth());
-            // 绘制当前行的背景色
-            drawTextBackground(canvas, mLeftOffset, y, getLineLength());
-            mTextPaint.setColor(originalColor);
-        }
     }
 
     // 绘制文本
@@ -1002,12 +997,6 @@ public abstract class FreeScrollingTextField extends View
         drawTextBackground(canvas, mCaretX, paintY, mCursorWidth);
         mTextPaint.setColor(originalColor);
     }
-
-    private void drawLineNum(Canvas canvas, String s, int paintX, int paintY) {
-        mLineBrush.setColor(mColorScheme.getColor(Colorable.NON_PRINTING_GLYPH));
-        canvas.drawText(s, paintX, paintY, mLineBrush);
-    }
-
     /**
      * Draw scroll bars and tracks
      *
@@ -1251,7 +1240,7 @@ public abstract class FreeScrollingTextField extends View
      * and/or vertically
      */
     public boolean makeCharVisible(int charOffset) {
-        TextWarriorException.assertVerbose(charOffset >= 0 && charOffset < hDoc.getTextLength(), "Invalid charOffset given");
+        TextWarriorException.assertVerbose(charOffset >= 0 && charOffset < hDoc.length(), "Invalid charOffset given");
         int scrollVerticalBy = makeCharRowVisible(charOffset);
         int scrollHorizontalBy = makeCharColumnVisible(charOffset);
 
@@ -1383,7 +1372,7 @@ public abstract class FreeScrollingTextField extends View
      * or Rect(-1, -1, -1, -1) if there is no character at that coordinate.
      */
     Rect getBoundingBox(int charOffset) {
-        if (charOffset < 0 || charOffset >= hDoc.getTextLength())
+        if (charOffset < 0 || charOffset >= hDoc.length())
             return new Rect(-1, -1, -1, -1);
 
         int row = hDoc.findRowNumber(charOffset);
@@ -1422,7 +1411,7 @@ public abstract class FreeScrollingTextField extends View
     int coordToCharIndex(int x, int y) {
         int row = y / rowHeight();
         if (row > hDoc.getRowCount())
-            return hDoc.getTextLength() - 1;
+            return hDoc.length() - 1;
 
         int charIndex = hDoc.getRowOffset(row);
         if (charIndex < 0)
@@ -1555,7 +1544,7 @@ public abstract class FreeScrollingTextField extends View
      */
     int getMaxScrollX() {
         if (isWordWrap())
-            return mLeftOffset - mSpaceWidth / 2;//0;
+            return 0;
         else
             return Math.max(0, xExtent - getContentWidth() + mNavMethod.getCaretBloat().right + mAlphaWidth);
     }
@@ -1824,7 +1813,7 @@ public abstract class FreeScrollingTextField extends View
     }
 
     protected boolean caretOnEOF() {
-        return (mCaretPosition == (hDoc.getTextLength() - 1));
+        return (mCaretPosition == (hDoc.length() - 1));
     }
 
     public final boolean isSelectText() {
@@ -1852,7 +1841,7 @@ public abstract class FreeScrollingTextField extends View
     }
 
     public void selectAll() {
-        mCtrlr.setSelectionRange(0, hDoc.getTextLength() - 1, false, true);
+        mCtrlr.setSelectionRange(0, hDoc.length() - 1, false, true);
     }
 
     public void setSelection(int beginPosition, int numChars) {
@@ -1947,7 +1936,10 @@ public abstract class FreeScrollingTextField extends View
         //italicTypeface = Typeface.create(typeface, Typeface.ITALIC);
         mTextPaint.setTypeface(typeface);
         mLineBrush.setTypeface(typeface);
-        if (hDoc.isWordWrap())
+		chrAdvs.clear();
+        mSpaceWidth = (int) mTextPaint.measureText(" ");
+		mAlphaWidth = getCharAdvance('a');
+		if (hDoc.isWordWrap())
             hDoc.analyzeWordWrap();
         mCtrlr.updateCaretRow();
         if (!makeCharVisible(mCaretPosition))

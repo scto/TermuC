@@ -11,6 +11,7 @@ import cn.rbc.codeeditor.util.Tokenizer;
 import static cn.rbc.codeeditor.util.DLog.log;
 import cn.rbc.codeeditor.util.*;
 import android.widget.*;
+import android.os.*;
 
 //*********************************************************************
 //************************** InputConnection **************************
@@ -88,9 +89,9 @@ public class TextFieldInputConnection extends BaseInputConnection {
 					break;
 				}
             default:
-                return super.sendKeyEvent(event);
+				return super.sendKeyEvent(event);
         }
-        return true;
+		return true;
     }
 
     /**

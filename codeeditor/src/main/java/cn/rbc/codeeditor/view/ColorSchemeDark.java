@@ -19,7 +19,7 @@ public class ColorSchemeDark extends ColorScheme
 		setColor(Colorable.CARET_DISABLED, 0xFFF0F0F0);
 		setColor(Colorable.CARET_BACKGROUND, 0xFF42A5F5);
 		setColor(Colorable.NON_PRINTING_GLYPH, 0xFF686868);
-		setColor(Colorable.LINE_HIGHLIGHT, 0xFF373737);
+		setColor(Colorable.LINE_HIGHLIGHT, 0x1E888888);
 		setColor(Colorable.SELECTION_BACKGROUND, 0xFF505050);
 	}
 

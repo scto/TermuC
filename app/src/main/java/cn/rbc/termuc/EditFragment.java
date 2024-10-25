@@ -15,6 +15,9 @@ import android.content.res.*;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.app.AlertDialog.Builder;
+import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EditFragment extends Fragment
 implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
@@ -24,13 +27,13 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 	public final static int TYPE_HEADER = 0x80000000;
 	public final static int TYPE_OTHER = 0;
 	public final static int TYPE_MASK = 0x7fffffff;
-	final static String FL = "f", TP = "t", CS = "c", TS = "s";
+	final static String FL = "f", TP = "t", CS = "c", TS = "s", MK = "m";
 	private File fl;
 	private TextEditor ed;
 	int type = -1;
 	private String C = "clang";
 	private long lastModified;
-	private java.util.List<Range> changes = new java.util.ArrayList<>();
+	private List<Range> changes = new ArrayList<>();
 
 	public EditFragment() {
 	}
@@ -49,6 +52,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		if (Application.dark_mode)
 			editor.setColorScheme(ColorSchemeDark.getInstance());
 		DisplayMetrics dm = getResources().getDisplayMetrics();
+		editor.setTypeface(Application.typeface());
 		editor.setTextSize((int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, Application.textsize, dm));
 		editor.setWordWrap(Application.wordwrap);
 		editor.setShowNonPrinting(Application.whitespace);
@@ -57,7 +61,10 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		if (savedInstanceState!=null) {
 			fl = new File((String)savedInstanceState.getCharSequence(FL));
 			type = savedInstanceState.getInt(TP, type);
-			editor.setDocument((Document)savedInstanceState.getCharSequence(CS));
+			Document doc = savedInstanceState.getParcelable(CS);
+			doc.setMetrics(editor);
+			doc.resetRowTable();
+			editor.setDocument(doc);
 			editor.setTextSize(savedInstanceState.getInt(TS));
 		} else try {
 			String s = load();
@@ -202,6 +209,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 			} else if (tp == TYPE_CPP) {
 				ed.setLanguage(CppLanguage.getInstance());
 				C = "clang++";
+				
 			} else {
 				ed.setLanguage(LanguageNonProg.getInstance());
 			}
@@ -211,7 +219,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putCharSequence(CS, ed.getText());
+		outState.putParcelable(CS, ed.getText());
 		outState.putCharSequence(FL, fl.getAbsolutePath());
 		outState.putInt(TP, type);
 		outState.putInt(TS, (int)ed.getTextSize());

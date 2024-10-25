@@ -62,7 +62,7 @@ public class SearchAction implements ActionMode.Callback, TextWatcher, TextView.
 		} else {
 			i = indexDoc(ed, idx+1);
 		}
-		if (i==-1) {
+		if (i<0) {
 			HelperUtils.show(Toast.makeText(ma, R.string.find_completed, Toast.LENGTH_SHORT));
 			idx = 0;
 			te.setSelection(0,0);
@@ -83,7 +83,7 @@ public class SearchAction implements ActionMode.Callback, TextWatcher, TextView.
 		if (ed.length()==0)
 			return;
 		int i = indexDoc(ed, idx);
-		if (i == -1) {
+		if (i < 0) {
 			idx = 0;
 		} else {
 			idx = i;
@@ -100,32 +100,22 @@ public class SearchAction implements ActionMode.Callback, TextWatcher, TextView.
 	private int indexDoc(CharSequence cs, int idx) {
 		int len = cs.length();
 		int i, ldp = dp.length()-len;
-		for (i=idx; i<ldp; i++) {
-			boolean b = true;
-			for (int k=0;k<len;k++) {
-				if (cs.charAt(k)!=dp.charAt(i+k)) {
-					b = false;
-					break;
-				}
-			}
-			if (b)
-				return i;
+		D: for (i=idx; i<ldp; i++) {
+			for (int k=0;k<len;k++)
+				if (cs.charAt(k)!=dp.charAt(i+k))
+					continue D;
+			return i;
 		}
 		return -1;
 	}
 
 	private int rindexDoc(CharSequence cs, int idx) {
 		int len = cs.length();
-		for (int i=idx; i>=0; i--) {
-			boolean b = true;
-			for (int k=0;k<len;k++) {
-				if (cs.charAt(k)!=dp.charAt(i+k)) {
-					b = false;
-					break;
-				}
-			}
-			if (b)
-				return i;
+		D: for (int i=idx; i>=0; i--) {
+			for (int k=0;k<len;k++)
+				if (cs.charAt(k)!=dp.charAt(i+k))
+					continue D;
+			return i;
 		}
 		return -1;
 	}

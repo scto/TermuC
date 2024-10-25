@@ -11,6 +11,9 @@ package cn.rbc.codeeditor.util;
 import cn.rbc.codeeditor.lang.Language;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import android.os.*;
+import android.text.*;
 
 /**
  * A decorator of TextBuffer that adds word-wrap capabilities.
@@ -18,7 +21,7 @@ import java.util.ArrayList;
  * Positions for word wrap row breaks are stored here.
  * Word-wrap is enabled by default.
  */
-public class Document extends TextBuffer {
+public class Document extends TextBuffer implements Parcelable {
 
 	private boolean _isWordWrap = false;
 
@@ -47,8 +50,8 @@ public class Document extends TextBuffer {
 		setBuffer(ca, len, lineCount);
 	}
 
-	private void resetRowTable() {
-		ArrayList<Integer> rowTable = new ArrayList<Integer>();
+	public void resetRowTable() {
+		ArrayList<Integer> rowTable = new ArrayList<>();
 		rowTable.add(0); //every document contains at least 1 row
 		_rowTable = rowTable;
 	}
@@ -117,7 +120,7 @@ public class Document extends TextBuffer {
 		if (!isValid(deletionPoint) || maxChars <= 0) {
 			return;
 		}
-		int totalChars = Math.min(maxChars, getTextLength() - deletionPoint);
+		int totalChars = Math.min(maxChars, length() - deletionPoint);
 		delete(deletionPoint, totalChars, time, true);
 	}
 	@Override
@@ -207,7 +210,7 @@ public class Document extends TextBuffer {
 			return;
 		}
 
-		analyzeWordWrap(1, 0, getTextLength());
+		analyzeWordWrap(1, 0, length());
 	}
 
 	private boolean hasMinimumWidthForWordWrap() {
@@ -223,7 +226,7 @@ public class Document extends TextBuffer {
 		if (!_isWordWrap) {
 			int offset = logicalToRealIndex(startOffset);
 			int end = logicalToRealIndex(endOffset);
-			ArrayList<Integer> rowTable = new ArrayList<Integer>();
+			ArrayList<Integer> rowTable = new ArrayList<>();
 
 			while (offset < end) {
 				// skip the gap
@@ -245,7 +248,6 @@ public class Document extends TextBuffer {
 			TextWarriorException.fail("Not enough space to do word wrap");
 			return;
 		}
-
 		ArrayList<Integer> rowTable = new ArrayList<Integer>();
 		int offset = logicalToRealIndex(startOffset);
 		int end = logicalToRealIndex(endOffset);
@@ -341,7 +343,7 @@ public class Document extends TextBuffer {
 			return _rowTable.get(rowNumber + 1) - _rowTable.get(rowNumber);
 		} else {
 			//last row
-			return getTextLength() - _rowTable.get(rowNumber);
+			return length() - _rowTable.get(rowNumber);
 		}
 	}
 
@@ -370,34 +372,15 @@ public class Document extends TextBuffer {
 		if (!isValid(charOffset)) {
 			return -1;
 		}
-
-		//binary search of _rowTable
-		int right = _rowTable.size() - 1;
-		int left = 0;
-		while (right >= left) {
-			int mid = (left + right) / 2;
-			int nextLineOffset = ((mid + 1) < _rowTable.size()) ? _rowTable.get(mid + 1) : getTextLength();
-	        if (charOffset >= _rowTable.get(mid) && charOffset < nextLineOffset) {
-	        	return mid;
-	        }
-
-	        if (charOffset >= nextLineOffset) {
-	        	left = mid + 1;
-	        } else {
-	        	right = mid - 1;
-	        }
-	    }
-
-		//should not be here
-	    return -1;
+		int i = Collections.binarySearch(_rowTable, charOffset);
+		if (i<0)
+			i = (~i)-1;
+		return i;
 	}
-
 
 	protected boolean isInvalidRow(int rowNumber) {
 		return rowNumber < 0 || rowNumber >= _rowTable.size();
 	}
-
-
 
 	public static interface TextFieldMetrics {
 		/**
@@ -416,4 +399,36 @@ public class Document extends TextBuffer {
 		 */
 		public int getRowWidth();
 	}
+
+	@Override
+	public void writeToParcel(Parcel p1, int p2) {
+		p1.writeString(toString());
+		p1.writeInt(_marks.size());
+		p1.writeIntArray(_marks.getData());
+	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	private Document(Parcel in) {
+		resetRowTable();
+		setText(in.readString());
+		_marks = new GapIntSet(1);
+		int[] m = new int[in.readInt()];
+		in.readIntArray(m);
+		_marks.setData(m);
+	}
+
+	public static final Parcelable.Creator<Document> CREATOR
+	= new Parcelable.Creator<Document>() {
+		public Document createFromParcel(Parcel in) {
+			return new Document(in);
+		}
+
+		public Document[] newArray(int size) {
+			return new Document[size];
+		}
+	};
 }

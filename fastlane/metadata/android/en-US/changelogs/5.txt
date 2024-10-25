@@ -1,0 +1,4 @@
+• Support breakpoint debugging simply (using GDB commandline interface)
+• Add 'Font' option
+• Collapse action button 'Run' when editing
+• Fix bugs when auto indent

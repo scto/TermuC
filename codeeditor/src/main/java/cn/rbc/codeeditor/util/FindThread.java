@@ -42,7 +42,7 @@ public class FindThread extends Thread implements ProgressSource {
         _searchText = searchText;
         _isCaseSensitive = isCaseSensitive;
         _isWholeWord = isWholeWord;
-        _docSize = src.getTextLength();
+        _docSize = src.length();
     }
 
     private FindThread(int requestCode, Document src, String searchText, String replacementText, int start,
@@ -54,7 +54,7 @@ public class FindThread extends Thread implements ProgressSource {
         _replacementText = replacementText;
         _isCaseSensitive = isCaseSensitive;
         _isWholeWord = isWholeWord;
-        _docSize = src.getTextLength();
+        _docSize = src.length();
     }
 
     static public FindThread createFindThread(Document src, String searchText, int start, boolean isForwardSearch,

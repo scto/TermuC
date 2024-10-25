@@ -1,5 +1,7 @@
 # TermuC
 
+[![release](https://img.shields.io/github/release/RainbowC0/TermuC.svg)](https://github.com/RainbowC0/TermuC/releases/) [![license](https://img.shields.io/github/license/RainbowC0/TermuC.svg)](https://github.com/RainbowC0/TermuC/blob/master/LICENSE.md) ![CI](https://github.com/RainbowC0/TermuC/actions/workflows/build-debug.yml/badge.svg?event=push)
+
 [中文 README](./README_zh.md)
 
 TermuC is a simple C/C++ IDE backed on Termux. Based on [MrIkso/CodeEditor](//github.com/MrIkso/CodeEditor)
@@ -14,7 +16,7 @@ TermuC is a simple C/C++ IDE backed on Termux. Based on [MrIkso/CodeEditor](//gi
 
 ## Technology
 
-This app use `com.termux.RUN_COMMAND` to call Termux to run command, and run `clangd` language server with `nc`, which builds an insistant I/O channel, offering functions as diagnosing and compilation.
+This app use `com.termux.RUN_COMMAND` to call Termux to run command, and run `clangd` language server with `netcat`, which builds an insistant I/O channel, offering functions as diagnosing and compilation.
 
 ## Features
 
@@ -24,7 +26,7 @@ This app use `com.termux.RUN_COMMAND` to call Termux to run command, and run `cl
 - [x] Diagnose
 - [x] Compile flags
 - [x] Dark mode
-- [ ] Debug
+- [x] Debug
 - [ ] Project manage
 - [ ] Workspace
 

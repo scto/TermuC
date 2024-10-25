@@ -21,5 +21,4 @@ public final class Pair {
     public String toString() {
         return "("+first+","+second+")";
     }
-    
 }

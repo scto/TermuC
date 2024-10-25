@@ -20,11 +20,6 @@ import cn.rbc.codeeditor.common.*;
 public class TextBuffer implements CharSequence
 {
 
-	@Override
-	public int length() {
-		return getTextLength();
-	}
-
 	// gap size must be > 0 to insert into full buffers successfully
 	protected final static int MIN_GAP_SIZE = 50;
 	protected char[] _contents;
@@ -40,6 +35,7 @@ public class TextBuffer implements CharSequence
 	/** Continuous seq of chars that have the same format (color, font, etc.) */
 	protected List<Pair> _spans;
 	protected List<ErrSpan> _diag;
+	protected GapIntSet _marks;
 
 	OnTextChangeListener _txLis;
 	private boolean _typ;
@@ -53,6 +49,7 @@ public class TextBuffer implements CharSequence
 		_lineCount = 1;
 		_cache = new TextBufferCache();
 		_undoStack = new UndoStack(this);
+		_marks = new GapIntSet();
 		_typ = false;
 	}
 
@@ -79,6 +76,7 @@ public class TextBuffer implements CharSequence
 		initGap(textSize);
 		_lineCount = lineCount;
 		_allocMultiplier = 1;
+		_marks.clear();
 	}
 
 	synchronized public void setBuffer(char[] newBuffer){
@@ -139,12 +137,10 @@ public class TextBuffer implements CharSequence
 	}
 
 	public IntStream chars() {
-		// TODO: Implement this method
 		return null;
 	}
 
 	public IntStream codePoints() {
-		// TODO: Implement this method
 		return null;
 	}
 
@@ -315,8 +311,8 @@ public class TextBuffer implements CharSequence
 		if (!isValid(charOffset) || maxChars <= 0)
 			return new String();
 		int totalChars = maxChars;
-		if ((charOffset + totalChars) > getTextLength())
-			totalChars = getTextLength() - charOffset;
+		if ((charOffset + totalChars) > length())
+			totalChars = length() - charOffset;
 		int realIndex = logicalToRealIndex(charOffset);
 		char[] chars = new char[totalChars];
 
@@ -345,6 +341,29 @@ public class TextBuffer implements CharSequence
 		return chars;
 	}
 
+	public void markLine(int l) {
+		_marks.toggle(l);
+	}
+
+	public int[] getMarks() {
+		return _marks.getData();
+	}
+
+	public int getMarksCount() {
+		return _marks.size();
+	}
+
+	public int getMark(int i) {
+		return _marks.get(i);
+	}
+
+	public int findMark(int m) {
+		return _marks.find(m);
+	}
+
+	public boolean isInMarkGap(int l) {
+		return _marks.isInGap(l);
+	}
 	/**
 	 * Insert all characters in c into position charOffset.
 	 *
@@ -372,13 +391,16 @@ public class TextBuffer implements CharSequence
 		if (c.length >= gapSize())
 			growBufferBy(c.length - gapSize());
 
+		int lines = 0;
 		for (int i = 0; i < c.length; ++i){
 			if(c[i] == Language.NEWLINE)
-				++_lineCount;
-			_contents[_gapStartIndex] = c[i];
-			++_gapStartIndex;
+				lines++;
+			_contents[_gapStartIndex++] = c[i];
 		}
-
+		_lineCount += lines;
+		if (lines>0) {
+			_marks.shift(findLineNumber(charOffset)+1, lines);
+		}
 		_cache.invalidateCache(charOffset);
 	}
 
@@ -408,14 +430,15 @@ public class TextBuffer implements CharSequence
 			else
 				shiftGapRight(newGapStart + gapSize());
 		}
-
+		newGapStart = findLineNumber(newGapStart)+1;
 		// increase gap size
+		int lines = 0;
 		for(int i = 0; i < totalChars; ++i){
-			--_gapStartIndex;
-			if (_contents[_gapStartIndex] == Language.NEWLINE)
-				--_lineCount;
+			if (_contents[--_gapStartIndex] == Language.NEWLINE)
+				lines--;
 		}
-
+		_lineCount += lines;
+		_marks.shift(newGapStart, lines);
 		_cache.invalidateCache(charOffset);
 	}
 
@@ -518,7 +541,8 @@ public class TextBuffer implements CharSequence
 	 * Returns the total number of characters in the text, including the
 	 * EOF sentinel char
 	 */
-	final synchronized public int getTextLength(){
+	 @Override
+	final synchronized public int length(){
 		return _contents.length - gapSize();
 	}
 
@@ -527,7 +551,7 @@ public class TextBuffer implements CharSequence
 	}
 
 	final synchronized public boolean isValid(int charOffset){
-		return (charOffset >= 0 && charOffset < getTextLength());
+		return (charOffset >= 0 && charOffset < length());
 	}
 
 	final protected int gapSize(){
@@ -611,7 +635,7 @@ public class TextBuffer implements CharSequence
 
 	@Override
 	public String toString() {
-		int len=getTextLength();
+		int len=length();
 		StringBuffer buf=new StringBuffer();
 		for (int i=0; i < len;i++) {
 			char c=charAt(i);

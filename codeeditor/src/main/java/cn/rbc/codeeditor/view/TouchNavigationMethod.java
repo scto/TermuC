@@ -12,6 +12,7 @@ import java.util.*;
 import android.widget.*;
 import android.util.*;
 import android.content.*;
+import cn.rbc.codeeditor.common.*;
 
 //TODO minimise unnecessary invalidate calls
 
@@ -91,8 +92,17 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
     public boolean onSingleTapUp(MotionEvent e) {
         int x = screenToViewX((int) e.getX());
         int y = screenToViewY((int) e.getY());
-        int charOffset = mTextField.coordToCharIndex(x, y);
+		FreeScrollingTextField tf = mTextField;
+        int charOffset = tf.coordToCharIndex(x, y);
 
+		if (x<tf.mLeftOffset) {
+			y = tf.hDoc.findLineNumber(charOffset);
+			if (y==-1)
+				y = tf.hDoc.getLineCount()-1;
+			tf.hDoc.markLine(1+y);
+			tf.invalidate();
+			return true;
+		}
         if (mTextField.isSelectText()) {
             int strictCharOffset = mTextField.coordToCharIndexStrict(x, y);
             if (mTextField.inSelectionRange(strictCharOffset) ||
