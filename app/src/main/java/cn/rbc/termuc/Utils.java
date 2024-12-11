@@ -23,12 +23,12 @@ public class Utils {
 		Intent it = new Intent();
 		it.setClassName("com.termux", "com.termux.app.RunCommandService");
 		it.setAction("com.termux.RUN_COMMAND");
-		it.putExtra(new StringBuilder(PREFC).append("PATH").toString(), cmd);
-		it.putExtra(new StringBuilder(PREFC).append("RUNNER").toString(), "app-shell");
-		it.putExtra(new StringBuilder(PREFC).append("ARGUMENTS").toString(), args);
-		it.putExtra(new StringBuilder(PREFC).append("WORKDIR").toString(), pwd);
-		it.putExtra(new StringBuilder(PREFC).append("BACKGROUND").toString(), background);
-		it.putExtra(new StringBuilder(PREFC).append("SESSION_ACTION").toString(), "0");
+		it.putExtra(PREFC.concat("PATH"), cmd);
+		it.putExtra(PREFC.concat("RUNNER"), "app-shell");
+		it.putExtra(PREFC.concat("ARGUMENTS"), args);
+		it.putExtra(PREFC.concat("WORKDIR"), pwd);
+		it.putExtra(PREFC.concat("BACKGROUND"), background);
+		it.putExtra(PREFC.concat("SESSION_ACTION"), "0");
         cont.startService(it);
 	}
 
@@ -143,15 +143,15 @@ public class Utils {
 	public static void initBack(Activity ctx, boolean manually) {
 		try {
 			ctx.getPackageManager().getPackageInfo("com.termux", PackageManager.GET_GIDS);
-		Builder bd = new Builder(ctx);
-		bd.setTitle(R.string.init_termux);
-		bd.setMessage(R.string.init_inform);
-		Init it = new Init(ctx);
-		bd.setPositiveButton(R.string.copy_jump, it);
-		bd.setNegativeButton(android.R.string.cancel, null);
-		if (!manually)
-			bd.setNeutralButton(R.string.initialized, it);
-		bd.create().show();
+			Builder bd = new Builder(ctx);
+			bd.setTitle(R.string.init_termux);
+			bd.setMessage(R.string.init_inform);
+			Init it = new Init(ctx);
+			bd.setPositiveButton(R.string.copy_jump, it);
+			bd.setNegativeButton(android.R.string.cancel, null);
+			if (!manually)
+				bd.setNeutralButton(R.string.initialized, it);
+			bd.create().show();
 		} catch (PackageManager.NameNotFoundException nne) {
 			if (manually)
 			HelperUtils.show(Toast.makeText(ctx, R.string.no_install, Toast.LENGTH_SHORT));

@@ -49,13 +49,19 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 				ma.lsp.initialized();
 				break;
 			case Lsp.ERROR:
-				FragmentManager fm = ma.getFragmentManager();
-				for (int i=ma.getActionBar().getNavigationItemCount()-1;i>=0;i--) {
-					TextEditor te = (TextEditor)fm.findFragmentByTag(ma.getTag(i)).getView();
-					te.getText().setDiag(null);
-					te.invalidate();
+				synchronized(this) {
+					FragmentManager fm = ma.getFragmentManager();
+					for (int i=ma.getActionBar().getNavigationItemCount()-1;i>=0;i--) {
+						Fragment f = fm.findFragmentByTag(ma.getTag(i));
+						if (f==null) continue;
+						TextEditor te = (TextEditor)f.getView();
+						te.getText().setDiag(null);
+						te.invalidate();
+					}
 				}
 				return;
+			case Lsp.UNLOCK:
+				ma.lsp.lock.unlock();
 			case Lsp.CLOSE:
 				return;
 		}
@@ -72,7 +78,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 						switch (n) {
 							case NEWTX:
 								n = jr.nextString();
-								//if (tmp3 instanceof Edit)
+								if (tmp3 instanceof Edit)
 									((Edit)tmp3).text = n;
 								//else tmp3 = n;
 								break;
@@ -110,8 +116,8 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								FragmentManager fm = ma.getFragmentManager();
 								for (int i=ma.getActionBar().getNavigationItemCount()-1;i>=0;i--) {
 									EditFragment ef = (EditFragment)fm.findFragmentByTag(ma.getTag(i));
-									int tp = ef.type;
-									if (tp != EditFragment.TYPE_OTHER)
+									int tp = ef.type&EditFragment.TYPE_MASK;
+									if (tp != EditFragment.TYPE_TXT)
 										ma.lsp.didOpen(ef.getFile(), tp==EditFragment.TYPE_CPP?"cpp":"c", ((TextEditor)ef.getView()).getText().toString());
 								}
 								return;
@@ -140,7 +146,9 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								if (jr.peek()==BEGIN_ARRAY) {
 									jr.beginArray();
 									tmp2 = new ArrayList<Edit>();
-								} else
+								} else if (jr.peek()==NULL)
+									jr.nextNull();
+								else
 									jr.beginObject();
 								stack.push(n);
 								break;
@@ -195,6 +203,8 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 						switch (stack.peek()) {
 							case ADDEDIT:
 							case RESU:
+								if (!(tmp3 instanceof Edit))
+									break;
 								Edit _p = (Edit)tmp3;
 								Document te = ma.getEditor().getText();
 								_p.start = te.getLineOffset(sl) + sc;

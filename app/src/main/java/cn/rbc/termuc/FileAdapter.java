@@ -91,10 +91,14 @@ public class FileAdapter extends BaseAdapter implements Comparator<File>, FileFi
 			return R.drawable.ic_folder_24;
 		else {
 			String n = f.getName();
-			if (n.endsWith(".c")||n.endsWith(".cpp")||n.endsWith(".cxx")
+			if (n.endsWith(".c")||isCpp(n)
 				||n.endsWith(".h")||n.endsWith(".hpp"))
 				return R.drawable.ic_code_24;
 		}
 		return R.drawable.ic_file_24;
+	}
+
+	public final static boolean isCpp(String name) {
+		return name.endsWith(".cpp") || name.endsWith(".cxx") || name.endsWith(".cc");
 	}
 }

@@ -6,4 +6,10 @@
 	<item type="id" name="show_list"/>
 	<item type="id" name="subcontainer"/>
 	<item type="id" name="file_list"/>
+	<item type="id" name="delete"/>
+	<item type="id" name="newfile"/>
+	<item type="id" name="newprj"/>
+	<item type="id" name="debug"/>
+	<item type="id" name="build"/>
+	<item type="id" name="compile"/>
 </resources>

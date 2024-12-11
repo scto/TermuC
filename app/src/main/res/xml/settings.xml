@@ -35,6 +35,18 @@
 			android:title="@string/whitespace"
 			android:defaultValue="false"
 			/>
+		<CheckBoxPreference
+			android:key="usespace"
+			android:title="@string/usespace"
+			android:defaultValue="false"
+			/>
+		<ListPreference
+			android:key="tabsize"
+			android:title="@string/tabsize"
+			android:entries="@array/tabsizes"
+			android:entryValues="@array/tabsizes"
+			android:defaultValue="4"
+			/>
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/file_browser">

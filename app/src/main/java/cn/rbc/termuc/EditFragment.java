@@ -21,24 +21,26 @@ import java.util.List;
 public class EditFragment extends Fragment
 implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 {
-	public final static int TYPE_C = 1;
-	public final static int TYPE_CPP = 2;
-	public final static int TYPE_HEADER = 0x80000000;
-	public final static int TYPE_OTHER = 0;
-	public final static int TYPE_MASK = 0x7fffffff;
+	public final static int
+	TYPE_C = 1,
+	TYPE_CPP = 2,
+	TYPE_HEADER = 4,
+	TYPE_TXT = 0,
+	TYPE_BLOD = 0x80000000,
+	TYPE_MASK = 3;
 	final static String FL = "f", TP = "t", CS = "c", TS = "s", MK = "m";
 	private File fl;
 	private TextEditor ed;
 	int type = -1;
-	private String C = "clang";
+	private String C;
 	private long lastModified;
 	private List<Range> changes = new ArrayList<>();
 
 	public EditFragment() {
 	}
 
-	public EditFragment(String path, int type) {
-		fl = new File(path);
+	public EditFragment(File path, int type) {
+		fl = path;
 		this.type = type;
 	}
 
@@ -55,6 +57,8 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		editor.setTextSize((int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, Application.textsize, dm));
 		editor.setWordWrap(Application.wordwrap);
 		editor.setShowNonPrinting(Application.whitespace);
+		editor.setUseSpace(Application.usespace);
+		editor.setTabSpaces(Application.tabsize);
 		editor.setLayoutParams(new FrameLayout.LayoutParams(
 								   FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 		if (savedInstanceState!=null) {
@@ -75,16 +79,17 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 				C = "clang++";
 				editor.setLanguage(CppLanguage.getInstance());
 			} else {
+				C = null;
 				editor.setLanguage(LanguageNonProg.getInstance());
 			}
 			ma.setEditor(editor);
-			if (tp != TYPE_OTHER && "s".equals(Application.completion))
+			if (tp != TYPE_TXT && "s".equals(Application.completion))
 				MainActivity.lsp.didOpen(fl, tp==TYPE_CPP?"cpp":"c", s);
 		} catch(IOException fnf) {
 			fnf.printStackTrace();
-			HelperUtils.show(Toast.makeText(ma, R.string.open_failed, Toast.LENGTH_SHORT));
+			HelperUtils.show(Toast.makeText(ma, R.string.open_failed+fnf.getMessage(), Toast.LENGTH_SHORT));
 		}
-		if ((type&TYPE_MASK)!=TYPE_OTHER) {
+		if ((type&TYPE_MASK)!=TYPE_TXT) {
 			if ("s".equals(Application.completion))
 				editor.setFormatter(this);
 			editor.setAutoComplete("l".equals(Application.completion));
@@ -128,9 +133,9 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		return null;
 	}
 
-	private int mVer;
+	private int mVer = 0;
 
-	public void onChanged(CharSequence c, int start, int ver, boolean ins, boolean typ) {
+	public void onChanged(CharSequence c, int start, boolean ins, boolean typ) {
 		TextEditor editor = ed;
 		Document text = editor.getText();
 		boolean wordwrap = editor.isWordWrap();
@@ -161,17 +166,21 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		range.msg = (String)c;
 		changes.add(range);
 		Lsp lsp = MainActivity.lsp;
-		lsp.didChange(fl, ver, changes);
+		lsp.didChange(fl, ++mVer, changes);
 		// when inserting text and typing, call for completion
 		if (ins && typ && c.length()==1)
 			lsp.completionTry(fl, range.enl, range.enc+1, c.charAt(0));
 		changes.clear();
-		mVer = ver;
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
+		if (isVisible())
+			refresh();
+	}
+
+	private void refresh() {
 		long mLast = fl.lastModified();
 		if (mLast>lastModified) {
 			lastModified = mLast;
@@ -210,7 +219,9 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 				C = "clang++";
 			} else {
 				ed.setLanguage(LanguageNonProg.getInstance());
+				C = null;
 			}
+			refresh();
 		}
 	}
 
@@ -241,12 +252,30 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		fr.close();
 		String s = sb.toString();
 		ed.setText(s);
-		if ((type&TYPE_MASK)!=TYPE_OTHER && "s".equals(Application.completion))
+		if ((type&TYPE_MASK)!=TYPE_TXT && "s".equals(Application.completion))
 			ed.getText().setOnTextChangeListener(this);
 		return s;
 	}
 
 	public File getFile() {
 		return fl;
+	}
+
+	public static int fileType(File pwd) {
+		String _it = pwd.getName();
+		int _tp;
+		if (_it.endsWith(".c"))
+			_tp = EditFragment.TYPE_C;
+		else if (FileAdapter.isCpp(_it))
+			_tp = EditFragment.TYPE_CPP;
+		else if (_it.endsWith(".h"))
+			_tp = EditFragment.TYPE_C | EditFragment.TYPE_HEADER;
+		else if (_it.endsWith(".hpp"))
+			_tp = EditFragment.TYPE_CPP | EditFragment.TYPE_HEADER;
+		else if (!Utils.isBlob(pwd))
+			_tp = EditFragment.TYPE_TXT | EditFragment.TYPE_HEADER;
+		else
+			_tp = EditFragment.TYPE_BLOD;
+		return _tp;
 	}
 }

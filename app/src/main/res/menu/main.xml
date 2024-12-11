@@ -1,7 +1,7 @@
 <menu xmlns:ad="http://schemas.android.com/apk/res/android">
 	<item
 		ad:id="@+id/run"
-		ad:title="@string/run"
+		ad:title="@string/run_"
 		ad:showAsAction="always"
 		ad:icon="@drawable/ic_play_24"
 		ad:alphabeticShortcut="r"
@@ -33,6 +33,19 @@
 	<item
 		ad:id="@+id/close"
 		ad:title="@string/close"/>
+	<item
+		ad:enabled="false"
+		ad:id="@+id/prj"
+		ad:title="@string/prj_">
+		<menu>
+		<item
+			ad:id="@+id/prj_attr"
+			ad:title="@string/prj_attr"/>
+		<item
+			ad:id="@+id/prj_close"
+			ad:title="@string/prj_close"/>
+		</menu>
+	</item>
 	<item
 		ad:id="@+id/settings"
 		ad:title="@string/settings"/>

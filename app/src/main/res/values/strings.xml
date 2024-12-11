@@ -11,8 +11,13 @@
 	<string name="custom">Custom</string>
     <string name="wordwrap">Word wrap</string>
     <string name="whitespace">Show whitespaces</string>
+	<string name="usespace">Indent with spaces</string>
+	<string name="tabsize">Tab size (\\t)</string>
     <string name="compiler">Compiler</string>
     <string name="cflags">Compiler flags</string>
+	<string name="run_">Run...</string>
+	<string name="build">Build</string>
+	<string name="compile">Compile</string>
     <string name="run">Run</string>
 	<string name="debug">Debug</string>
     <string name="undo">Undo</string>
@@ -20,6 +25,9 @@
     <string name="save">Save</string>
     <string name="find">Find</string>
     <string name="close">Close</string>
+	<string name="prj_">Project...</string>
+	<string name="prj_attr">Configuration</string>
+	<string name="prj_close">Close Project</string>
 	<string name="no_open_files">No Open Files</string>
 	<string name="analysis">Code Analysis</string>
 	<string name="completion">Auto completion</string>
@@ -40,7 +48,11 @@
 	<string name="open_failed">Open failed!</string>
 	<string name="browse_files">Browse Files</string>
 	<string name="hint_filename">Name (eg: main.cpp)</string>
+	<string name="prj_name">Project Name</string>
+	<string name="open_prj">Open Project</string>
+	<string name="confirm_open">Open project %s?</string>
 	<string name="new_f">New File/Folder</string>
+	<string name="new_prj">New Project</string>
 	<string name="find_">Find...</string>
 	<string name="next">Next</string>
 	<string name="prev">Prev</string>
@@ -113,5 +125,10 @@
 		<item>30</item>
 		<item>31</item>
 		<item>32</item>
+	</string-array>
+	<string-array name="tabsizes">
+		<item>2</item>
+		<item>4</item>
+		<item>8</item>
 	</string-array>
 </resources>

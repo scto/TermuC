@@ -66,7 +66,6 @@ public class TextEditor extends FreeScrollingTextField{
         setAutoComplete(false);
         setAutoIndent(true);
         setUseGboard(true);
-		setUseSpace(false);
 		//setAutoIndentWidth(2);
         setNavigationMethod(new YoyoNavigationMethod(this));
     }

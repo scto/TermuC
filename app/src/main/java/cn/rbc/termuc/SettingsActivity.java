@@ -12,12 +12,13 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 {
 	private final static String TAG = "SettingsActivity", FT = "f";
 
-	private CheckBoxPreference mDarkModePref, mWordWrapPref, mWhitespacePref, mShowHidden;
+	private CheckBoxPreference mDarkModePref, mWordWrapPref, mWhitespacePref, mUseSpacePref, mShowHidden;
 	private EditTextPreference mCFlagsPref, mHost, mPort;
-	private ListPreference mFontPref, mSizePref, mEngine;
+	private ListPreference mFontPref, mSizePref, mTabSizePref, mEngine;
 
-	private boolean mDark, mWrap, mSpace;
+	private boolean mDark, mWrap, mSpace, mUseSpace;
 	private String mComp, mFont, tpFont;
+	private int mTabSize;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +34,8 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 		mSizePref = (ListPreference)findPreference(Application.KEY_TEXTSIZE);
 		mWordWrapPref = (CheckBoxPreference)findPreference(Application.KEY_WORDWRAP);
 		mWhitespacePref = (CheckBoxPreference)findPreference(Application.KEY_WHITESPACE);
+		mUseSpacePref = (CheckBoxPreference)findPreference(Application.KEY_USESPACE);
+		mTabSizePref = (ListPreference)findPreference(Application.KEY_TABSIZE);
 		mShowHidden = (CheckBoxPreference)findPreference(Application.KEY_SHOW_HIDDEN);
 		mCFlagsPref = (EditTextPreference)findPreference(Application.KEY_CFLAGS);
 		mEngine = (ListPreference)findPreference(Application.KEY_COMPLETION);
@@ -46,6 +49,8 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 		mDark = Application.dark_mode;
 		mWrap = Application.wordwrap;
 		mSpace = Application.whitespace;
+		mUseSpace = Application.usespace;
+		mTabSize = Application.tabsize;
 		mComp = Application.completion;
 		mFont = tpFont = Application.font;
 	}
@@ -106,6 +111,8 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 				  (mFont == tpFont
 				  && mWrap == mWordWrapPref.isChecked()
 				  && mSpace == mWhitespacePref.isChecked()
+				  && mUseSpace == mUseSpacePref.isChecked()
+				  && mTabSize == Integer.parseInt(mTabSizePref.getValue())
 				  && mComp.equals(mEngine.getValue()))
 				  ? RESULT_CANCELED : RESULT_OK);
 		super.onBackPressed();
@@ -128,6 +135,8 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 		Application.dark_mode = mDarkModePref.isChecked();
 		Application.wordwrap = mWordWrapPref.isChecked();
 		Application.whitespace = mWhitespacePref.isChecked();
+		Application.usespace = mUseSpacePref.isChecked();
+		Application.tabsize = Integer.parseInt(mTabSizePref.getValue());
 		Application.font = tpFont;
 		Application.textsize = Integer.parseInt(mSizePref.getValue());
 		Application.show_hidden = mShowHidden.isChecked();

@@ -374,8 +374,7 @@ public class TextBuffer implements CharSequence
 		if (undoable) {
 			_undoStack.captureInsert(charOffset, c.length, timestamp);
 			if (_txLis != null) {
-				UndoStack.Command cm = _undoStack.getLastCommand();
-				_txLis.onChanged(new String(c), charOffset, cm._group, true, _typ);
+				_txLis.onChanged(new String(c), charOffset, true, _typ);
 				_typ = false;
 			}
 		}
@@ -415,8 +414,7 @@ public class TextBuffer implements CharSequence
 		if (undoable) {
 			_undoStack.captureDelete(charOffset, totalChars, timestamp);
 			if (_txLis != null) {
-				UndoStack.Command cm = _undoStack.getLastCommand();
-				_txLis.onChanged(subSequence(charOffset, totalChars), charOffset, cm._group, false, _typ);
+				_txLis.onChanged(subSequence(charOffset, totalChars), charOffset, false, _typ);
 				_typ = false;
 			}
 		}

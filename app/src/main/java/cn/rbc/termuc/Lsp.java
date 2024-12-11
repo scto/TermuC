@@ -19,32 +19,41 @@ public class Lsp implements Runnable {
 	final static int INITIALIZE = 0, INITIALIZED = 1,
 	OPEN = 2, CLOSE = 3,
 	COMPLETION = 4, FIX = 5, CHANGE = 6, SAVE = 7, NOTI = 8,
-	ERROR = -1;
+	ERROR = -1, UNLOCK = -2;
 	private final static String TAG = "LSP";
 	private final static byte[] CONTENTLEN = "Content-Length: ".getBytes(StandardCharsets.UTF_8);
 	private int tp;
-	private Socket sk;
-	private ExecutorService mExecutor;
+	private Socket sk = new Socket();
+	private ExecutorService mExecutor = Executors.newSingleThreadExecutor();
 	private char[] compTrigs = {};
 	private long mLastReceivedTime;
 	private Handler mRead;
+	Lock lock = new ReentrantLock();
 
+	// In main thread
 	public void start(Context mC, Handler read) {
-		Utils.run(mC, "/system/bin/toybox", new String[]{"nc", "-l", "-s", Application.lsp_host, "-p", Integer.toString(Application.lsp_port), "clangd", "--header-insertion-decorators=0"}, Utils.ROOT.getAbsolutePath(), true);
-		mExecutor = Executors.newSingleThreadExecutor();
-		sk = new Socket();
+		Utils.run(mC, "/system/bin/nc", new String[]{"-l", "-s", Application.lsp_host, "-p", Integer.toString(Application.lsp_port), "-w", "6", "nice", "-n", "-20", "clangd", "--header-insertion-decorators=0"}, Utils.ROOT.getAbsolutePath(), true);
 		mRead = read;
+		lock.lock();
 		new Thread(this).start();
+		mExecutor.execute(new Runnable(){
+			public void run() {
+				lock.lock();
+				lock.unlock();
+			}
+		});
 	}
 
 	public void end() {
+		shutdown();
+		exit();
 		try {
 			sk.close();
 		} catch(IOException ioe) {}
 	}
 
 	public boolean isEnded() {
-		return sk.isClosed();
+		return sk.isClosed() || !sk.isConnected();
 	}
 
 	public void run() {
@@ -57,10 +66,10 @@ public class Lsp implements Runnable {
 					Thread.sleep(250L);
 				}
 				i++;
-			} while (i<=20 && !sk.isConnected());
+			} while (i<=20 && isEnded());
+			mRead.sendEmptyMessage(UNLOCK);
 			if (i>20)
 				throw new IOException("Connection failed");
-			initialize();
 			InputStream is = sk.getInputStream();
 			byte[] b = new byte[16];
 			OUTER:	while (true) {
@@ -91,9 +100,7 @@ public class Lsp implements Runnable {
 		} catch (Exception ioe) {
 			Log.e(TAG, ioe.getMessage());
 		}
-		Message msg = new Message();
-		msg.what = ERROR;
-		mRead.sendMessage(msg);
+		mRead.sendEmptyMessage(ERROR);
 	}
 
 	public long lastReceivedTime() {
@@ -110,10 +117,15 @@ public class Lsp implements Runnable {
 		return s.toString();
 	}
 
-	private void initialize() {
+	public void initialize(String root) {
 		tp = INITIALIZE;
 		StringBuilder sb = new StringBuilder("{\"processId\":");
 		sb.append(android.os.Process.myPid());
+		sb.append(",\"capabilities\":{\"workspace\":{\"applyEdit\":true,\"workspaceFolders\":true}}");
+		if (root!=null) {
+			sb.append(",\"rootUri\":");
+			sb.append(JSONObject.quote(new File(root).toURI().toString()));
+		}
 		sb.append(",\"initializationOptions\":{\"fallbackFlags\":[\"-Wall\"]}}");
 		mExecutor.execute(new Send("initialize", sb.toString(), true));
 	}
@@ -164,7 +176,7 @@ public class Lsp implements Runnable {
 		mExecutor.execute(new Send("textDocument/didSave", s.toString(), false));
 	}
 
-	public synchronized void didChange(File f, int version, String text) {
+	public void didChange(File f, int version, String text) {
 		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":");
 		sb.append(JSONObject.quote(Uri.fromFile(f).toString()));
 		sb.append(",\"version\":");
@@ -176,11 +188,11 @@ public class Lsp implements Runnable {
 		mExecutor.execute(new Send("textDocument/didChange", sb.toString(), false));
 	}
 
-	public synchronized void didChange(File f, int version, List<Range> chs) {
+	public void didChange(File f, int version, List<Range> chs) {
 		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":");
 		sb.append(JSONObject.quote(Uri.fromFile(f).toString()));
 		sb.append(",\"version\":");
-		sb.append(version);
+		sb.append(Integer.toUnsignedString(version));
 		sb.append("},\"contentChanges\":[");
 		for (int i=0,j=chs.size(); i<j; i++) {
 			Range c = chs.get(i);
@@ -202,7 +214,7 @@ public class Lsp implements Runnable {
 		mExecutor.execute(new Send("textDocument/didChange", sb.toString(), false));
 	}
 
-	public synchronized boolean completionTry(File f, int l, int c, char tgc) {
+	public boolean completionTry(File f, int l, int c, char tgc) {
 		byte b = isCompTrig(tgc);
 		if (b==0)
 			return false;
@@ -226,7 +238,7 @@ public class Lsp implements Runnable {
 		return true;
 	}
 
-	public synchronized void formatting(File fl, int tabSize, boolean useSpace) {
+	public void formatting(File fl, int tabSize, boolean useSpace) {
 		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":");
 		sb.append(JSONObject.quote(Uri.fromFile(fl).toString()));
 		sb.append("},\"options\":{\"tabSize\":");
@@ -238,7 +250,7 @@ public class Lsp implements Runnable {
 		mExecutor.execute(new Send("textDocument/formatting", sb.toString(), true));
 	}
 
-	public synchronized void rangeFormatting(File fl, Range range, int tabSize, boolean useSpace) {
+	public void rangeFormatting(File fl, Range range, int tabSize, boolean useSpace) {
 		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":");
 		sb.append(JSONObject.quote(Uri.fromFile(fl).toString()));
 		sb.append("},\"range\":{\"start\":{\"line\":");
@@ -254,8 +266,15 @@ public class Lsp implements Runnable {
 		sb.append(",\"insertSpaces\":");
 		sb.append(useSpace);
 		sb.append("}}");
-		//Log.d(TAG, sb.toString());
 		mExecutor.execute(new Send("textDocument/rangeFormatting", sb.toString(), true));
+	}
+
+	public void shutdown() {
+		mExecutor.execute(new Send("shutdown", "{}", true));
+	}
+
+	public void exit() {
+		mExecutor.execute(new Send("exit", "{}", false));
 	}
 
 	public boolean isConnected() {
@@ -271,10 +290,6 @@ public class Lsp implements Runnable {
 
 		public void run() {
 			try {
-				if (sk==null || sk.isClosed())
-					sk = new Socket(Application.lsp_host, Application.lsp_port);
-				else if (!sk.isConnected())
-					sk.connect(new InetSocketAddress(Application.lsp_host, Application.lsp_port));
 				OutputStream ow = sk.getOutputStream();
 				ow.write(CONTENTLEN);
 				ow.write((s.length+"\r\n\r\n").getBytes(StandardCharsets.UTF_8));

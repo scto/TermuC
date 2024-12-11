@@ -22,6 +22,8 @@ public class Application extends android.app.Application {
 	KEY_WORDWRAP = "wordwrap",
 	KEY_WHITESPACE = "whitespace",
 	KEY_TEXTSIZE = "fontsize",
+	KEY_USESPACE = "usespace",
+	KEY_TABSIZE = "tabsize",
 	KEY_SHOW_HIDDEN = "showhidden",
 	KEY_CHECKAPP = "checkapp",
 	KEY_INITAPP = "initapp",
@@ -30,9 +32,9 @@ public class Application extends android.app.Application {
 	KEY_LSP_HOST = "lsphost",
 	KEY_LSP_PORT = "lspport";
 
-	public static boolean dark_mode, wordwrap, whitespace, show_hidden;
+	public static boolean dark_mode, wordwrap, whitespace, show_hidden, usespace;
 	public static String font, cflags, completion, lsp_host;
-	public static int lsp_port, textsize;
+	public static int lsp_port, textsize, tabsize;
 
 	@Override
 	public void onCreate() {
@@ -51,6 +53,8 @@ public class Application extends android.app.Application {
 		textsize = Integer.parseInt(sp.getString(KEY_TEXTSIZE, "14"));
         wordwrap = sp.getBoolean(KEY_WORDWRAP, true);
 		whitespace = sp.getBoolean(KEY_WHITESPACE, false);
+		usespace = sp.getBoolean(KEY_USESPACE, false);
+		tabsize = Integer.parseInt(sp.getString(KEY_TABSIZE, "4"));
 		show_hidden = sp.getBoolean(KEY_SHOW_HIDDEN, true);
         cflags = sp.getString(KEY_CFLAGS, "-lm -Wall");
 		completion = sp.getString(KEY_COMPLETION, "s");

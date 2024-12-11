@@ -25,37 +25,46 @@ import android.graphics.drawable.*;
 import android.provider.*;
 import cn.rbc.codeeditor.common.*;
 import android.graphics.*;
+import android.util.*;
+import android.database.*;
+import static android.Manifest.permission.*;
 
 public class MainActivity extends Activity implements
 ActionBar.OnNavigationListener, OnGlobalLayoutListener,
 AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener,
-DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
+DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener,
+Runnable {
 
 	public final static int SETTING = 0, ACCESS_FILE = 1;
 	public final static String PWD = "p", SHOWLIST = "l", FILES = "o", TESTAPP = "t", INITAPP = "i";
-    private ArrayAdapter<String> hda;
+    private HeaderAdapter hda;
 	private FileAdapter adp;
 	private EditFragment lastFrag = null;
-	private boolean byhand = true, transZ;
+	private boolean byhand = true, keyboardShown = false, transZ;
     private View keys, showlist;
     private File pwd;
     private TextView pwdpth, msgEmpty, transTxV;
     private LinearLayout subc;
     private TextEditor codeEditor;
-	private Menu _appmenu;
-	private ActionBar ab;
+	private Menu appMenu;
 	private SearchAction mSearchAction;
 	private String transStr;
+	private File prj;
 	private Dialog transDlg;
 	private static MainHandler hand;
 	static Lsp lsp;
 
 	private void envInit(SharedPreferences pref) {
 		pwd = new File(pref.getString(PWD, Utils.ROOT.getPath()));
+		for (File f = pwd; !f.equals(Utils.ROOT); f = f.getParentFile()) {
+			if (new File(f, Project.PROJ).isFile()) {
+				prj = f;
+				break;
+			}
+		}
 		if (lsp == null) {
 			hand = new MainHandler(this);
 			lsp = new Lsp();
-			lsp.start(this, hand);
 		} else
 			hand.updateActivity(this);
 	}
@@ -87,16 +96,33 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 		if (Application.dark_mode)
 			setTheme(android.R.style.Theme_Holo);
         super.onCreate(savedInstanceState);
-		getWindow().getDecorView().getViewTreeObserver().addOnGlobalLayoutListener(this);
 		hda = new HeaderAdapter(new ContextThemeWrapper(getBaseContext(), android.R.style.Theme_Holo), R.layout.header_dropdown_item);
 		Resources.Theme rt = getResources().newTheme();
 		rt.applyStyle(android.R.style.Theme_Holo, true);
 		hda.setDropDownViewTheme(rt);
-		ab = getActionBar();
-		// ab.setHomeButtonEnabled(true);
-        ab.setListNavigationCallbacks(hda, this);
+		getActionBar().setListNavigationCallbacks(hda, this);
+		hda.registerDataSetObserver(new DataSetObserver() {
+				private int lastCount = 0;
+				public void onChanged() {
+					int count = hda.getCount();
+					if (count == 0) {
+						ActionBar ab = getActionBar();
+						ab.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+						ab.setDisplayShowTitleEnabled(true);
+						msgEmpty.setVisibility(View.VISIBLE);
+						showFullMenu(false);
+					} else if (lastCount == 0) {
+						ActionBar ab = getActionBar();
+						ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+						ab.setDisplayShowTitleEnabled(false);
+						msgEmpty.setVisibility(View.GONE);
+						showFullMenu(true);
+					}
+					lastCount = count;
+				}
+			});
 		setContentView(R.layout.activity_main);
-        showlist = findViewById(R.id.show_list);
+		showlist = findViewById(R.id.show_list);
 		keys = findViewById(R.id.keys);
 		subc = findViewById(R.id.subcontainer);
 		ListView l = findViewById(R.id.file_list);
@@ -108,17 +134,18 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 		l.setAdapter(adp);
 		l.setOnItemClickListener(this);
 		l.setOnItemLongClickListener(this);
+		getWindow().getDecorView().getViewTreeObserver().addOnGlobalLayoutListener(this);
 		mSearchAction = new SearchAction(this);
 		int sdk = android.os.Build.VERSION.SDK_INT;
 		if (sdk >= android.os.Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
 			Intent it = new Intent();
 			it.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-			it.setData(Uri.parse("package:"+getPackageName()));
+			it.setData(Uri.parse("package:" + getPackageName()));
 			startActivityForResult(it, ACCESS_FILE);
 		} else if (sdk >= android.os.Build.VERSION_CODES.M)
 			requestPermissions(new String[]{
-								   android.Manifest.permission.READ_EXTERNAL_STORAGE,
-								   android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+								   READ_EXTERNAL_STORAGE,
+								   WRITE_EXTERNAL_STORAGE
 							   }, PackageManager.PERMISSION_GRANTED);
 		if (pref.getBoolean(TESTAPP, true))
 			Utils.testApp(this, false);
@@ -149,18 +176,27 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 			InputMethodManager inputMethodManager = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
 			Method declaredMethod = inputMethodManager.getClass().getDeclaredMethod("getInputMethodWindowVisibleHeight", new Class[0]);
 			declaredMethod.setAccessible(true);
-			if (((Integer)declaredMethod.invoke(inputMethodManager, new Object[0])).intValue() > 0) {
-				showlist.setVisibility(View.GONE);
-				subc.setVisibility(View.GONE);
-				keys.setVisibility(View.VISIBLE);
-				_appmenu.findItem(R.id.run).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-				_appmenu.findItem(R.id.redo).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-				return;
+			boolean b = ((Integer)declaredMethod.invoke(inputMethodManager, new Object[0])).intValue() > 0;
+			if (keyboardShown != b && (transTxV == null || !transTxV.isAttachedToWindow())) {
+				keyboardShown = b;
+				int showas, slvis;
+				if (b) {
+					slvis = View.GONE;
+					subc.setVisibility(slvis);
+					showas = MenuItem.SHOW_AS_ACTION_IF_ROOM;
+				} else {
+					slvis = View.VISIBLE;
+					showas = MenuItem.SHOW_AS_ACTION_ALWAYS;
+				}
+				showlist.setVisibility(slvis);
+				keys.setVisibility(View.VISIBLE ^ View.GONE ^ slvis);
+				Menu menu = appMenu;
+				menu.findItem(R.id.redo).setShowAsAction(
+					MenuItem.SHOW_AS_ACTION_ALWAYS
+					^ MenuItem.SHOW_AS_ACTION_IF_ROOM
+					^ showas);
+				menu.findItem(R.id.run).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 			}
-			showlist.setVisibility(View.VISIBLE);
-			keys.setVisibility(View.GONE);
-			_appmenu.findItem(R.id.run).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-			_appmenu.findItem(R.id.redo).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -168,55 +204,22 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 
 	public void onItemClick(AdapterView<?> av, View v, int i, long n) {
 		String _it = adp.getItem(i - 1).name;
-		if ("..".equals(_it))
+		if ("..".equals(_it)) {
+			if (new File(pwd, Project.PROJ).isFile())
+				prj = null;
 			pwd = pwd.getParentFile();
-		else {
-			pwd = new File(pwd, _it);
-			if (pwd.isFile()) {
-				_it = pwd.getAbsolutePath();
-				int _i = hda.getCount(), _tp = -1;
-				if (getFragmentManager().findFragmentByTag(_it) != null) {
-					for (_i--; -1 < _i && !_it.equals(hda.getItem(_i)); _i--);
-				} else {
-					if (_it.endsWith(".c"))
-						_tp = EditFragment.TYPE_C;
-					else if (_it.endsWith(".cpp") || _it.endsWith(".cxx"))
-						_tp = EditFragment.TYPE_CPP;
-					else if (_it.endsWith(".h"))
-						_tp = EditFragment.TYPE_C | EditFragment.TYPE_HEADER;
-					else if (_it.endsWith(".hpp"))
-						_tp = EditFragment.TYPE_CPP | EditFragment.TYPE_HEADER;
-					else if (!Utils.isBlob(pwd))
-						_tp = EditFragment.TYPE_OTHER | EditFragment.TYPE_HEADER;
-					else
-						_i = -1;
-					if (_tp != -1) {
-						EditFragment ef = new EditFragment(pwd.getPath(), _tp);
-						FragmentTransaction mts = getFragmentManager().beginTransaction()
-							.add(R.id.editFrag, ef, _it);
-						if (lastFrag != null)
-							mts.hide(lastFrag);
-						mts.show(ef).commit();
-						lastFrag = ef;
-						hda.add(_it);
-						byhand = false;
-						if (_i == 0) {
-							_appmenu.clear();
-							getMenuInflater().inflate(R.menu.main, _appmenu);
-							ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-							ab.setDisplayShowTitleEnabled(false);
-							msgEmpty.setVisibility(View.GONE);
-						}
-						setFileRunnable(((_tp & EditFragment.TYPE_HEADER) == 0));
-					}
-				}
-				if (_i != -1) {
-					ab.setSelectedNavigationItem(_i);
-					byhand = true;
-				}
-				pwd = pwd.getParentFile();
+		} else {
+			File f = new File(pwd, _it);
+			if (f.isFile()) {
+				transStr = openFile(f) ? f.getAbsolutePath() : null;
+				if (Project.rootPath == null && prj!=null)
+					openProject();
 				return;
 			}
+			File trj = new File(f, Project.PROJ);
+			if (trj.isFile())
+				prj = f;
+			pwd = f;
 		}
 		refresh();
 	}
@@ -227,39 +230,226 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 		PopupMenu pm = new PopupMenu(MainActivity.this, v);
 		Menu _m = pm.getMenu();
 		transStr = adp.getItem(i - 1).name;
-		_m.add(R.string.delete).setOnMenuItemClickListener(this);
+		_m.add(Menu.NONE, R.id.delete, Menu.NONE, R.string.delete).setOnMenuItemClickListener(this);
 		pm.show();
 		return true;
 	}
 
 	@Override
 	public boolean onMenuItemClick(MenuItem p1) {
+		int id = p1.getItemId();
+		if (id == R.id.run || id == R.id.debug) {
+			try {
+				lastFrag.save();
+				if ((lastFrag.type & EditFragment.TYPE_MASK) != EditFragment.TYPE_TXT)
+					lsp.didSave(lastFrag.getFile());
+				Project.reload();
+				StringBuilder sb;
+				String pth;
+				if (Project.rootPath == null) {
+					sb = new StringBuilder("exec=$TMPDIR/m;");
+					sb.append(lastFrag.getC());
+					sb.append(" \"");
+					sb.append(Utils.escape(lastFrag.getFile().getAbsolutePath()));
+					sb.append("\" ");
+					sb.append(Application.cflags);
+					if (id != 0 && Application.cflags.indexOf("-g") == -1)
+						sb.append(" -g");
+					sb.append(" -o $exec && ");
+					pth = pwd.getAbsolutePath();
+				} else {
+					sb = Project.buildEnvironment(lastFrag.getFile());
+					sb.append("exec=$TMPDIR/termuc;mkdir $exec 2>/dev/null;find $o -maxdepth 1 -type f \\( -iname '*.so' -o ! -name '*.*' \\) -exec cp {} $exec \\;;exec=$exec/");
+					sb.append(Project.runCmd);
+					sb.append(" && chmod +x $exec && ");
+					pth = Project.rootPath;
+				}
+				if (id == R.id.run)
+					sb.append("$exec && echo -n \"\nPress any key to exit...\" && read");
+				else {
+					sb.append("gdb -q ");
+					String fn = lastFrag.getFile().getName();
+					Document dc = codeEditor.getText();
+					id = dc.getMarksCount();
+					for (int i=0;i < id;i++)
+						sb.append(String.format("-ex 'b %s:%d' ", fn, dc.getMark(i)));
+					sb.append("-ex r $exec");
+				}
+				Utils.run(this, Utils.PREF.concat("/usr/bin/bash"), new String[]{"-c",
+							  sb.toString()},
+						  pth, false);
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+			}
+			return true;
+		} else if (id==R.id.build || id==R.id.compile) {
+			try {
+				lastFrag.save();
+				File f = lastFrag.getFile();
+				if ((lastFrag.type & EditFragment.TYPE_MASK) != EditFragment.TYPE_TXT)
+					lsp.didSave(f);
+				Project.reload();
+				File out = new File(Project.rootPath, Project.outputDir);
+				if (!out.exists()) {
+					out.mkdir();
+					refresh();
+				}
+				StringBuilder sb = Project.buildEnvironment(f);
+				String cmd = id==R.id.build?Project.buildCmd:Project.compileCmd;
+				sb.append(cmd);
+				Utils.run(this, Utils.PREF.concat("/usr/bin/bash"), new String[]{
+					"-c", sb.toString()
+				}, Project.rootPath, true);
+			} catch(IOException ioe) {
+				ioe.printStackTrace();
+			}
+			return true;
+		}
 		Builder bd = new Builder(this);
-		bd.setTitle(R.string.delete);
-		bd.setMessage(getString(R.string.confirm_delete, transStr));
+		if (id == R.id.delete) {
+			bd.setTitle(R.string.delete);
+			bd.setMessage(getString(R.string.confirm_delete, transStr));
+			bd.setPositiveButton(android.R.string.ok, this);
+			transZ = false;
+		} else {
+			bd.setTitle(R.string.new_);
+			EditText ed = new EditText(this);
+			bd.setView(ed);
+			transTxV = ed;
+			ed.setLayoutParams(
+				new ViewGroup.LayoutParams(
+					ViewGroup.LayoutParams.FILL_PARENT,
+					ViewGroup.LayoutParams.FILL_PARENT
+				));
+			if (id == R.id.newfile) {
+				ed.setId(R.id.newfile);
+				ed.setHint(R.string.hint_filename);
+				bd.setPositiveButton(R.string.file, onc);
+				bd.setNeutralButton(R.string.folder, onc);
+			} else {
+				ed.setId(R.id.newprj);
+				ed.setHint(R.string.prj_name);
+				bd.setPositiveButton(android.R.string.ok, onc);
+			}
+		}
 		bd.setNegativeButton(android.R.string.cancel, null);
-		bd.setPositiveButton(android.R.string.ok, this);
-		transZ = false;
 		bd.create().show();
 		return true;
 	}
 
 	void setFileRunnable(boolean exec) {
-		_appmenu.findItem(R.id.run).setVisible(exec);
+		if (exec || Project.rootPath == null)
+			appMenu.findItem(R.id.run).setVisible(exec);
+	}
+
+	boolean openFile(File f) {
+		String _it = f.getAbsolutePath();
+		int _i;
+		if (getFragmentManager().findFragmentByTag(_it) != null) {
+			for (_i = hda.getCount() - 1; _i >= 0 && !_it.equals(hda.getItem(_i)); _i--);
+		} else if ((_i = EditFragment.fileType(f)) >= 0) {
+			if (hda.isEmpty() && "s".equals(Application.completion) && lsp.isEnded()) {
+				lsp.end();
+				lsp.start(this, hand);
+				lsp.initialize(Project.rootPath);
+			}
+			EditFragment ef = new EditFragment(f, _i);
+			FragmentTransaction mts = getFragmentManager().beginTransaction();
+			mts.add(R.id.editFrag, ef, _it);
+			if (lastFrag != null)
+				mts.hide(lastFrag);
+			mts.show(ef).commit();
+			lastFrag = ef;
+			hda.add(_it);
+			byhand = false;
+			setFileRunnable(((_i & EditFragment.TYPE_HEADER) == 0));
+			_i = hda.getCount() - 1;
+		}
+		boolean b = _i>=0;
+		if (b) {
+			getActionBar().setSelectedNavigationItem(_i);
+			byhand = b;
+		}
+		return b;
+	}
+
+	private void openProject() {
+		Builder bd = new Builder(this);
+		bd.setTitle(R.string.open_prj);
+		bd.setMessage(getString(R.string.confirm_open, prj));
+		bd.setPositiveButton(android.R.string.ok, this);
+		bd.setNegativeButton(android.R.string.cancel, null);
+		transZ = true;
+		bd.create().show();
+	}
+
+	private void openProjFiles(List<String> opens) {
+		String pth = transStr;
+		FragmentManager fm = getFragmentManager();
+		FragmentTransaction fts = fm.beginTransaction();
+		for (int i=0;i < hda.getCount();) {
+			String str = hda.getItem(i);
+			if (str.equals(pth)) {
+				i++;
+			} else {
+				hda.remove(str);
+				fts.remove(fm.findFragmentByTag(str));
+				lsp.didClose(new File(str));
+			}
+		}
+		lsp.end();
+		lsp.start(this, hand);
+		lsp.initialize(Project.rootPath);
+		int tp;
+		EditFragment ef = null;
+		for (String i:opens) {
+			if (i.equals(pth)) {
+				tp = lastFrag.type;
+				if (tp != EditFragment.TYPE_TXT && "s".equals(Application.completion))
+					MainActivity.lsp.didOpen(lastFrag.getFile(), tp == EditFragment.TYPE_CPP ?"cpp": "c", codeEditor.getText().toString());
+				continue;
+			}
+			File f = new File(i);
+			if (f.isFile() && (tp = EditFragment.fileType(f)) >= 0) {
+				ef = new EditFragment(f, tp);
+				fts.add(R.id.editFrag, ef, i);
+				fts.hide(ef);
+				hda.add(i);
+			}
+		}
+		if (ef!=null) {
+			byhand = false;
+			getActionBar().setSelectedNavigationItem(hda.getCount()-1);
+			fts.show(ef);
+			byhand = true;
+		}
+		fts.commit();
 	}
 
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         switch (menuItem.getItemId()) {
             case R.id.run:
-				int bs = codeEditor.getText().getMarksCount();
-				transZ = true;
-				if (bs==0) 
-					onClick(null, 0);
+				boolean nbreaks = codeEditor.getText().getMarksCount() == 0;
+				boolean nproj = Project.rootPath == null;
+				if (nproj && nbreaks)
+					onMenuItemClick(menuItem);
 				else {
-					Builder bd = new AlertDialog.Builder(this);
-					bd.setItems(R.array.runs, this);
-					bd.create().show();
+					View de = getWindow().getDecorView();
+					View r = de.findViewById(R.id.run);
+					if (r == null)
+						r = de.findViewById(R.id.redo);
+					PopupMenu pm = new PopupMenu(this, r);
+					Menu m = pm.getMenu();
+					if (!nproj) {
+						m.add(0, R.id.build, 0, R.string.build).setOnMenuItemClickListener(this);
+						if ((lastFrag.type&EditFragment.TYPE_MASK)!=0)
+							m.add(0, R.id.compile, 0, R.string.compile).setOnMenuItemClickListener(this);
+					}
+					m.add(0, R.id.run, 0, R.string.run).setOnMenuItemClickListener(this);
+					if (!nbreaks)
+						m.add(0, R.id.debug, 0, R.string.debug).setOnMenuItemClickListener(this);
+					pm.show();
 				}
 				break;
 			case R.id.undo:
@@ -271,7 +461,7 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
             case R.id.save:
 				try {
 					lastFrag.save();
-					if ((lastFrag.type & EditFragment.TYPE_MASK) != EditFragment.TYPE_OTHER)
+					if ((lastFrag.type & EditFragment.TYPE_MASK) != EditFragment.TYPE_TXT)
 						lsp.didSave(lastFrag.getFile());
 					toast(getText(R.string.saved));
 				} catch (IOException e) {
@@ -282,6 +472,7 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 				startActionMode(mSearchAction);
 				break;
 			case R.id.close:
+				ActionBar ab = getActionBar();
 				int sd = ab.getSelectedNavigationIndex();
 				String _t = hda.getItem(ab.getSelectedNavigationIndex());
 				hda.remove(_t);
@@ -289,20 +480,33 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 				FragmentTransaction mTans = fm.beginTransaction();
 				mTans.remove(fm.findFragmentByTag(_t));
 				int cnt = hda.getCount();
-				if (hda.getCount() == 0) {
-					ab.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-					ab.setDisplayShowTitleEnabled(true);
-					_appmenu.clear();
-					getMenuInflater().inflate(R.menu.nopen, _appmenu);
-					msgEmpty.setVisibility(View.VISIBLE);
-				} else {
+				if (hda.getCount() > 0) {
 					if (cnt == sd)
 						sd--;
 					lastFrag = (EditFragment)fm.findFragmentByTag(hda.getItem(sd));
 					mTans.show(lastFrag);
 				}
 				mTans.commit();
-				lsp.didClose(pwd);
+				lsp.didClose(new File(_t));
+				break;
+			case R.id.prj_attr:
+				openFile(new File(Project.rootPath, Project.PROJ));
+				break;
+			case R.id.prj_close:
+				Project.save(hda);
+				Project.close();
+				fm = getFragmentManager();
+				mTans = fm.beginTransaction();
+				while (!hda.isEmpty()) {
+					String s = hda.getItem(0);
+					hda.remove(s);
+					mTans.remove(fm.findFragmentByTag(s));
+					lsp.didClose(new File(s));
+				}
+				lastFrag = null;
+				mTans.commit();
+				appMenu.findItem(R.id.prj).setEnabled(false);
+				lsp.end();
 				break;
 			case R.id.settings:
 				Intent it = new Intent(this, SettingsActivity.class);
@@ -359,13 +563,8 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 				i++;
 			}
 			if (!hda.isEmpty()) {
-				_appmenu.clear();
-				getMenuInflater().inflate(R.menu.main, _appmenu);
-				ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-				ab.setDisplayShowTitleEnabled(false);
-				msgEmpty.setVisibility(View.GONE);
 				byhand = false;
-				ab.setSelectedNavigationItem(j);
+				getActionBar().setSelectedNavigationItem(j);
 				byhand = true;
 				setFileRunnable((_tp & EditFragment.TYPE_HEADER) == 0);
 			}
@@ -379,8 +578,8 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
         bundle.putString(PWD, pwd.getPath());
 		bundle.putInt(SHOWLIST, subc.getVisibility());
 		ArrayList<String> al = new ArrayList<>(hda.getCount());
-		for (int i=0,l=hda.getCount();i < l;i++)
-			al.add(hda.getItem(i));
+		for (String s:hda)
+			al.add(s);
 		bundle.putStringArrayList(FILES, al);
         super.onSaveInstanceState(bundle);
     }
@@ -388,43 +587,26 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 	@Override
 	public void onClick(DialogInterface di, int id) {
 		if (transZ) {
-			try {
-				lastFrag.save();
-				if ((lastFrag.type & EditFragment.TYPE_MASK) != EditFragment.TYPE_OTHER)
-					lsp.didSave(lastFrag.getFile());
-				StringBuilder sb = new StringBuilder(lastFrag.getC());
-				sb.append(" \"");
-				sb.append(Utils.escape(lastFrag.getFile().getAbsolutePath()));
-				sb.append("\" ");
-				sb.append(Application.cflags);
-				if (id!=0 && Application.cflags.indexOf("-g")==-1)
-					sb.append(" -g");
-				sb.append(" -o $TMPDIR/m && ");
-				if (id==0)
-					sb.append("$TMPDIR/m && echo -n \"\nPress any key to exit...\" && read");
-				else {
-					sb.append("gdb -q ");
-					String fn = lastFrag.getFile().getName();
-					Document dc = codeEditor.getText();
-					id = dc.getMarksCount();
-					for (int i=0;i<id;i++)
-						sb.append(String.format("-ex 'b %s:%d' ", fn, dc.getMark(i)));
-					sb.append("-ex r $TMPDIR/m");
+			File c = new File(prj, Project.PROJ);
+			if (c.isFile()) {
+				try {
+					List<String> opens = new ArrayList<>();
+					Project.load(c, opens);
+					appMenu.findItem(R.id.prj).setEnabled(true);
+					openProjFiles(opens);
+					return;
+				} catch (IOException e) {
+					Log.e("LSP", e.getMessage());
 				}
-				Utils.run(this, new StringBuilder(Utils.PREF).append("/usr/bin/bash").toString(), new String[]{"-c",
-							  sb.toString()},
-						  pwd.getPath(), false);
-			} catch (IOException ioe) {
-				ioe.printStackTrace();
 			}
-		} else {
-			ProgressDialog pd = new ProgressDialog(MainActivity.this);
-			pd.setMessage(getString(R.string.deleting, transStr));
-			pd.setIndeterminate(true);
-			pd.show();
-			transDlg = pd;
-			new Thread(this).start();
+			return;
 		}
+		ProgressDialog pd = new ProgressDialog(MainActivity.this);
+		pd.setMessage(getString(R.string.deleting, transStr));
+		pd.setIndeterminate(true);
+		pd.show();
+		transDlg = pd;
+		new Thread(this).start();
 	}
 
 	public void run() {
@@ -451,29 +633,33 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 		super.onActivityResult(requestCode, resultCode, data);
 		switch (requestCode) {
 			case SETTING:
-			if (resultCode == RESULT_OK) {
-				boolean s = "s".equals(Application.completion);
-				FragmentManager fm = getFragmentManager();
-				Typeface tf = Application.typeface();
-				for (int i=getActionBar().getNavigationItemCount() - 1;i >= 0;i--) {
-					Fragment f = fm.findFragmentByTag(hda.getItem(i));
-					TextEditor ed = (TextEditor)f.getView();
-					ed.setFormatter(s?(EditFragment)f: null);
-					ed.setAutoComplete("l".equals(Application.completion));
-					ed.setTypeface(tf);
-					ed.setWordWrap(Application.wordwrap);
-					ed.setShowNonPrinting(Application.whitespace);
+				if (resultCode == RESULT_OK) {
+					boolean s = "s".equals(Application.completion);
+					FragmentManager fm = getFragmentManager();
+					Typeface tf = Application.typeface();
+					for (int i=getActionBar().getNavigationItemCount() - 1;i >= 0;i--) {
+						Fragment f = fm.findFragmentByTag(hda.getItem(i));
+						TextEditor ed = (TextEditor)f.getView();
+						ed.setFormatter(s ?(EditFragment)f: null);
+						ed.setAutoComplete("l".equals(Application.completion));
+						ed.setTypeface(tf);
+						ed.setWordWrap(Application.wordwrap);
+						ed.setShowNonPrinting(Application.whitespace);
+						ed.setUseSpace(Application.usespace);
+						ed.setTabSpaces(Application.tabsize);
+					}
+					if (s) {
+						if (lsp.isEnded()) {
+							lsp.end();
+							lsp.start(this, hand);
+							lsp.initialize(Project.rootPath);
+						}
+					} else if (!lsp.isEnded())
+						lsp.end();
+				} else if (resultCode == RESULT_FIRST_USER) {
+					recreate();
 				}
-				if (s) {
-					if (lsp.isEnded())
-						lsp.start(this, hand);
-				} else if (!lsp.isEnded()) {
-					lsp.end();
-				}
-			} else if (resultCode == RESULT_FIRST_USER) {
-				recreate();
-			}
-			break;
+				break;
 			case ACCESS_FILE:
 				if (resultCode == RESULT_OK)
 					refresh();
@@ -483,45 +669,57 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 		}
 	}
 
-	private DialogInterface.OnClickListener onc = new DialogInterface.OnClickListener(){
+	private final DialogInterface.OnClickListener onc = new DialogInterface.OnClickListener(){
 		public void onClick(DialogInterface p1, int p2) {
-			try {
-				File f = new File(pwd, transTxV.getText().toString());
-				if (p2 == DialogInterface.BUTTON_POSITIVE)
-					f.createNewFile();
-				else
-					f.mkdir();
+			TextView tv = transTxV;
+			File f = new File(pwd, tv.getText().toString());
+			if (tv.getId() == R.id.newfile)
+				try {
+					if (p2 == DialogInterface.BUTTON_POSITIVE)
+						f.createNewFile();
+					else
+						f.mkdir();
+					refresh();
+				} catch (IOException e) {
+					e.printStackTrace();
+					toast(e.getMessage());
+				}
+			else if (Project.create(f)) {
+				appMenu.findItem(R.id.prj).setEnabled(true);
+				pwd = f;
+				prj = f;
 				refresh();
-			} catch (IOException e) {
-				e.printStackTrace();
-				toast(e.getMessage());
 			}
 		}
 	};
 
     public void createFile(View view) {
-        View inflate = View.inflate(this, R.layout.edit, null);
-        transTxV = inflate.findViewById(R.id.edit_name);
-		Builder bd = new Builder(this);
-		bd.setTitle(R.string.new_);
-		bd.setView(inflate);
-		bd.setPositiveButton(R.string.file, onc);
-		bd.setNeutralButton(R.string.folder, onc);
-		bd.setNegativeButton(android.R.string.cancel, null);
-		bd.create().show();
+		PopupMenu pm = new PopupMenu(this, view);
+		Menu m = pm.getMenu();
+		m.add(Menu.NONE, R.id.newfile, Menu.NONE, R.string.new_f).setOnMenuItemClickListener(this);
+		m.add(Menu.NONE, R.id.newprj, Menu.NONE, R.string.new_prj).setOnMenuItemClickListener(this);
+		pm.show();
     }
 
 	@Override
-	public boolean onPrepareOptionsMenu(Menu menu) {
-		_appmenu = menu;
-		return super.onPrepareOptionsMenu(menu);
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.main, menu);
+		appMenu = menu;
+		showFullMenu(false);
+		return true;
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		super.onCreateOptionsMenu(menu);
-		getMenuInflater().inflate(R.menu.nopen, menu);
-		return true;
+	private void showFullMenu(boolean show) {
+		Menu menu = appMenu;
+		int i = menu.size() - 2;
+		boolean prj = Project.rootPath == null;
+		if (!(show || prj))
+			i--;
+		for (; i >= 0; i--) {
+			MenuItem mi = menu.getItem(i);
+			if (prj || mi.getItemId() != R.id.run)
+				menu.getItem(i).setVisible(show);
+		}
 	}
 
     @Override
@@ -536,7 +734,7 @@ DialogInterface.OnClickListener, MenuItem.OnMenuItemClickListener, Runnable {
 
     public void showList(View view) {
 		View v = subc;
-        v.setVisibility(v.getVisibility() == View.VISIBLE ?View.GONE: View.VISIBLE);
+        v.setVisibility(View.VISIBLE ^ View.GONE ^ v.getVisibility());
     }
 
 	public void setEditor(TextEditor edit) {

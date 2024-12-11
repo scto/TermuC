@@ -83,7 +83,7 @@ public class UndoStack {
 				lastUndone = c;
 				if (lis != null) {
 					boolean b = c instanceof Delete;
-					lis.onChanged(c._data != null ? c._data : (b ? new String(_buf.gapSubSequence(c._length)) : _buf.subSequence(c._start, c._length)), c._start, group, b, false);
+					lis.onChanged(c._data != null ? c._data : (b ? new String(_buf.gapSubSequence(c._length)) : _buf.subSequence(c._start, c._length)), c._start, b, false);
 				}
 				c.undo();
 				--_top;
@@ -112,7 +112,7 @@ public class UndoStack {
 
 				lastRedone = c;
 				if (lis != null)
-					lis.onChanged(c._data, c._start, group, c instanceof Insert, false);
+					lis.onChanged(c._data, c._start, c instanceof Insert, false);
 				c.redo();
 				++_top;
 			} while (canRedo());
