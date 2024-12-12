@@ -18,8 +18,8 @@ public class Project
 	public static String buildCmd, compileCmd, runCmd;
 
 	private static void setDefault() {
-		buildCmd = "clang $f -o $o/$e -Wall";
-		compileCmd = "clang -c $f -o $o/$e.o -Wall";
+		buildCmd = "clang $d/$f -o $o/$e -lm -Wall";
+		compileCmd = "clang -c $d/$f -o $o/$e.o -lm -Wall";
 		runCmd = "$e";
 		outputDir = "build";
 	}
@@ -129,7 +129,7 @@ public class Project
 				name = name.substring(0, i);
 			sb.append(Utils.escape(name));
 			sb.append("\";d=\"");
-			sb.append(Utils.escape(file.getAbsolutePath()));
+			sb.append(Utils.escape(file.getParent()));
 			sb.append("\";");
 		}
 		return sb;
