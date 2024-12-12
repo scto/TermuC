@@ -29,7 +29,6 @@ public class TextEditor extends FreeScrollingTextField{
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-
                 case ReadThread.MSG_READ_OK:
                     setText(msg.obj.toString());
                     break;
@@ -66,7 +65,8 @@ public class TextEditor extends FreeScrollingTextField{
         setAutoComplete(false);
         setAutoIndent(true);
         setUseGboard(true);
-		//setAutoIndentWidth(2);
+		//setSuggestion(false);
+		mTypeInput |= InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD;
         setNavigationMethod(new YoyoNavigationMethod(this));
     }
 
@@ -123,6 +123,12 @@ public class TextEditor extends FreeScrollingTextField{
         }
         return super.onKeyShortcut(keyCode, event);
     }
+
+	@Override
+	public void setTabSpaces(int spaceCount) {
+		super.setTabSpaces(spaceCount);
+		setAutoIndentWidth(spaceCount);
+	}
 
 	@Override
 	public void format() {

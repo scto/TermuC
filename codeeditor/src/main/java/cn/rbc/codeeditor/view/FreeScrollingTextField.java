@@ -284,7 +284,7 @@ public abstract class FreeScrollingTextField extends View
     private Pair mCaretSpan = new Pair(0, 0);
     private Typeface defTypeface = Typeface.DEFAULT;
     private Typeface boldTypeface = Typeface.DEFAULT_BOLD;
-    private int mTypeInput = InputType.TYPE_CLASS_TEXT;
+    protected int mTypeInput = InputType.TYPE_CLASS_TEXT;
     private Context mContext;
 	private SparseIntArray chrAdvs = new SparseIntArray();
 

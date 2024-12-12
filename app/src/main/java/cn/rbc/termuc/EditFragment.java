@@ -28,7 +28,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 	TYPE_TXT = 0,
 	TYPE_BLOD = 0x80000000,
 	TYPE_MASK = 3;
-	final static String FL = "f", TP = "t", CS = "c", TS = "s", MK = "m";
+	final static String FL = "f", TP = "t", CS = "c", TS = "s", MK = "m", VS = "v";
 	private File fl;
 	private TextEditor ed;
 	int type = -1;
@@ -64,6 +64,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		if (savedInstanceState!=null) {
 			fl = new File((String)savedInstanceState.getCharSequence(FL));
 			type = savedInstanceState.getInt(TP, type);
+			mVer = savedInstanceState.getInt(VS, mVer);
 			Document doc = savedInstanceState.getParcelable(CS);
 			doc.setMetrics(editor);
 			doc.resetRowTable();
@@ -100,11 +101,6 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 
 	public String getC() {
 		return C;
-	}
-
-	@Override
-	public int createAutoIndent(CharSequence text) {
-		return 4;
 	}
 
 	@Override
@@ -232,6 +228,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		outState.putCharSequence(FL, fl.getAbsolutePath());
 		outState.putInt(TP, type);
 		outState.putInt(TS, (int)ed.getTextSize());
+		outState.putInt(VS, mVer);
 	}
 
 	public void save() throws IOException {
