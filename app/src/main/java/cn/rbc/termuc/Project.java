@@ -20,7 +20,7 @@ public class Project
 	private static void setDefault() {
 		buildCmd = "clang $f -o $o/$e -Wall";
 		compileCmd = "clang -c $f -o $o/$e.o -Wall";
-		runCmd = "./$e";
+		runCmd = "$e";
 		outputDir = "build";
 	}
 
@@ -110,24 +110,28 @@ public class Project
 	 * $o  outputDir
 	 */
 	public static StringBuilder buildEnvironment(File file) {
-		StringBuilder sb = new StringBuilder("f=\"");
-		String name = file.getName();
-		sb.append(Utils.escape(name));
-		sb.append("\";e=\"");
-		// remove suffix
-		int i = name.lastIndexOf('.');
-		if (i>=0)
-			name = name.substring(0, i);
-		sb.append(Utils.escape(name));
-		sb.append("\";d=\"");
-		sb.append(Utils.escape(file.getAbsolutePath()));
+		StringBuilder sb = new StringBuilder();
 		if (rootPath!=null) {
-			sb.append("\";p=\"");
+			sb.append("p=\"");
 			sb.append(Utils.escape(rootPath));
+			sb.append("\";o=\"");
+			sb.append(Utils.escape(outputDir));
+			sb.append("\";");
 		}
-		sb.append("\";o=\"");
-		sb.append(Utils.escape(outputDir));
-		sb.append("\";");
+		if (file!=null) {
+			sb.append("f=\"");
+			String name = file.getName();
+			sb.append(Utils.escape(name));
+			sb.append("\";e=\"");
+			// remove suffix
+			int i = name.lastIndexOf('.');
+			if (i>=0)
+				name = name.substring(0, i);
+			sb.append(Utils.escape(name));
+			sb.append("\";d=\"");
+			sb.append(Utils.escape(file.getAbsolutePath()));
+			sb.append("\";");
+		}
 		return sb;
 	}
 }

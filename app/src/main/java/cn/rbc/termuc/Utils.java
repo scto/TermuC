@@ -17,6 +17,7 @@ import android.app.AlertDialog.Builder;
 public class Utils {
 	public final static File ROOT = Environment.getExternalStorageDirectory();
 	public final static String PREF = "/data/data/com.termux/files";
+	public final static String PERM_EXEC = "com.termux.permission.RUN_COMMAND";
     private final static String PREFC = "com.termux.RUN_COMMAND_";
 
 	public static void run(Context cont, String cmd, String[] args, String pwd, boolean background) {

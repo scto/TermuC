@@ -13,6 +13,7 @@ import android.view.*;
 import android.graphics.drawable.*;
 import cn.rbc.codeeditor.util.*;
 import android.graphics.*;
+import android.provider.*;
 
 public class Application extends android.app.Application {
 	final static String

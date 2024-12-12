@@ -13,7 +13,6 @@ import android.content.*;
 import android.content.res.*;
 import android.util.Log;
 import java.util.*;
-import org.json.*;
 import java.net.*;
 import android.net.*;
 import cn.rbc.codeeditor.util.*;
@@ -37,7 +36,7 @@ Runnable {
 
 	public final static int SETTING = 0, ACCESS_FILE = 1;
 	public final static String PWD = "p", SHOWLIST = "l", FILES = "o", TESTAPP = "t", INITAPP = "i";
-    private HeaderAdapter hda;
+	private HeaderAdapter hda;
 	private FileAdapter adp;
 	private EditFragment lastFrag = null;
 	private boolean byhand = true, keyboardShown = false, transZ;
@@ -111,6 +110,7 @@ Runnable {
 						ab.setDisplayShowTitleEnabled(true);
 						msgEmpty.setVisibility(View.VISIBLE);
 						showFullMenu(false);
+						lastFrag = null;
 					} else if (lastCount == 0) {
 						ActionBar ab = getActionBar();
 						ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
@@ -136,17 +136,24 @@ Runnable {
 		l.setOnItemLongClickListener(this);
 		getWindow().getDecorView().getViewTreeObserver().addOnGlobalLayoutListener(this);
 		mSearchAction = new SearchAction(this);
-		int sdk = android.os.Build.VERSION.SDK_INT;
-		if (sdk >= android.os.Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-			Intent it = new Intent();
-			it.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-			it.setData(Uri.parse("package:" + getPackageName()));
-			startActivityForResult(it, ACCESS_FILE);
+		final int sdk = android.os.Build.VERSION.SDK_INT;
+		String[] s = null;
+		if (sdk >= android.os.Build.VERSION_CODES.R) {
+			if (!Environment.isExternalStorageManager()) {
+				Intent it = new Intent();
+				it.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+				it.setData(Uri.parse("package:" + getPackageName()));
+				startActivityForResult(it, ACCESS_FILE);
+			}
+			s = new String[]{Utils.PERM_EXEC};
 		} else if (sdk >= android.os.Build.VERSION_CODES.M)
-			requestPermissions(new String[]{
-								   READ_EXTERNAL_STORAGE,
-								   WRITE_EXTERNAL_STORAGE
-							   }, PackageManager.PERMISSION_GRANTED);
+			s = new String[]{
+					Utils.PERM_EXEC,
+					READ_EXTERNAL_STORAGE,
+					WRITE_EXTERNAL_STORAGE,
+				};
+		if (s != null)
+			requestPermissions(s, PackageManager.PERMISSION_GRANTED);
 		if (pref.getBoolean(TESTAPP, true))
 			Utils.testApp(this, false);
 		else if (pref.getBoolean(INITAPP, true))
@@ -156,12 +163,15 @@ Runnable {
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-		if (requestCode == PackageManager.PERMISSION_GRANTED
-			&& grantResults[0] == requestCode
-			&& grantResults[1] == requestCode)
-			refresh();
-		else
-			toast(getText(R.string.request_failed));
+		if (requestCode == PackageManager.PERMISSION_GRANTED) {
+			for (int i:grantResults)
+				if (i!=PackageManager.PERMISSION_GRANTED) {
+					toast(getText(R.string.request_failed));
+					break;
+				}
+			if (grantResults.length>1 && grantResults[1]==PackageManager.PERMISSION_GRANTED)
+				refresh();
+		}
 	}
 
     private void refresh() {
@@ -240,17 +250,20 @@ Runnable {
 		int id = p1.getItemId();
 		if (id == R.id.run || id == R.id.debug) {
 			try {
-				lastFrag.save();
-				if ((lastFrag.type & EditFragment.TYPE_MASK) != EditFragment.TYPE_TXT)
-					lsp.didSave(lastFrag.getFile());
+				if (lastFrag!=null) {
+					lastFrag.save();
+					if ((lastFrag.type & EditFragment.TYPE_MASK) != EditFragment.TYPE_TXT)
+						lsp.didSave(lastFrag.getFile());
+				}
 				Project.reload();
 				StringBuilder sb;
 				String pth;
+				File f = lastFrag==null?null:lastFrag.getFile();
 				if (Project.rootPath == null) {
 					sb = new StringBuilder("exec=$TMPDIR/m;");
 					sb.append(lastFrag.getC());
 					sb.append(" \"");
-					sb.append(Utils.escape(lastFrag.getFile().getAbsolutePath()));
+					sb.append(Utils.escape(f.getAbsolutePath()));
 					sb.append("\" ");
 					sb.append(Application.cflags);
 					if (id != 0 && Application.cflags.indexOf("-g") == -1)
@@ -258,7 +271,7 @@ Runnable {
 					sb.append(" -o $exec && ");
 					pth = pwd.getAbsolutePath();
 				} else {
-					sb = Project.buildEnvironment(lastFrag.getFile());
+					sb = Project.buildEnvironment(f);
 					sb.append("exec=$TMPDIR/termuc;mkdir $exec 2>/dev/null;find $o -maxdepth 1 -type f \\( -iname '*.so' -o ! -name '*.*' \\) -exec cp {} $exec \\;;exec=$exec/");
 					sb.append(Project.runCmd);
 					sb.append(" && chmod +x $exec && ");
@@ -268,7 +281,7 @@ Runnable {
 					sb.append("$exec && echo -n \"\nPress any key to exit...\" && read");
 				else {
 					sb.append("gdb -q ");
-					String fn = lastFrag.getFile().getName();
+					String fn = f.getName();
 					Document dc = codeEditor.getText();
 					id = dc.getMarksCount();
 					for (int i=0;i < id;i++)
@@ -284,10 +297,13 @@ Runnable {
 			return true;
 		} else if (id==R.id.build || id==R.id.compile) {
 			try {
-				lastFrag.save();
-				File f = lastFrag.getFile();
-				if ((lastFrag.type & EditFragment.TYPE_MASK) != EditFragment.TYPE_TXT)
-					lsp.didSave(f);
+				File f;
+				if (lastFrag!=null) {
+					lastFrag.save();
+					f = lastFrag.getFile();
+					if ((lastFrag.type & EditFragment.TYPE_MASK) != EditFragment.TYPE_TXT)
+						lsp.didSave(f);
+				} else f = null;
 				Project.reload();
 				File out = new File(Project.rootPath, Project.outputDir);
 				if (!out.exists()) {
@@ -299,7 +315,7 @@ Runnable {
 				sb.append(cmd);
 				Utils.run(this, Utils.PREF.concat("/usr/bin/bash"), new String[]{
 					"-c", sb.toString()
-				}, Project.rootPath, true);
+				}, Project.rootPath, false);
 			} catch(IOException ioe) {
 				ioe.printStackTrace();
 			}
@@ -338,7 +354,7 @@ Runnable {
 	}
 
 	void setFileRunnable(boolean exec) {
-		if (exec || Project.rootPath == null)
+		if (Project.rootPath == null||exec)
 			appMenu.findItem(R.id.run).setVisible(exec);
 	}
 
@@ -420,6 +436,8 @@ Runnable {
 		if (ef!=null) {
 			byhand = false;
 			getActionBar().setSelectedNavigationItem(hda.getCount()-1);
+			if (ef!=lastFrag && lastFrag!=null)
+				fts.hide(lastFrag);
 			fts.show(ef);
 			byhand = true;
 		}
@@ -430,7 +448,7 @@ Runnable {
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         switch (menuItem.getItemId()) {
             case R.id.run:
-				boolean nbreaks = codeEditor.getText().getMarksCount() == 0;
+				boolean nbreaks = lastFrag==null || codeEditor.getText().getMarksCount()==0;
 				boolean nproj = Project.rootPath == null;
 				if (nproj && nbreaks)
 					onMenuItemClick(menuItem);
@@ -443,7 +461,7 @@ Runnable {
 					Menu m = pm.getMenu();
 					if (!nproj) {
 						m.add(0, R.id.build, 0, R.string.build).setOnMenuItemClickListener(this);
-						if ((lastFrag.type&EditFragment.TYPE_MASK)!=0)
+						if (lastFrag!=null && (lastFrag.type&EditFragment.TYPE_MASK)!=0)
 							m.add(0, R.id.compile, 0, R.string.compile).setOnMenuItemClickListener(this);
 					}
 					m.add(0, R.id.run, 0, R.string.run).setOnMenuItemClickListener(this);
@@ -503,9 +521,9 @@ Runnable {
 					mTans.remove(fm.findFragmentByTag(s));
 					lsp.didClose(new File(s));
 				}
-				lastFrag = null;
 				mTans.commit();
 				appMenu.findItem(R.id.prj).setEnabled(false);
+				setFileRunnable(false);
 				lsp.end();
 				break;
 			case R.id.settings:
@@ -567,10 +585,12 @@ Runnable {
 				getActionBar().setSelectedNavigationItem(j);
 				byhand = true;
 				setFileRunnable((_tp & EditFragment.TYPE_HEADER) == 0);
+				
 			}
 		}
 		if (subc != null)
 			subc.setVisibility(bundle.getInt(SHOWLIST));
+		appMenu.findItem(R.id.prj).setEnabled(Project.rootPath!=null);
     }
 
     @Override
@@ -626,6 +646,7 @@ Runnable {
 	protected void onResume() {
 		super.onResume();
 		refresh();
+		onGlobalLayout();
 	}
 
 	@Override
@@ -661,10 +682,11 @@ Runnable {
 				}
 				break;
 			case ACCESS_FILE:
+				toast(resultCode+"");
 				if (resultCode == RESULT_OK)
 					refresh();
-				else
-					toast(getText(R.string.request_failed));
+				//else
+					//toast(getText(R.string.request_failed));
 				break;
 		}
 	}
