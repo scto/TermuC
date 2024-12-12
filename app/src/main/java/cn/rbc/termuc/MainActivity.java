@@ -664,12 +664,14 @@ Runnable {
 			case SETTING:
 				if (resultCode == RESULT_OK) {
 					boolean s = "s".equals(Application.completion);
-					if (s==lsp.isEnded()) {
+					boolean chg = s==lsp.isEnded();
+					if (chg) {
 						lsp.end();
 						if (s) {
 							lsp.start(this, hand);
 							lsp.initialize(Project.rootPath);
 						}
+						chg = s;
 					}
 					FragmentManager fm = getFragmentManager();
 					Typeface tf = Application.typeface();
@@ -684,7 +686,7 @@ Runnable {
 						ed.setUseSpace(Application.usespace);
 						ed.setTabSpaces(Application.tabsize);
 						int tp = f.type&EditFragment.TYPE_MASK;
-						if (s && tp!=EditFragment.TYPE_TXT)
+						if (chg && tp!=EditFragment.TYPE_TXT)
 							lsp.didOpen(f.getFile(), tp==EditFragment.TYPE_C?"c":"cpp", ed.getText().toString());
 					}
 					
