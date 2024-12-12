@@ -110,7 +110,6 @@ Runnable {
 						ab.setDisplayShowTitleEnabled(true);
 						msgEmpty.setVisibility(View.VISIBLE);
 						showFullMenu(false);
-						lastFrag = null;
 					} else if (lastCount == 0) {
 						ActionBar ab = getActionBar();
 						ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
@@ -291,8 +290,10 @@ Runnable {
 				Utils.run(this, Utils.PREF.concat("/usr/bin/bash"), new String[]{"-c",
 							  sb.toString()},
 						  pth, false);
+			} catch (android.util.MalformedJsonException je) {
+				toast(getString(R.string.parse_failed));
 			} catch (IOException ioe) {
-				ioe.printStackTrace();
+				Log.e("LSP", ioe.toString());
 			}
 			return true;
 		} else if (id==R.id.build || id==R.id.compile) {
@@ -316,8 +317,10 @@ Runnable {
 				Utils.run(this, Utils.PREF.concat("/usr/bin/bash"), new String[]{
 					"-c", sb.toString()
 				}, Project.rootPath, false);
+			} catch (android.util.MalformedJsonException je) {
+				toast(getString(R.string.parse_failed));
 			} catch(IOException ioe) {
-				ioe.printStackTrace();
+				Log.e("LSP", ioe.getMessage());
 			}
 			return true;
 		}
@@ -414,15 +417,18 @@ Runnable {
 			}
 		}
 		lsp.end();
-		lsp.start(this, hand);
-		lsp.initialize(Project.rootPath);
+		boolean s = "s".equals(Application.completion);
+		if (s) {
+			lsp.start(this, hand);
+			lsp.initialize(Project.rootPath);
+		}
 		int tp;
 		EditFragment ef = null;
 		for (String i:opens) {
 			if (i.equals(pth)) {
-				tp = lastFrag.type;
-				if (tp != EditFragment.TYPE_TXT && "s".equals(Application.completion))
-					MainActivity.lsp.didOpen(lastFrag.getFile(), tp == EditFragment.TYPE_CPP ?"cpp": "c", codeEditor.getText().toString());
+				tp = lastFrag.type&EditFragment.TYPE_MASK;
+				if (s && tp != EditFragment.TYPE_TXT)
+					lsp.didOpen(lastFrag.getFile(), tp == EditFragment.TYPE_CPP ?"cpp": "c", codeEditor.getText().toString());
 				continue;
 			}
 			File f = new File(i);
@@ -436,8 +442,10 @@ Runnable {
 		if (ef!=null) {
 			byhand = false;
 			getActionBar().setSelectedNavigationItem(hda.getCount()-1);
-			if (ef!=lastFrag && lastFrag!=null)
+			if (ef!=lastFrag && lastFrag!=null) {
 				fts.hide(lastFrag);
+				lastFrag = ef;
+			}
 			fts.show(ef);
 			byhand = true;
 		}
@@ -503,7 +511,7 @@ Runnable {
 						sd--;
 					lastFrag = (EditFragment)fm.findFragmentByTag(hda.getItem(sd));
 					mTans.show(lastFrag);
-				}
+				} else lastFrag = null;
 				mTans.commit();
 				lsp.didClose(new File(_t));
 				break;
@@ -522,6 +530,7 @@ Runnable {
 					lsp.didClose(new File(s));
 				}
 				mTans.commit();
+				lastFrag = null;
 				appMenu.findItem(R.id.prj).setEnabled(false);
 				setFileRunnable(false);
 				lsp.end();
@@ -585,7 +594,6 @@ Runnable {
 				getActionBar().setSelectedNavigationItem(j);
 				byhand = true;
 				setFileRunnable((_tp & EditFragment.TYPE_HEADER) == 0);
-				
 			}
 		}
 		if (subc != null)
@@ -616,7 +624,7 @@ Runnable {
 					openProjFiles(opens);
 					return;
 				} catch (IOException e) {
-					Log.e("LSP", e.getMessage());
+					toast(getString(R.string.open_failed));
 				}
 			}
 			return;
@@ -656,37 +664,37 @@ Runnable {
 			case SETTING:
 				if (resultCode == RESULT_OK) {
 					boolean s = "s".equals(Application.completion);
+					if (s==lsp.isEnded()) {
+						lsp.end();
+						if (s) {
+							lsp.start(this, hand);
+							lsp.initialize(Project.rootPath);
+						}
+					}
 					FragmentManager fm = getFragmentManager();
 					Typeface tf = Application.typeface();
-					for (int i=getActionBar().getNavigationItemCount() - 1;i >= 0;i--) {
-						Fragment f = fm.findFragmentByTag(hda.getItem(i));
+					for (int i=hda.getCount() - 1;i >= 0;i--) {
+						EditFragment f = (EditFragment)fm.findFragmentByTag(hda.getItem(i));
 						TextEditor ed = (TextEditor)f.getView();
-						ed.setFormatter(s ?(EditFragment)f: null);
+						ed.setFormatter(s ? f : null);
 						ed.setAutoComplete("l".equals(Application.completion));
 						ed.setTypeface(tf);
 						ed.setWordWrap(Application.wordwrap);
 						ed.setShowNonPrinting(Application.whitespace);
 						ed.setUseSpace(Application.usespace);
 						ed.setTabSpaces(Application.tabsize);
+						int tp = f.type&EditFragment.TYPE_MASK;
+						if (s && tp!=EditFragment.TYPE_TXT)
+							lsp.didOpen(f.getFile(), tp==EditFragment.TYPE_C?"c":"cpp", ed.getText().toString());
 					}
-					if (s) {
-						if (lsp.isEnded()) {
-							lsp.end();
-							lsp.start(this, hand);
-							lsp.initialize(Project.rootPath);
-						}
-					} else if (!lsp.isEnded())
-						lsp.end();
+					
 				} else if (resultCode == RESULT_FIRST_USER) {
 					recreate();
 				}
 				break;
 			case ACCESS_FILE:
-				toast(resultCode+"");
 				if (resultCode == RESULT_OK)
 					refresh();
-				//else
-					//toast(getText(R.string.request_failed));
 				break;
 		}
 	}
@@ -733,10 +741,8 @@ Runnable {
 
 	private void showFullMenu(boolean show) {
 		Menu menu = appMenu;
-		int i = menu.size() - 2;
+		int i = menu.size() - 3;
 		boolean prj = Project.rootPath == null;
-		if (!(show || prj))
-			i--;
 		for (; i >= 0; i--) {
 			MenuItem mi = menu.getItem(i);
 			if (prj || mi.getItemId() != R.id.run)

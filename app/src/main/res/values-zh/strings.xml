@@ -72,5 +72,6 @@
 	<string name="copy_jump">复制并跳转</string>
 	<string name="initialized">已配置</string>
 	<string name="request_failed">申请权限失败</string>
+	<string name="parse_failed">配置文件解析失败！</string>
 	<string name="select_font">选择字体文件</string>
 </resources>

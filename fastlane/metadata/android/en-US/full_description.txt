@@ -1,5 +1,7 @@
 TermuC is a simple C/C++ IDE backed on powerful Termux. Install Termux first and install clang in Termux to supply the compiler and language server.
 
+For more details, please visit the project's Github presence.
+
 <b>Setup</b>
 
 To support the full functions as an IDE, please follow the setup instruction.
@@ -17,3 +19,5 @@ To support the full functions as an IDE, please follow the setup instruction.
 ✅ Diagnose
 ✅ Compile flags
 ✅ Dark mode
+✅ Debug
+✅ Project management
