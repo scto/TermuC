@@ -57,8 +57,8 @@ public class Project
 	public static boolean save(Iterable<String> opens) {
 		if (rootPath == null)
 			return false;
-		try {
-			File f = new File(rootPath, PROJ);
+		File f = new File(rootPath, PROJ);
+        try {
 			JsonWriter w = new JsonWriter(new BufferedWriter(new FileWriter(f)));
 			w.setIndent("  ");
 			w.beginObject();

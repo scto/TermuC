@@ -50,7 +50,9 @@ public class Utils {
 				}
 			}
 			file.close();
-		} catch (IOException e) {}
+		} catch (IOException e) {
+            e.printStackTrace();
+        }
 		return false;
 	}
 
@@ -66,8 +68,7 @@ public class Utils {
 		PackageManager pm = ctx.getPackageManager();
 		try {
 			pm.getPackageInfo("com.termux", PackageManager.GET_GIDS);
-			if (manually)
-				HelperUtils.show(Toast.makeText(ctx, R.string.installed, Toast.LENGTH_SHORT));
+			if (manually) HelperUtils.show(Toast.makeText(ctx, R.string.installed, Toast.LENGTH_SHORT));
 		} catch (PackageManager.NameNotFoundException e) {
 			Builder bd = new Builder(ctx);
 			bd.setTitle(R.string.install_app);
@@ -75,8 +76,7 @@ public class Utils {
 			bd.setNegativeButton(android.R.string.cancel, null);
 			Install oc = new Install(ctx);
 			bd.setPositiveButton(android.R.string.ok, oc);
-			if (!manually)
-				bd.setNeutralButton(R.string.no_remind, oc);
+			if (!manually) bd.setNeutralButton(R.string.no_remind, oc);
 			bd.create().show();
 		}
 	}

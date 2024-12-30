@@ -1916,6 +1916,10 @@ public abstract class FreeScrollingTextField extends View
 		//tc
     }
 
+    public void sendPrintableChar(char c) {
+        mCtrlr.onPrintableChar(c);
+    }
+
 	public void format() {
 		replaceText(0, hDoc.length()-1, Tokenizer.getLanguage().getFormatter().format(hDoc, mAutoIndentWidth).toString());
 	}
@@ -2155,10 +2159,6 @@ public abstract class FreeScrollingTextField extends View
                 break;
             case KeyEvent.KEYCODE_DPAD_UP:
                 mCtrlr.moveCaretUp();
-                break;
-            case KeyEvent.KEYCODE_ENTER:
-                if (mAutoCompletePanel.isShow())
-                    mAutoCompletePanel.select(0);
                 break;
             default:
                 break;

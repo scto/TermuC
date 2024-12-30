@@ -94,6 +94,10 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
                 }
                 break;
             case Language.NEWLINE:
+                if (fld.mAutoCompletePanel.isShow()) {
+                    fld.mAutoCompletePanel.select(0);
+                    return;
+                }
 				char[] ind;
                 if (fld.isAutoIndent) {
                     ind = createAutoIndent();
@@ -108,7 +112,10 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
 			case Language.TAB:
 				if (fld.isUseSpace()) {
 					int tl = fld.mTabLength;
-					char[] cs = new char[tl - pos % tl];
+                    Document doc = fld.hDoc;
+                    int lineNumber = doc.findLineNumber(pos);
+                    int offset = doc.getLineOffset(lineNumber);
+					char[] cs = new char[tl - (pos - offset) % tl];
 					Arrays.fill(cs, ' ');
 					fld.hDoc.insertBefore(cs, pos, System.nanoTime());
 					moveCaret(pos + cs.length);
@@ -121,7 +128,6 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
                 fld.onAdd(String.valueOf(c), pos, 1);
                 break;
         }
-
         fld.setEdited(true);
         determineSpans();
 		//tc

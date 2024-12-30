@@ -28,7 +28,7 @@
 		<CheckBoxPreference
 			android:key="wordwrap"
 			android:title="@string/wordwrap"
-			android:defaultValue="true"
+			android:defaultValue="false"
 			/>
 		<CheckBoxPreference
 			android:key="whitespace"

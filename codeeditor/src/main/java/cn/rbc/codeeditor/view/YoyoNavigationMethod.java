@@ -23,16 +23,22 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 	private boolean isCaretHandleTouched = false;
 	private boolean isShowYoyoCaret = true;
 	private int mYoyoSize = 0;
+    private Paint mYoyoPaint;
 
 	public YoyoNavigationMethod(FreeScrollingTextField textField) {
 		super(textField);
     
 		DisplayMetrics dm = textField.getContext().getResources().getDisplayMetrics();
-		mYoyoSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, dm);
-        
-		mYoyoCaret = new Yoyo(textField.getContext());
-		mYoyoStart = new Yoyo(textField.getContext());
-		mYoyoEnd = new Yoyo(textField.getContext());
+		mYoyoSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 22, dm);
+
+        Context cont = textField.getContext();
+        Paint paint = new Paint();
+        paint.setColor(mTextField.getColorScheme().getColor(ColorScheme.Colorable.CARET_BACKGROUND));
+        paint.setAntiAlias(true);
+        mYoyoPaint = paint;
+		mYoyoCaret = new Yoyo(cont);
+		mYoyoStart = new Yoyo(cont);
+		mYoyoEnd = new Yoyo(cont);
         mTextField.setCaretListener(this);
 	}
 
@@ -115,34 +121,35 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
     // move yoyo
 	private void moveHandle(Yoyo yoyo, MotionEvent e) {
         boolean scrolled = false;
-        int x = (int) e.getX() - mTextField.getPaddingLeft();
-        int y = (int) e.getY() -mTextField.getPaddingTop();
+        FreeScrollingTextField field = mTextField;
+        int x = (int) e.getX() - field.getPaddingLeft();
+        int y = (int) e.getY() - field.getPaddingTop();
         
         // If the edges of the textField content area are touched, scroll in the
         // corresponding direction.
-        if (x <= mTextField.SCROLL_EDGE_SLOP / 3) {
-            scrolled = mTextField.autoScrollCaret(FreeScrollingTextField.SCROLL_LEFT);
-        } else if (x >= (mTextField.getContentWidth() - mTextField.SCROLL_EDGE_SLOP / 3)) {
-            scrolled = mTextField.autoScrollCaret(FreeScrollingTextField.SCROLL_RIGHT);
-        } else if (y < mTextField.SCROLL_EDGE_SLOP) {
-            scrolled = mTextField.autoScrollCaret(FreeScrollingTextField.SCROLL_UP);
-        } else if (y > (mTextField.getContentHeight() - mTextField.SCROLL_EDGE_SLOP)) {
-            scrolled = mTextField.autoScrollCaret(FreeScrollingTextField.SCROLL_DOWN);
+        if (x <= field.SCROLL_EDGE_SLOP / 3) {
+            scrolled = field.autoScrollCaret(FreeScrollingTextField.SCROLL_LEFT);
+        } else if (x >= (field.getContentWidth() - field.SCROLL_EDGE_SLOP / 3)) {
+            scrolled = field.autoScrollCaret(FreeScrollingTextField.SCROLL_RIGHT);
+        } else if (y < field.SCROLL_EDGE_SLOP) {
+            scrolled = field.autoScrollCaret(FreeScrollingTextField.SCROLL_UP);
+        } else if (y > (field.getContentHeight() - field.SCROLL_EDGE_SLOP)) {
+            scrolled = field.autoScrollCaret(FreeScrollingTextField.SCROLL_DOWN);
         }
        
-        mTextField.setCaretScrolled(true);
+        field.setCaretScrolled(true);
         if(!scrolled) {
-            mTextField.stopAutoScrollCaret();
-            mTextField.setCaretScrolled(false);
+            field.stopAutoScrollCaret();
+            field.setCaretScrolled(false);
             Pair foundIndex = yoyo.findNearestChar(x/*(int) e.getX()*/, y/*(int) e.getY()*/);
             int newCaretIndex = foundIndex.first;
 
             if (newCaretIndex >= 0) {
-                mTextField.moveCaret(newCaretIndex);
+                field.moveCaret(newCaretIndex);
                 //snap the handle to the caret
-                Rect newCaretBounds = mTextField.getBoundingBox(newCaretIndex);
-                int newX = newCaretBounds.left + mTextField.getPaddingLeft();
-                int newY = newCaretBounds.bottom + mTextField.getPaddingTop();
+                Rect newCaretBounds = field.getBoundingBox(newCaretIndex);
+                int newX = newCaretBounds.left + field.getPaddingLeft();
+                int newY = newCaretBounds.bottom + field.getPaddingTop();
 
                 yoyo.attachYoyo(newX, newY);
             }
@@ -153,11 +160,12 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
     @Override
     public void updateCaret(int caretIndex) {
         if (caretIndex >= 0 && isCaretHandleTouched) {
-            mTextField.moveCaret(caretIndex);
+            FreeScrollingTextField field = mTextField;
+            field.moveCaret(caretIndex);
             //snap the handle to the caret
-            Rect newCaretBounds = mTextField.getBoundingBox(caretIndex);
-            int newX = newCaretBounds.left + mTextField.getPaddingLeft();
-            int newY = newCaretBounds.bottom + mTextField.getPaddingTop();
+            Rect newCaretBounds = field.getBoundingBox(caretIndex);
+            int newX = newCaretBounds.left + field.getPaddingLeft();
+            int newY = newCaretBounds.bottom + field.getPaddingTop();
 
             mYoyoCaret.attachYoyo(newX, newY);
         }
@@ -276,11 +284,11 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 
 	@Override
 	public void onColorSchemeChanged(ColorScheme colorScheme) {
-		mYoyoCaret.setHandleColor(colorScheme.getColor(ColorScheme.Colorable.CARET_BACKGROUND));
+        mYoyoPaint.setColor(colorScheme.getColor(ColorScheme.Colorable.CARET_BACKGROUND));
 	}
 
 	private class Yoyo {
-		private final int YOYO_STRING_RESTING_HEIGHT = mYoyoSize / 3;
+		//private final int YOYO_STRING_RESTING_HEIGHT = mYoyoSize / 3;
 		private final Rect HANDLE_RECT = new Rect(0, 0, mYoyoSize, mYoyoSize) ;
 		public final Rect HANDLE_BLOAT;
 
@@ -291,18 +299,23 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 
 		//coordinates of the top-left corner of the yoyo handle
 		private int handleX = 0;
-		private int handleY = 0;
+		//private int handleY = 0;
 
 		//the offset where the handle is first touched,
 		//(0,0) being the top-left of the handle
 		private int xOffset = 0;
 		private int yOffset = 0;
 
+        // the offset of caret and scale of y
+        // private int offX = 0;
+        private float scaleY = 1.f;
+
 //		private final static int YOYO_HANDLE_ALPHA = 180;
 //		private final static int YOYO_HANDLE_COLOR = 0xFF0000FF;
 		private final Paint yoyoPaint;
 
 		private boolean isYoyoShow = false;
+        private final static float SQRT2 = (float)Math.sqrt(2.f);
 
 		public Yoyo(Context context) {
             this.context = context;
@@ -311,18 +324,15 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 				radius,
 				0,
 				0,
-				HANDLE_RECT.bottom + YOYO_STRING_RESTING_HEIGHT);
+				HANDLE_RECT.bottom);
 
-			yoyoPaint = new Paint();
-			yoyoPaint.setColor(mTextField.getColorScheme().getColor(ColorScheme.Colorable.CARET_BACKGROUND));
-			yoyoPaint.setAntiAlias(true);
-
+			yoyoPaint = mYoyoPaint;
 		}
 
-		public void setHandleColor(int color) {
+		/*public void setHandleColor(int color) {
 			// TODO: Implement this method
 			yoyoPaint.setColor(color);
-		}
+		}*/
 
 		/**
 		 * Draws the yoyo handle and string. The Yoyo handle can extend into 
@@ -334,10 +344,12 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 		 */
 		public void draw(Canvas canvas, boolean activated) {
 			int radius = getRadius();
+            float cx = anchorX; //mTextField.mCursorWidth / 2;
 			//canvas.drawLine(anchorX, anchorY, handleX + radius, handleY + radius, yoyoPaint);
-			canvas.drawArc(new RectF((int)(anchorX - radius * 1.5 + mTextField.mCursorWidth / 2) ,anchorY - radius/*- YOYO_STRING_RESTING_HEIGHT*/,
-                                     (int)(handleX + radius * 2.5), handleY + radius / 2), 60, 60, true, yoyoPaint);
-            canvas.drawOval(new RectF(handleX, handleY, handleX + HANDLE_RECT.right, handleY + HANDLE_RECT.bottom), yoyoPaint);
+			canvas.drawArc(new RectF(cx - radius, anchorY - radius/*- YOYO_STRING_RESTING_HEIGHT*/,
+                                     cx + radius, anchorY + radius), 45, 90, true, yoyoPaint);
+            canvas.drawCircle(cx, anchorY + radius * SQRT2, radius, yoyoPaint);
+            //canvas.drawOval(new RectF(handleX, handleY, handleX + HANDLE_RECT.right, handleY + HANDLE_RECT.bottom), yoyoPaint);
 		}
 
         
@@ -345,12 +357,16 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
             canvas.rotate(45, anchorX, anchorY);
             draw(canvas, isStartHandleTouched);
             canvas.rotate(-45, anchorX, anchorY);
+            handleX = anchorX - HANDLE_RECT.right;
+            scaleY = 1.f;
         }
 
         public void drawRight(Canvas canvas, boolean activated) {
             canvas.rotate(-45, anchorX, anchorY);
             draw(canvas, isEndHandleTouched);
             canvas.rotate(45, anchorX, anchorY);
+            handleX = anchorX;
+            scaleY = 1.f;
         }
 
 		public final int getRadius() {
@@ -376,12 +392,13 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 			anchorX = x;
 			anchorY = y;
 			handleX = x - getRadius();
-			handleY = y + YOYO_STRING_RESTING_HEIGHT;
+            scaleY = .5f + .5f*SQRT2;
+			//handleY = y;
 		}
 
 		private void invalidateYoyo() {
 			int handleCenter = handleX + getRadius();
-			int x0, x1, y0, y1;
+			int x0, x1, y0;
 			if (handleCenter >= anchorX) {
 				x0 = anchorX;
 				x1 = handleCenter + 1;
@@ -390,22 +407,16 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 				x1 = anchorX + 1;
 			}
 
-			if (handleY >= anchorY) {
-				y0 = anchorY;
-				y1 = handleY;
-			} else {
-				y0 = handleY;
-				y1 = anchorY;
-			}
+            y0 = anchorY;
 
 			//invalidate the string area
-			mTextField.invalidate(x0, y0, x1, y1);
+			mTextField.invalidate(x0, y0, x1, y0);
 			invalidateHandle();
 		}
 
 		public void invalidateHandle() {
-			Rect handleExtent = new Rect(handleX, handleY,
-										 handleX + HANDLE_RECT.right, handleY + HANDLE_RECT.bottom);
+			Rect handleExtent = new Rect(handleX, anchorY,
+										 handleX + HANDLE_RECT.right, anchorY + HANDLE_RECT.bottom);
 			mTextField.invalidate(handleExtent);
 		}
 
@@ -424,7 +435,7 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 		 */
 		public Pair findNearestChar(int handleX, int handleY) {
 			int attachedLeft = screenToViewX(handleX) - xOffset + getRadius();
-			int attachedBottom = screenToViewY(handleY) - yOffset - YOYO_STRING_RESTING_HEIGHT - 2;
+			int attachedBottom = screenToViewY(handleY) - yOffset - 2;
 
 			return new Pair(mTextField.coordToCharIndex(attachedLeft, attachedBottom),
 							mTextField.coordToCharIndexStrict(attachedLeft, attachedBottom));
@@ -440,7 +451,7 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 		 */
 		public void setInitialTouch(int x, int y) {
 			xOffset = x - handleX;
-			yOffset = y - handleY;
+			yOffset = y - anchorY;
 		}
 
 		public void clearInitialTouch() {
@@ -461,10 +472,12 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 		}
 
 		public boolean isInHandle(int x, int y) {
-            return isYoyoShow && (x >= handleX - mYoyoSize
-                && x < (handleX + HANDLE_RECT.right) + mYoyoSize
-                && y >= handleY - HANDLE_RECT.top
-                && y < (handleY + mYoyoSize + HANDLE_RECT.bottom)
+            x -= handleX;
+            y -= anchorY;
+            return isYoyoShow && (x >= 0
+                && x < mYoyoSize
+                && y >= 0
+                && y < mYoyoSize*scaleY
                 );
         }
 	}//end inner class

@@ -60,25 +60,24 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 		// mTextField.getParent().requestDisallowInterceptTouchEvent(e.getX() > 10);
         int x = screenToViewX((int) e.getX());
         int y = screenToViewY((int) e.getY());
-        isCaretTouched = isNearChar(x, y, mTextField.getCaretPosition());
+        FreeScrollingTextField field = mTextField;
+        isCaretTouched = isNearChar(x, y, field.getCaretPosition());
 
-        if (mTextField.isFlingScrolling()) {
-            mTextField.stopFlingScrolling();
-        } else if (mTextField.isSelectText()) {
-            if (isNearChar(x, y, mTextField.getSelectionStart())) {
-                mTextField.focusSelectionStart();
-                mTextField.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+        if (field.isFlingScrolling()) {
+            field.stopFlingScrolling();
+        } else if (field.isSelectText()) {
+            if (isNearChar(x, y, field.getSelectionStart())) {
+                field.focusSelectionStart();
+                field.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
                 isCaretTouched = true;
-            } else if (isNearChar(x, y, mTextField.getSelectionEnd())) {
-                mTextField.focusSelectionEnd();
-                mTextField.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+            } else if (isNearChar(x, y, field.getSelectionEnd())) {
+                field.focusSelectionEnd();
+                field.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
                 isCaretTouched = true;
             }
         }
 
-        if (isCaretTouched) {
-            mTextField.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
-        }
+        if (isCaretTouched) field.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
 
         return true;
     }
@@ -95,32 +94,33 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 		FreeScrollingTextField tf = mTextField;
         int charOffset = tf.coordToCharIndex(x, y);
 
-		if (x<tf.mLeftOffset) {
-			y = tf.hDoc.findLineNumber(charOffset);
-			if (y==-1)
-				y = tf.hDoc.getLineCount()-1;
-			tf.hDoc.markLine(1+y);
+		if (x < tf.mLeftOffset) {
+            Document doc = tf.hDoc;
+			y = doc.findLineNumber(charOffset);
+			if (y == -1)
+				y = doc.getLineCount() - 1;
+		    doc.markLine(1 + y);
 			tf.invalidate();
 			return true;
 		}
-        if (mTextField.isSelectText()) {
-            int strictCharOffset = mTextField.coordToCharIndexStrict(x, y);
-            if (mTextField.inSelectionRange(strictCharOffset) ||
-				isNearChar(x, y, mTextField.getSelectionStart()) ||
-				isNearChar(x, y, mTextField.getSelectionEnd())) {
+        if (tf.isSelectText()) {
+            int strictCharOffset = tf.coordToCharIndexStrict(x, y);
+            if (tf.inSelectionRange(strictCharOffset) ||
+				isNearChar(x, y, tf.getSelectionStart()) ||
+				isNearChar(x, y, tf.getSelectionEnd())) {
                 // do nothing
             } else {
-                mTextField.selectText(false);
+                tf.selectText(false);
                 if (charOffset >= 0) {
-                    mTextField.moveCaret(charOffset);
+                    tf.moveCaret(charOffset);
                 }
             }
         } else {
             if (charOffset >= 0) {
-                mTextField.moveCaret(charOffset);
+                tf.moveCaret(charOffset);
             }
         }
-        mTextField.showIME(true);
+        tf.showIME(true);
         return true;
     }
 
@@ -172,61 +172,63 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
     }
 
     protected void dragCaret(MotionEvent e) {
-        if (!mTextField.isSelectText() && isDragSelect()) {
-            mTextField.selectText(true);
+        FreeScrollingTextField field = mTextField;
+        if (!field.isSelectText() && isDragSelect()) {
+            field.selectText(true);
         }
 
-        int x = (int) e.getX() - mTextField.getPaddingLeft();
-        int y = (int) e.getY() - mTextField.getPaddingTop();
+        int x = (int) e.getX() - field.getPaddingLeft();
+        int y = (int) e.getY() - field.getPaddingTop();
         boolean scrolled = false;
 
         // If the edges of the textField content area are touched, scroll in the
         // corresponding direction.
-        if (x < mTextField.SCROLL_EDGE_SLOP) {
-            scrolled = mTextField.autoScrollCaret(FreeScrollingTextField.SCROLL_LEFT);
-        } else if (x >= (mTextField.getContentWidth() - mTextField.SCROLL_EDGE_SLOP)) {
-            scrolled = mTextField.autoScrollCaret(FreeScrollingTextField.SCROLL_RIGHT);
-        } else if (y < mTextField.SCROLL_EDGE_SLOP) {
-            scrolled = mTextField.autoScrollCaret(FreeScrollingTextField.SCROLL_UP);
-        } else if (y >= (mTextField.getContentHeight() - mTextField.SCROLL_EDGE_SLOP)) {
-            scrolled = mTextField.autoScrollCaret(FreeScrollingTextField.SCROLL_DOWN);
+        if (x < field.SCROLL_EDGE_SLOP) {
+            scrolled = field.autoScrollCaret(FreeScrollingTextField.SCROLL_LEFT);
+        } else if (x >= (field.getContentWidth() - field.SCROLL_EDGE_SLOP)) {
+            scrolled = field.autoScrollCaret(FreeScrollingTextField.SCROLL_RIGHT);
+        } else if (y < field.SCROLL_EDGE_SLOP) {
+            scrolled = field.autoScrollCaret(FreeScrollingTextField.SCROLL_UP);
+        } else if (y >= (field.getContentHeight() - field.SCROLL_EDGE_SLOP)) {
+            scrolled = field.autoScrollCaret(FreeScrollingTextField.SCROLL_DOWN);
         }
 
         if (!scrolled) {
-            mTextField.stopAutoScrollCaret();
-            int newCaretIndex = mTextField.coordToCharIndex(
+            field.stopAutoScrollCaret();
+            int newCaretIndex = field.coordToCharIndex(
 				screenToViewX((int) e.getX()),
 				screenToViewY((int) e.getY())
             );
             if (newCaretIndex >= 0) {
-                mTextField.moveCaret(newCaretIndex);
+                field.moveCaret(newCaretIndex);
             }
         }
     }
 
     private void scrollView(float distanceX, float distanceY) {
-        int newX = (int) distanceX + mTextField.getScrollX();
-        int newY = (int) distanceY + mTextField.getScrollY();
+        FreeScrollingTextField field = mTextField;
+        int newX = (int) distanceX + field.getScrollX();
+        int newY = (int) distanceY + field.getScrollY();
 
         // If scrollX and scrollY are somehow more than the recommended
         // max scroll values, use them as the new maximum
         // Also take into account the size of the caret,
         // which may extend beyond the text boundaries
-        int maxWidth = Math.max(mTextField.getMaxScrollX(), mTextField.getScrollX());
+        int maxWidth = Math.max(field.getMaxScrollX(), field.getScrollX());
         if (newX > maxWidth) {
             newX = maxWidth;
         } else if (newX < 0) {
             newX = 0;
         }
 
-        int maxHeight = Math.max(mTextField.getMaxScrollY(), mTextField.getScrollY());
+        int maxHeight = Math.max(field.getMaxScrollY(), field.getScrollY());
         if (newY > maxHeight) {
             newY = maxHeight;
         } else if (newY < 0) {
             newY = 0;
         }
-        //mTextField.scrollTo(newX, newY);
-        mTextField.smoothScrollTo(newX, newY);
+        //field.scrollTo(newX, newY);
+        field.smoothScrollTo(newX, newY);
 
     }
 
@@ -295,62 +297,61 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
         int y = screenToViewY((int) e.getY());
         int charOffset = mTextField.coordToCharIndex(x, y);
 
-        if (mTextField.isSelectText() && mTextField.inSelectionRange(charOffset)) {
-            Document doc = mTextField.getText();
+        FreeScrollingTextField field = mTextField;
+        if (field.isSelectText() && field.inSelectionRange(charOffset)) {
+            Document doc = field.getText();
             int line = doc.findLineNumber(charOffset);
             int start = doc.getLineOffset(line);
             int end = doc.getLineOffset(line + 1) - 1;
-            mTextField.setSelectionRange(start, end - start);
-        } else {
-            if (charOffset >= 0) {
-                mTextField.moveCaret(charOffset);
-                Document doc = mTextField.getText();
-                int start, end;
-                for (start = charOffset; start >= 0; start--)
-                    if (!Character.isJavaIdentifierPart(doc.charAt(start)))
-                        break;
-                if (start != charOffset)
-                    start++;
-                for (end = charOffset; Character.isJavaIdentifierPart(doc.charAt(end)); end++);
-                mTextField.selectText(true);
-                mTextField.setSelectionRange(start, end - start);
-				// toast err msg
-				List<ErrSpan> dg = mTextField.hDoc.getDiag();
-				if (!(dg == null || dg.isEmpty())) {
-					y = dg.size() - 1;
-					int m, line = 1 + doc.findLineNumber(charOffset);
-					x = doc.getLineOffset(line - 1);
-					start -= x;
-					end -= x;
-					x = 0;
-					ErrSpan errspan;
-					while (x < y) {
-						m = (x + y) >> 1;
-						errspan = dg.get(m);
-						if (errspan.enl > line || errspan.enl == line && errspan.enc >= start)
-							y = m;
-						else
-							x = m + 1;
-					}
-					errspan = dg.get(y);
-					if ((errspan.stl < line || errspan.stl==line && errspan.stc<=end)
-						&& (line < errspan.enl || line==errspan.enl && start<=errspan.enc)
-						&& errspan.msg != null) {
-						Context ctx = mTextField.getContext();
-						Toast t = new Toast(ctx);
-						LinearLayout ll = new LinearLayout(ctx);
-						ll.setOrientation(LinearLayout.VERTICAL);
-						TextView tv = new TextView(ctx);
-						tv.setTextColor(0xffffffff);
-						tv.setText(errspan.msg);
-						int pd = (int)(12*HelperUtils.getDpi(ctx)+.5f);
-						ll.setPadding(pd, pd, pd, pd);
-						ll.setBackgroundColor(ColorScheme.DIAG[errspan.severity]&0xf0ffffff);
-						ll.addView(tv);
-						t.setView(ll);
-						HelperUtils.show(t);
-					}
-				}
+            field.setSelectionRange(start, end - start);
+        } else if (charOffset >= 0) {
+            field.moveCaret(charOffset);
+            Document doc = field.getText();
+            int start, end;
+            for (start = charOffset; start >= 0; start--)
+                if (!Character.isJavaIdentifierPart(doc.charAt(start)))
+                    break;
+            if (start != charOffset)
+                start++;
+            for (end = charOffset; Character.isJavaIdentifierPart(doc.charAt(end)); end++);
+            field.selectText(true);
+            field.setSelectionRange(start, end - start);
+            // toast err msg
+            List<ErrSpan> dg = doc.getDiag();
+            if (!(dg == null || dg.isEmpty())) {
+                y = dg.size() - 1;
+                int m, line = 1 + doc.findLineNumber(charOffset);
+                x = doc.getLineOffset(line - 1);
+                start -= x;
+                end -= x;
+                x = 0;
+                ErrSpan errspan;
+                while (x < y) {
+                    m = (x + y) >> 1;
+                    errspan = dg.get(m);
+                    if (errspan.enl > line || errspan.enl == line && errspan.enc >= start)
+                        y = m;
+                    else
+                        x = m + 1;
+                }
+                errspan = dg.get(y);
+                if ((errspan.stl < line || errspan.stl == line && errspan.stc <= end)
+                    && (line < errspan.enl || line == errspan.enl && start <= errspan.enc)
+                    && errspan.msg != null) {
+                    Context ctx = field.getContext();
+                    Toast t = new Toast(ctx);
+                    LinearLayout ll = new LinearLayout(ctx);
+                    ll.setOrientation(LinearLayout.VERTICAL);
+                    TextView tv = new TextView(ctx);
+                    tv.setTextColor(0xffffffff);
+                    tv.setText(errspan.msg);
+                    int pd = (int)(12 * HelperUtils.getDpi(ctx) + .5f);
+                    ll.setPadding(pd, pd, pd, pd);
+                    ll.setBackgroundColor(ColorScheme.DIAG[errspan.severity] & 0xf0ffffff);
+                    ll.addView(tv);
+                    t.setView(ll);
+                    HelperUtils.show(t);
+			    }
             }
         }
         return true;

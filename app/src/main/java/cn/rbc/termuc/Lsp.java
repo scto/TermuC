@@ -49,7 +49,9 @@ public class Lsp implements Runnable {
 		exit();
 		try {
 			sk.close();
-		} catch(IOException ioe) {}
+		} catch(IOException ioe) {
+            ioe.printStackTrace();
+        }
 	}
 
 	public boolean isEnded() {

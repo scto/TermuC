@@ -22,6 +22,7 @@ import android.annotation.*;
 import android.graphics.*;
 import android.util.*;
 import cn.rbc.codeeditor.util.*;
+import android.os.*;
 
 
 public class AutoCompletePanel implements OnItemClickListener {
@@ -37,6 +38,7 @@ public class AutoCompletePanel implements OnItemClickListener {
     private Filter _filter;
     private int _height;
     private int _backgroundColor;
+    private int mMaxWidth;
     private GradientDrawable gd;
     public int _textColor, _mxHeight;
     private boolean isShow = false;
@@ -94,12 +96,16 @@ public class AutoCompletePanel implements OnItemClickListener {
 		v.measure(0, 0);
 		mItemView = v;
 		_mxHeight = v.getMeasuredHeight() << 2;
+        DisplayMetrics metrices = ct.getResources().getDisplayMetrics();
+        mMaxWidth = Math.min(metrices.widthPixels,
+            (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 492, metrices));
 		PopupWindow pw = new PopupWindow(list);
 		_autoCompletePanel = pw;
 		pw.setAnimationStyle(0);
 		pw.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
 		pw.setOutsideTouchable(true);
-		pw.setOverlapAnchor(true);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M)
+		    pw.setOverlapAnchor(true);
         TypedArray array = ct.getTheme().obtainStyledAttributes(
 			new int[]{
 				android.R.attr.colorBackground,
@@ -199,8 +205,7 @@ public class AutoCompletePanel implements OnItemClickListener {
 			v.measure(mw, 0);
 			mH += v.getMeasuredHeight();
 		}
-		if (mH > mxH)
-			mH = mxH;
+		if (mH > mxH) mH = mxH;
 		setHeight(mH);
 		FreeScrollingTextField tf = _textField;
 		int y = tf.getCaretY() + tf.rowHeight() / 2 - tf.getScrollY();
@@ -209,11 +214,14 @@ public class AutoCompletePanel implements OnItemClickListener {
 			tf.scrollBy(0, dh);
 			y -= dh;
 		}
-		setWidth(tf.getWidth() - (AutoPanelAdapter.PADDING << 1));
+		setWidth(mMaxWidth - (AutoPanelAdapter.PADDING << 1));
 		if (!isShow()) {
 			_list.requestFocus();
+            int caretx = tf.getCaretX();
+            final int leftWidth = _context.getResources().getDisplayMetrics().widthPixels-mMaxWidth;
 			_autoCompletePanel.showAsDropDown(tf,
-											  AutoPanelAdapter.PADDING,
+											  caretx<leftWidth
+                                              ?caretx:leftWidth+AutoPanelAdapter.PADDING,
 											  y,
 											  Gravity.TOP);
         }

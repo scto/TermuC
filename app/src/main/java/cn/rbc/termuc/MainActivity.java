@@ -27,6 +27,7 @@ import android.graphics.*;
 import android.util.*;
 import android.database.*;
 import static android.Manifest.permission.*;
+import cn.rbc.codeeditor.lang.*;
 
 public class MainActivity extends Activity implements
 ActionBar.OnNavigationListener, OnGlobalLayoutListener,
@@ -41,14 +42,13 @@ Runnable {
 	private EditFragment lastFrag = null;
 	private boolean byhand = true, keyboardShown = false, transZ;
     private View keys, showlist;
-    private File pwd;
+    private File pwd, prj;
     private TextView pwdpth, msgEmpty, transTxV;
     private LinearLayout subc;
     private TextEditor codeEditor;
 	private Menu appMenu;
 	private SearchAction mSearchAction;
 	private String transStr;
-	private File prj;
 	private Dialog transDlg;
 	private static MainHandler hand;
 	static Lsp lsp;
@@ -546,17 +546,8 @@ Runnable {
     public void inputKey(View view) {
         String charSequence = ((TextView) view).getText().toString();
         if ("⇥".equals(charSequence)) {
-			if (codeEditor.isUseSpace()) {
-				int tabLen = codeEditor.getTabSpaces();
-				int pos = codeEditor.getCaretPosition();
-				Document doc = codeEditor.getText();
-				int l = doc.findLineNumber(pos);
-				int of = doc.getLineOffset(l);
-				char[] cs = new char[tabLen - (pos - of) % tabLen];
-				Arrays.fill(cs, ' ');
-				charSequence = new String(cs);
-			} else
-            	charSequence = "\t";
+			codeEditor.sendPrintableChar(Language.TAB);
+            return;
 		}
 		codeEditor.getText().setTyping(true);
         codeEditor.paste(charSequence);
@@ -624,9 +615,10 @@ Runnable {
 					openProjFiles(opens);
 					return;
 				} catch (IOException e) {
-					toast(getString(R.string.open_failed));
+                    e.printStackTrace();
 				}
 			}
+			toast(getString(R.string.open_failed));
 			return;
 		}
 		ProgressDialog pd = new ProgressDialog(MainActivity.this);
