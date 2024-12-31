@@ -4,7 +4,7 @@
 
 [中文 README](./README_zh.md)
 
-TermuC is a simple C/C++ IDE backed on Termux. Based on [MrIkso/CodeEditor](/MrIkso/CodeEditor)
+TermuC is a simple C/C++ IDE backed on Termux. Based on [MrIkso/CodeEditor](//github.com/MrIkso/CodeEditor)
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
     alt="Get it on F-Droid"
@@ -12,7 +12,7 @@ TermuC is a simple C/C++ IDE backed on Termux. Based on [MrIkso/CodeEditor](/MrI
 
 ## Download
 
-- Artifacts in [Github Actions](/RainbowC0/TermuC/actions)
+- Artifacts in [Github Actions](//github.com/RainbowC0/TermuC/actions)
 - [F-Droid](//f-droid.org/packages/cn.rbc.termuc)
 
 ## Screenshot
@@ -37,5 +37,5 @@ This app use `com.termux.RUN_COMMAND` to call Termux to run command, and run `cl
 
 ## Wiki
 
-- [*Setup* (Critical)](/RainbowC0/TermuC/wiki/Setup)
-- [Usage](/RainbowC0/TermuC/wiki/Usage)
+- [*Setup* (Critical)](//github.com/RainbowC0/TermuC/wiki/Setup)
+- [Usage](//github.com/RainbowC0/TermuC/wiki/Usage)
