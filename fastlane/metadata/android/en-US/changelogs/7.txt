@@ -1,0 +1,9 @@
+Mostly improvements for tablet & landscape
+
+• Add icons for completion panel in LSP mode
+• Handle delete key
+• Handle enter key from keyboard when completion
+• Enable drag-selection
+• Set maximum width for completion panel
+• Fix touch-detecting for yoyos
+• Hide status bar when landscape

@@ -39,7 +39,7 @@ public class AutoPanelAdapter extends BaseAdapter  {
     private Flag _abort;
     private DisplayMetrics dm;
     private ArrayList<ListItem> listItems;
-    public Bitmap bitmap;
+    private Typeface codicon;
     private Context _context;
     private AutoCompletePanel mAutoComplete;
     private FreeScrollingTextField mTextFiled;
@@ -52,7 +52,7 @@ public class AutoPanelAdapter extends BaseAdapter  {
         _abort = new Flag();
         listItems = new ArrayList<>();
         dm = context.getResources().getDisplayMetrics();
-        bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.icon_method);
+        codicon = Typeface.createFromAsset(context.getAssets(), "codicon.ttf");
 		mInflater = LayoutInflater.from(context);
     }
 
@@ -80,12 +80,13 @@ public class AutoPanelAdapter extends BaseAdapter  {
         View tempView = null;
         if (view == null) {
             View rootView = mInflater.inflate(R.layout.auto_panel_item, null);
+            ((TextView)rootView.findViewById(R.id.auto_panel_icon)).setTypeface(codicon);
             tempView = rootView;
         } else {
             tempView = view;
         }
         TextView textView = tempView.findViewById(R.id.auto_panel_text);
-        ImageView imageView = tempView.findViewById(R.id.auto_panel_icon);
+        TextView iconView = tempView.findViewById(R.id.auto_panel_icon);
 		ListItem it = getItem(i);
         String text = it.label;
 		int tp = it.kind;
@@ -116,12 +117,10 @@ public class AutoPanelAdapter extends BaseAdapter  {
             //    else{
             foregroundColorSpan = new ForegroundColorSpan(mAutoComplete._textColor);
             //    }
-			if (tp == 14) // 关键字
-				spannableString.setSpan(new StyleSpan(Typeface.BOLD), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             spannableString.setSpan(foregroundColorSpan, 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
         textView.setText(spannableString);
-		imageView.setImageBitmap(tp==2 || tp==3 ? bitmap : null);
+        iconView.setText(getIcon(tp), TextView.BufferType.SPANNABLE);
         return tempView;
     }
 
@@ -209,5 +208,27 @@ public class AutoPanelAdapter extends BaseAdapter  {
 
         };
         return filter;
+    }
+
+    private int getIcon(int type) {
+        switch (type) {
+            case 1: return R.string.icon_text;
+            case 2:
+            case 3:
+            case 4: return R.string.icon_method;
+            case 5: return R.string.icon_field;
+            case 6: return R.string.icon_variable;
+            case 7: return R.string.icon_class;
+            case 8: return R.string.icon_interface;
+            case 9: return R.string.icon_module;
+            case 12:
+            case 13: return R.string.icon_enum;
+            case 14: return R.string.icon_keyword;
+            case 15: return R.string.icon_snippet;
+            case 17: return R.string.icon_file;
+            case 21: return R.string.icon_constant;
+            case 25: return R.string.icon_parameter;
+            default: return R.string.empty;
+        }
     }
 }

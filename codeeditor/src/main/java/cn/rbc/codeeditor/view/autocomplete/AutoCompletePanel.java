@@ -190,10 +190,6 @@ public class AutoCompletePanel implements OnItemClickListener {
 		}
 	}
 
-	public Bitmap getBitmap() {
-		return _adapter.bitmap;
-	}
-
     public void show() {
 		int mH = 0, i, l;
 		final int mxH = _mxHeight;
