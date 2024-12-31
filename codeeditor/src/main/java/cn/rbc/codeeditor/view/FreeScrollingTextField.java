@@ -809,13 +809,9 @@ public abstract class FreeScrollingTextField extends View
 					canvas.drawRect(0, rowheight*currRowNum, mLeftOffset-(mSpaceWidth>>1), rowheight*(currRowNum+1), mLineBrush);
 					ca = ColorScheme.Colorable.SELECTION_FOREGROUND;
 					mI++;
-<<<<<<< Updated upstream
 				} else if (BuildConfig.DEBUG && hDoc.isInMarkGap(currLineNum))
-=======
-				} /*else if (BuildConfig.DEBUG && hDoc.isInMarkGap(currLineNum))
->>>>>>> Stashed changes
 					ca = ColorScheme.Colorable.STRING;
-				*/else
+				else
 					ca = ColorScheme.Colorable.NON_PRINTING_GLYPH;
 				mLineBrush.setColor(mColorScheme.getColor(ca));
                 String num = String.valueOf(currLineNum);
