@@ -16,10 +16,10 @@
 		<item name="android:clickable">true</item>
 		<item name="android:paddingLeft">6dp</item>
 		<item name="android:paddingRight">6dp</item>
-		<item name="android:paddingTop">4dp</item>
-		<item name="android:paddingBottom">4dp</item>
+		<item name="android:paddingTop">@dimen/key_padding_vert</item>
+		<item name="android:paddingBottom">@dimen/key_padding_vert</item>
 		<item name="android:typeface">monospace</item>
-		<item name="android:textSize">22sp</item>
+		<item name="android:textSize">@dimen/key_size</item>
 		<item name="android:onClick">inputKey</item>
 		<item name="android:background">?android:attr/selectableItemBackground</item>
 	</style>

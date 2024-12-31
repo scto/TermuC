@@ -291,6 +291,7 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 		//private final int YOYO_STRING_RESTING_HEIGHT = mYoyoSize / 3;
 		private final Rect HANDLE_RECT = new Rect(0, 0, mYoyoSize, mYoyoSize) ;
 		public final Rect HANDLE_BLOAT;
+        public final static float SQRT2 = 1.4142136f;
 
         private Context context;
 		//coordinates where the top of the yoyo string is attached
@@ -315,7 +316,6 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 		private final Paint yoyoPaint;
 
 		private boolean isYoyoShow = false;
-        private final static float SQRT2 = (float)Math.sqrt(2.f);
 
 		public Yoyo(Context context) {
             this.context = context;
@@ -329,11 +329,6 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 			yoyoPaint = mYoyoPaint;
 		}
 
-		/*public void setHandleColor(int color) {
-			// TODO: Implement this method
-			yoyoPaint.setColor(color);
-		}*/
-
 		/**
 		 * Draws the yoyo handle and string. The Yoyo handle can extend into 
 		 * the padding region.
@@ -344,12 +339,11 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 		 */
 		public void draw(Canvas canvas, boolean activated) {
 			int radius = getRadius();
-            float cx = anchorX; //mTextField.mCursorWidth / 2;
+            float cx = anchorX;
 			//canvas.drawLine(anchorX, anchorY, handleX + radius, handleY + radius, yoyoPaint);
 			canvas.drawArc(new RectF(cx - radius, anchorY - radius/*- YOYO_STRING_RESTING_HEIGHT*/,
                                      cx + radius, anchorY + radius), 45, 90, true, yoyoPaint);
             canvas.drawCircle(cx, anchorY + radius * SQRT2, radius, yoyoPaint);
-            //canvas.drawOval(new RectF(handleX, handleY, handleX + HANDLE_RECT.right, handleY + HANDLE_RECT.bottom), yoyoPaint);
 		}
 
         

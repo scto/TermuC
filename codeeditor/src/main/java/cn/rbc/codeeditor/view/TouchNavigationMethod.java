@@ -443,7 +443,7 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
     }
 
     final private boolean isDragSelect() {
-        return false;
+        return true;
     }
 
     /**

@@ -81,16 +81,26 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
 		fld.hDoc.setTyping(true);
         switch (c) {
             case Language.BACKSPACE:
-                if (selectionDeleted)
-                    break;
-                if (pos > 0) {
+                if (selectionDeleted) break;
+                if (pos > 0 ) {
 					int l = pos > 1 && ((c = fld.hDoc.charAt(pos - 2)) == 0xd83d || c == 0xd83c) ? 2 : 1;
-					String s = (String)fld.hDoc.subSequence(pos-l,l);
-                    fld.hDoc.deleteAt(pos - l, l, System.nanoTime());
+                    pos -= l;
+					String s = (String)fld.hDoc.subSequence(pos,l);
+                    fld.hDoc.deleteAt(pos, l, System.nanoTime());
                     fld.onDel(s, fld.mCaretPosition, l);
                     moveCaretLeft(true);
 					if (l == 2)
 						moveCaretLeft(true);
+                }
+                break;
+            case Language.DELETE:
+                if (selectionDeleted) break;
+                int l = fld.hDoc.length();
+                if (pos < l) {
+                    l = ((c=fld.hDoc.charAt(pos)) == 0xd83d || c == 0xd83c) ? 2 : 1;
+                    String s = (String)fld.hDoc.subSequence(pos, l);
+                    fld.hDoc.deleteAt(pos, l, System.nanoTime());
+                    fld.onDel(s, pos, l);
                 }
                 break;
             case Language.NEWLINE:

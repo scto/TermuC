@@ -64,6 +64,7 @@ import cn.rbc.codeeditor.view.autocomplete.AutoCompletePanel;
 import cn.rbc.codeeditor.view.ColorScheme.Colorable;
 
 import java.util.*;
+import cn.rbc.termuc.*;
 
 /**
  * A custom text view that uses a solid shaded caret (aka cursor) instead of a
@@ -808,7 +809,7 @@ public abstract class FreeScrollingTextField extends View
 					canvas.drawRect(0, rowheight*currRowNum, mLeftOffset-(mSpaceWidth>>1), rowheight*(currRowNum+1), mLineBrush);
 					ca = ColorScheme.Colorable.SELECTION_FOREGROUND;
 					mI++;
-				} else if (hDoc.isInMarkGap(currLineNum))
+				} else if (BuildConfig.DEBUG && hDoc.isInMarkGap(currLineNum))
 					ca = ColorScheme.Colorable.STRING;
 				else
 					ca = ColorScheme.Colorable.NON_PRINTING_GLYPH;

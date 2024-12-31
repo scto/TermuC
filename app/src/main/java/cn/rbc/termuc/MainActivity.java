@@ -94,6 +94,12 @@ Runnable {
 		envInit(pref);
 		if (Application.dark_mode)
 			setTheme(android.R.style.Theme_Holo);
+        Configuration conf = getResources().getConfiguration();
+        if (conf.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_FULLSCREEN);
+        }
         super.onCreate(savedInstanceState);
 		hda = new HeaderAdapter(new ContextThemeWrapper(getBaseContext(), android.R.style.Theme_Holo), R.layout.header_dropdown_item);
 		Resources.Theme rt = getResources().newTheme();

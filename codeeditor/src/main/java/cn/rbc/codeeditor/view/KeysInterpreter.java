@@ -34,10 +34,11 @@ public class KeysInterpreter {
             c = Language.NEWLINE;
         } else if (isBackspace(event)) {
             c = Language.BACKSPACE;
-        }
+        } else if (isDelete(event)) {
+            c = Language.DELETE;
         // This should be before the check for isSpace() because the
         // shortcut for TAB uses the SPACE key.
-        else if (isTab(event)) {
+        } else if (isTab(event)) {
             c = Language.TAB;
         } else if (isSpace(event)) {
             c = ' ';
@@ -56,6 +57,10 @@ public class KeysInterpreter {
 
     private static boolean isBackspace(KeyEvent event) {
         return (event.getKeyCode() == KeyEvent.KEYCODE_DEL);
+    }
+
+    private static boolean isDelete(KeyEvent event) {
+        return event.getKeyCode() == KeyEvent.KEYCODE_FORWARD_DEL;
     }
 
     private static boolean isNewline(KeyEvent event) {

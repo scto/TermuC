@@ -65,7 +65,6 @@ public class TextEditor extends FreeScrollingTextField{
         setAutoComplete(false);
         setAutoIndent(true);
         setUseGboard(true);
-		//setSuggestion(false);
 		mTypeInput |= InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD;
         setNavigationMethod(new YoyoNavigationMethod(this));
     }
