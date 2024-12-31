@@ -10,7 +10,11 @@ TermuC 是一个简单的 C/C++ IDE，采用 Termux 作为后台。项目基于 
 
 ## 下载
 
+<<<<<<< Updated upstream
 - Artfacts in [Github Actions](/RainbowC0/TermuC/actions)
+=======
+- Artfacts in [Github Actions](//github.com/RainbowC0/TermuC/actions)
+>>>>>>> Stashed changes
 - [F-Droid](//f-droid.org/packages/cn.rbc.termuc)
 
 ## 截图
@@ -35,5 +39,10 @@ TermuC 是一个简单的 C/C++ IDE，采用 Termux 作为后台。项目基于 
 
 ## Wiki
 
+<<<<<<< Updated upstream
 - [*初始化*(很重要)](/RainbowC0/TermuC/wiki/Setup)
 - [使用方法](/RainbowC0/TermuC/wiki/Usage)
+=======
+- [*初始化*(很重要)](//github.com/RainbowC0/TermuC/wiki/Setup)
+- [使用方法](//github.com/RainbowC0/TermuC/wiki/Usage)
+>>>>>>> Stashed changes
