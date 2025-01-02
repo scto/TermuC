@@ -277,13 +277,13 @@ Runnable {
 					pth = pwd.getAbsolutePath();
 				} else {
 					sb = Project.buildEnvironment(f);
-					sb.append("exec=$TMPDIR/termuc;mkdir $exec 2>/dev/null;find $o -maxdepth 1 -type f \\( -iname '*.so' -o ! -name '*.*' \\) -exec cp {} $exec \\;;exec=$exec/");
+					sb.append("exec=$TMPDIR/termuc;mkdir $exec 2>/dev/null;find $o -maxdepth 1 -type f \\( -iname '*.so' -o ! -name '*.*' \\) -exec cp {} $exec \\;;exec=($exec/");
 					sb.append(Project.runCmd);
-					sb.append(" && chmod +x $exec && ");
+					sb.append(") && chmod +x $exec && ");
 					pth = Project.rootPath;
 				}
 				if (id == R.id.run)
-					sb.append("$exec && echo -n \"\nPress any key to exit...\" && read");
+					sb.append("${exec[@]} && echo -n \"\nPress any key to exit...\" && read");
 				else {
 					sb.append("gdb -q ");
 					String fn = f.getName();
@@ -291,7 +291,7 @@ Runnable {
 					id = dc.getMarksCount();
 					for (int i=0;i < id;i++)
 						sb.append(String.format("-ex 'b %s:%d' ", fn, dc.getMark(i)));
-					sb.append("-ex r $exec");
+					sb.append("-ex r --args ${exec[@]}");
 				}
 				Utils.run(this, Utils.PREF.concat("/usr/bin/bash"), new String[]{"-c",
 							  sb.toString()},
