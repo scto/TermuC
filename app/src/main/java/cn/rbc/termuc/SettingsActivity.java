@@ -12,11 +12,12 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 {
 	private final static String TAG = "SettingsActivity", FT = "f";
 
-	private CheckBoxPreference mDarkModePref, mWordWrapPref, mWhitespacePref, mUseSpacePref, mShowHidden;
+    private CheckBoxPreference mDarkModePref, mWordWrapPref, mWhitespacePref, mUseSpacePref,
+            mShowHidden, mSuggestionPref;
 	private EditTextPreference mCFlagsPref, mHost, mPort;
 	private ListPreference mFontPref, mSizePref, mTabSizePref, mEngine;
 
-	private boolean mDark, mWrap, mSpace, mUseSpace;
+	private boolean mDark, mWrap, mSpace, mUseSpace, mSuggestion;
 	private String mComp, mFont, tpFont;
 	private int mTabSize;
 
@@ -36,6 +37,7 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 		mWhitespacePref = (CheckBoxPreference)findPreference(Application.KEY_WHITESPACE);
 		mUseSpacePref = (CheckBoxPreference)findPreference(Application.KEY_USESPACE);
 		mTabSizePref = (ListPreference)findPreference(Application.KEY_TABSIZE);
+        mSuggestionPref = (CheckBoxPreference)findPreference(Application.KEY_SUGGUESTION);
 		mShowHidden = (CheckBoxPreference)findPreference(Application.KEY_SHOW_HIDDEN);
 		mCFlagsPref = (EditTextPreference)findPreference(Application.KEY_CFLAGS);
 		mEngine = (ListPreference)findPreference(Application.KEY_COMPLETION);
@@ -51,6 +53,7 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 		mSpace = Application.whitespace;
 		mUseSpace = Application.usespace;
 		mTabSize = Application.tabsize;
+        mSuggestion = Application.suggestion;
 		mComp = Application.completion;
 		mFont = tpFont = Application.font;
 	}
@@ -113,6 +116,7 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 				  && mSpace == mWhitespacePref.isChecked()
 				  && mUseSpace == mUseSpacePref.isChecked()
 				  && mTabSize == Integer.parseInt(mTabSizePref.getValue())
+                  && mSuggestion == mSuggestionPref.isChecked()
 				  && mComp.equals(mEngine.getValue()))
 				  ? RESULT_CANCELED : RESULT_OK);
 		super.onBackPressed();
@@ -139,6 +143,7 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 		Application.tabsize = Integer.parseInt(mTabSizePref.getValue());
 		Application.font = tpFont;
 		Application.textsize = Integer.parseInt(mSizePref.getValue());
+        Application.suggestion = mSuggestionPref.isChecked();
 		Application.show_hidden = mShowHidden.isChecked();
 		Application.cflags = mCFlagsPref.getText();
 		Application.completion = mEngine.getValue();

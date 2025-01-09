@@ -6,11 +6,9 @@ import java.io.*;
 import org.json.JSONObject;
 import java.util.*;
 import android.util.Log;
-import android.app.*;
 import java.nio.charset.StandardCharsets;
 import android.os.*;
 import cn.rbc.codeeditor.util.*;
-import android.widget.*;
 import android.util.JsonReader;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
@@ -59,8 +57,8 @@ public class Lsp implements Runnable {
 	}
 
 	public void run() {
+		int i = 0;
 		try{
-			int i = 0;
 			do {
 				try {
 					sk = new Socket(Application.lsp_host, Application.lsp_port);
@@ -147,13 +145,13 @@ public class Lsp implements Runnable {
 
 	public void initialized() {
 		tp = INITIALIZED;
-		mExecutor.execute(new Send("initialized", new HashMap(), false));
+		mExecutor.execute(new Send("initialized", new HashMap<>(), false));
 	}
 
 	public void didClose(File f) {
 		HashMap<String,String> m = new HashMap<>();
 		m.put("uri", Uri.fromFile(f).toString());
-		HashMap<String,HashMap> k = new HashMap<>();
+		HashMap<String,HashMap<String,String>> k = new HashMap<>();
 		k.put("textDocument", m);
 		tp = CLOSE;
 		mExecutor.execute(new Send("textDocument/didClose", k, false));
@@ -194,7 +192,7 @@ public class Lsp implements Runnable {
 		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":");
 		sb.append(JSONObject.quote(Uri.fromFile(f).toString()));
 		sb.append(",\"version\":");
-		sb.append(Integer.toUnsignedString(version));
+		sb.append(version);
 		sb.append("},\"contentChanges\":[");
 		for (int i=0,j=chs.size(); i<j; i++) {
 			Range c = chs.get(i);

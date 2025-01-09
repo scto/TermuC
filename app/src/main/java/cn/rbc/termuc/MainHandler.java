@@ -4,11 +4,9 @@ import cn.rbc.codeeditor.util.*;
 import java.util.*;
 import android.app.*;
 import android.util.*;
-import android.widget.*;
 import java.io.*;
 import cn.rbc.codeeditor.view.autocomplete.*;
 import static android.util.JsonToken.*;
-import java.nio.charset.*;
 import android.net.*;
 
 public class MainHandler extends Handler implements Comparator<ErrSpan> {
@@ -46,7 +44,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 	public void handleMessage(Message msg) {
 		switch (msg.what) {
 			case Lsp.INITIALIZE:
-				ma.lsp.initialized();
+				MainActivity.lsp.initialized();
 				break;
 			case Lsp.ERROR:
 				synchronized(this) {
@@ -61,7 +59,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 				}
 				return;
 			case Lsp.UNLOCK:
-				ma.lsp.lock.unlock();
+				MainActivity.lsp.lock.unlock();
 			case Lsp.CLOSE:
 				return;
 		}
@@ -111,14 +109,14 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								while (jr.hasNext())
 									sb.append(jr.nextString());
 								jr.close();
-								ma.lsp.setCompTrigs(sb.toString().toCharArray());
+								MainActivity.lsp.setCompTrigs(sb.toString().toCharArray());
 								// what == Lsp.INITIALIZE
 								FragmentManager fm = ma.getFragmentManager();
 								for (int i=ma.getActionBar().getNavigationItemCount()-1;i>=0;i--) {
 									EditFragment ef = (EditFragment)fm.findFragmentByTag(ma.getTag(i));
 									int tp = ef.type&EditFragment.TYPE_MASK;
 									if (tp != EditFragment.TYPE_TXT)
-										ma.lsp.didOpen(ef.getFile(), tp==EditFragment.TYPE_CPP?"cpp":"c", ((TextEditor)ef.getView()).getText().toString());
+										MainActivity.lsp.didOpen(ef.getFile(), tp==EditFragment.TYPE_CPP?"cpp":"c", ((TextEditor)ef.getView()).getText().toString());
 								}
 								return;
 							case RNG:

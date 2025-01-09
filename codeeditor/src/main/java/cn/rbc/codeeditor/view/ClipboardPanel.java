@@ -9,7 +9,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import cn.rbc.termuc.R;
+import cn.rbc.codeeditor.R;
 
 public class ClipboardPanel implements ActionMode.Callback {
     protected FreeScrollingTextField _textField;

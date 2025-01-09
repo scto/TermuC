@@ -2,7 +2,6 @@ package cn.rbc.termuc;
 import android.content.*;
 import android.os.*;
 import java.io.*;
-import java.nio.charset.*;
 import android.util.*;
 import java.util.*;
 import android.widget.*;
@@ -21,16 +20,19 @@ public class Utils {
     private final static String PREFC = "com.termux.RUN_COMMAND_";
 
 	public static void run(Context cont, String cmd, String[] args, String pwd, boolean background) {
-		Intent it = new Intent();
-		it.setClassName("com.termux", "com.termux.app.RunCommandService");
-		it.setAction("com.termux.RUN_COMMAND");
-		it.putExtra(PREFC.concat("PATH"), cmd);
-		it.putExtra(PREFC.concat("RUNNER"), "app-shell");
-		it.putExtra(PREFC.concat("ARGUMENTS"), args);
-		it.putExtra(PREFC.concat("WORKDIR"), pwd);
-		it.putExtra(PREFC.concat("BACKGROUND"), background);
-		it.putExtra(PREFC.concat("SESSION_ACTION"), "0");
-        cont.startService(it);
+        Intent it = new Intent();
+        it.setClassName("com.termux", "com.termux.app.RunCommandService");
+        it.setAction("com.termux.RUN_COMMAND");
+        it.putExtra(PREFC.concat("PATH"), cmd);
+        it.putExtra(PREFC.concat("RUNNER"), "app-shell");
+        it.putExtra(PREFC.concat("ARGUMENTS"), args);
+        it.putExtra(PREFC.concat("WORKDIR"), pwd);
+        it.putExtra(PREFC.concat("BACKGROUND"), background);
+        it.putExtra(PREFC.concat("SESSION_ACTION"), "0");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            cont.startForegroundService(it);
+        else
+            cont.startService(it);
 	}
 
 	public static String escape(String str) {
@@ -58,7 +60,7 @@ public class Utils {
 
 	public static boolean removeFiles(File dir) {
 		File[] fl = dir.listFiles();
-		if (fl!=null)
+		if (fl != null)
 			for (File f:fl)
 				removeFiles(f);
 		return dir.delete();
@@ -96,7 +98,7 @@ public class Utils {
 		}
 		public void onClick(DialogInterface d, int p) {
 			Activity app = mApp;
-			if (p==DialogInterface.BUTTON_NEUTRAL) {
+			if (p == DialogInterface.BUTTON_NEUTRAL) {
 				app.getPreferences(Activity.MODE_PRIVATE).edit().putBoolean(MainActivity.TESTAPP, false).commit();
 				return;
 			}
@@ -106,7 +108,7 @@ public class Utils {
 			List<ResolveInfo> lst = pm.queryIntentActivities(it, 0);
 			List<Map<String,Object>> list = new ArrayList<>();
 			Map<String,Object> m;
-			final Intent[] its = new Intent[lst.size()+2];
+			final Intent[] its = new Intent[lst.size() + 2];
 			int i = 0;
 			for (ResolveInfo ri:lst) {
 				m = new ArrayMap<>();
@@ -155,7 +157,7 @@ public class Utils {
 			bd.create().show();
 		} catch (PackageManager.NameNotFoundException nne) {
 			if (manually)
-			HelperUtils.show(Toast.makeText(ctx, R.string.no_install, Toast.LENGTH_SHORT));
+                HelperUtils.show(Toast.makeText(ctx, R.string.no_install, Toast.LENGTH_SHORT));
 		}
 	}
 
@@ -166,7 +168,7 @@ public class Utils {
 			StringBuilder sb = new StringBuilder();
 			int i;
 			byte[] bt = new byte[1024];
-			while ((i=is.read(bt))>0)
+			while ((i = is.read(bt)) > 0)
 				sb.append(new String(bt, 0, i));
 			is.close();
 			ClipData cd = ClipData.newPlainText("Label", sb.toString());

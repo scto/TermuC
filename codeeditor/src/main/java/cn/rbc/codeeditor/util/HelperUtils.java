@@ -7,7 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.util.TypedValue;
 
-import cn.rbc.termuc.R;
 import android.widget.*;
 import android.annotation.*;
 

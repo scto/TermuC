@@ -18,7 +18,7 @@ import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import cn.rbc.termuc.R;
+import cn.rbc.codeeditor.R;
 import cn.rbc.codeeditor.util.Flag;
 import cn.rbc.codeeditor.view.FreeScrollingTextField;
 
@@ -26,8 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static cn.rbc.codeeditor.util.DLog.log;
-import android.annotation.*;
-import android.text.style.*;
 import android.graphics.*;
 
 /**

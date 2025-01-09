@@ -59,6 +59,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		editor.setShowNonPrinting(Application.whitespace);
 		editor.setUseSpace(Application.usespace);
 		editor.setTabSpaces(Application.tabsize);
+        editor.setSuggestion(Application.suggestion);
 		editor.setLayoutParams(new FrameLayout.LayoutParams(
 								   FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 		if (savedInstanceState!=null) {
@@ -75,13 +76,13 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 			int tp = type&TYPE_MASK;
 			if (tp == TYPE_C) {
 				C = "clang";
-				editor.setLanguage(CLanguage.getInstance());
+				TextEditor.setLanguage(CLanguage.getInstance());
 			} else if (tp == TYPE_CPP) {
 				C = "clang++";
-				editor.setLanguage(CppLanguage.getInstance());
+				TextEditor.setLanguage(CppLanguage.getInstance());
 			} else {
 				C = null;
-				editor.setLanguage(LanguageNonProg.getInstance());
+				TextEditor.setLanguage(LanguageNonProg.getInstance());
 			}
 			ma.setEditor(editor);
 			if (tp != TYPE_TXT && "s".equals(Application.completion))
@@ -208,13 +209,13 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 			ma.setFileRunnable((type&TYPE_HEADER)==0);
 			int tp = type&TYPE_MASK;
 			if (tp == TYPE_C) {// C
-				ed.setLanguage(CLanguage.getInstance());
+				TextEditor.setLanguage(CLanguage.getInstance());
 				C = "clang";
 			} else if (tp == TYPE_CPP) {
-				ed.setLanguage(CppLanguage.getInstance());
+				TextEditor.setLanguage(CppLanguage.getInstance());
 				C = "clang++";
 			} else {
-				ed.setLanguage(LanguageNonProg.getInstance());
+				TextEditor.setLanguage(LanguageNonProg.getInstance());
 				C = null;
 			}
 			refresh();
@@ -234,9 +235,8 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 	public void save() throws IOException {
         FileWriter fileWriter = new FileWriter(fl);
         fileWriter.write(ed.getText().toString());
-		fileWriter.flush();
         fileWriter.close();
-		lastModified = fl.lastModified();
+        lastModified = fl.lastModified();
     }
 
 	public String load() throws IOException {
@@ -262,17 +262,17 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		String _it = pwd.getName();
 		int _tp;
 		if (_it.endsWith(".c"))
-			_tp = EditFragment.TYPE_C;
+			_tp = TYPE_C;
 		else if (FileAdapter.isCpp(_it))
-			_tp = EditFragment.TYPE_CPP;
+			_tp = TYPE_CPP;
 		else if (_it.endsWith(".h"))
-			_tp = EditFragment.TYPE_C | EditFragment.TYPE_HEADER;
+			_tp = TYPE_C | TYPE_HEADER;
 		else if (_it.endsWith(".hpp"))
-			_tp = EditFragment.TYPE_CPP | EditFragment.TYPE_HEADER;
+			_tp = TYPE_CPP | TYPE_HEADER;
 		else if (!Utils.isBlob(pwd))
-			_tp = EditFragment.TYPE_TXT | EditFragment.TYPE_HEADER;
+			_tp = TYPE_TXT | TYPE_HEADER;
 		else
-			_tp = EditFragment.TYPE_BLOD;
+			_tp = TYPE_BLOD;
 		return _tp;
 	}
 }

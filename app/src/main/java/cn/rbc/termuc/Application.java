@@ -1,19 +1,7 @@
 package cn.rbc.termuc;
 import android.content.*;
-import android.content.SharedPreferences.*;
 import android.preference.*;
-import android.content.pm.*;
-import android.app.AlertDialog.Builder;
-import android.net.*;
-import java.util.*;
-import android.util.*;
-import android.widget.*;
-import android.app.*;
-import android.view.*;
-import android.graphics.drawable.*;
-import cn.rbc.codeeditor.util.*;
 import android.graphics.*;
-import android.provider.*;
 
 public class Application extends android.app.Application {
 	final static String
@@ -25,6 +13,7 @@ public class Application extends android.app.Application {
 	KEY_TEXTSIZE = "fontsize",
 	KEY_USESPACE = "usespace",
 	KEY_TABSIZE = "tabsize",
+    KEY_SUGGUESTION = "suggestion",
 	KEY_SHOW_HIDDEN = "showhidden",
 	KEY_CHECKAPP = "checkapp",
 	KEY_INITAPP = "initapp",
@@ -33,7 +22,7 @@ public class Application extends android.app.Application {
 	KEY_LSP_HOST = "lsphost",
 	KEY_LSP_PORT = "lspport";
 
-	public static boolean dark_mode, wordwrap, whitespace, show_hidden, usespace;
+	public static boolean dark_mode, wordwrap, whitespace, show_hidden, usespace, suggestion;
 	public static String font, cflags, completion, lsp_host;
 	public static int lsp_port, textsize, tabsize;
 
@@ -56,6 +45,7 @@ public class Application extends android.app.Application {
 		whitespace = sp.getBoolean(KEY_WHITESPACE, false);
 		usespace = sp.getBoolean(KEY_USESPACE, false);
 		tabsize = Integer.parseInt(sp.getString(KEY_TABSIZE, "4"));
+        suggestion = sp.getBoolean(KEY_SUGGUESTION, false);
 		show_hidden = sp.getBoolean(KEY_SHOW_HIDDEN, true);
         cflags = sp.getString(KEY_CFLAGS, "-lm -Wall");
 		completion = sp.getString(KEY_COMPLETION, "s");

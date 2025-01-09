@@ -13,18 +13,12 @@ import android.content.*;
 import android.content.res.*;
 import android.util.Log;
 import java.util.*;
-import java.net.*;
 import android.net.*;
 import cn.rbc.codeeditor.util.*;
-import android.preference.*;
 import android.content.pm.*;
 import android.app.AlertDialog.Builder;
-import android.util.ArrayMap;
-import android.graphics.drawable.*;
 import android.provider.*;
-import cn.rbc.codeeditor.common.*;
 import android.graphics.*;
-import android.util.*;
 import android.database.*;
 import static android.Manifest.permission.*;
 import cn.rbc.codeeditor.lang.*;
@@ -159,10 +153,10 @@ Runnable {
 				};
 		if (s != null)
 			requestPermissions(s, PackageManager.PERMISSION_GRANTED);
-		if (pref.getBoolean(TESTAPP, true))
-			Utils.testApp(this, false);
-		else if (pref.getBoolean(INITAPP, true))
+		if (pref.getBoolean(INITAPP, true))
 			Utils.initBack(this, false);
+        if (pref.getBoolean(TESTAPP, true))
+			Utils.testApp(this, false);
     }
 
 	@Override
@@ -683,6 +677,7 @@ Runnable {
 						ed.setShowNonPrinting(Application.whitespace);
 						ed.setUseSpace(Application.usespace);
 						ed.setTabSpaces(Application.tabsize);
+                        ed.setSuggestion(Application.suggestion);
 						int tp = f.type&EditFragment.TYPE_MASK;
 						if (chg && tp!=EditFragment.TYPE_TXT)
 							lsp.didOpen(f.getFile(), tp==EditFragment.TYPE_C?"c":"cpp", ed.getText().toString());

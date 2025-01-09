@@ -16,34 +16,34 @@ import cn.rbc.codeeditor.lang.*;
 import android.os.*;
 import android.text.*;
 
-public class TextEditor extends FreeScrollingTextField{
-   // private Document _inputtingDoc;
-   // private boolean _isWordWrap;
+public class TextEditor extends FreeScrollingTextField {
+    // private Document _inputtingDoc;
+    // private boolean _isWordWrap;
     private Context mContext;
     private String _lastSelectFile;
     private int _index;
 	private Formatter mFormatter;
 
     /*
-    private Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case ReadThread.MSG_READ_OK:
-                    setText(msg.obj.toString());
-                    break;
-                case ReadThread.MSG_READ_FAIL:
-                    showToast("打开失败");
-                    break;
-                case WriteThread.MSG_WRITE_OK:
-                    showToast("保存成功");
-                    break;
-                case WriteThread.MSG_WRITE_FAIL:
-                    showToast("保存失败");
-                    break;
-            }
-        }
-    };*/
+     private Handler handler = new Handler() {
+     @Override
+     public void handleMessage(Message msg) {
+     switch (msg.what) {
+     case ReadThread.MSG_READ_OK:
+     setText(msg.obj.toString());
+     break;
+     case ReadThread.MSG_READ_FAIL:
+     showToast("打开失败");
+     break;
+     case WriteThread.MSG_WRITE_OK:
+     showToast("保存成功");
+     break;
+     case WriteThread.MSG_WRITE_FAIL:
+     showToast("保存失败");
+     break;
+     }
+     }
+     };*/
 
     public TextEditor(Context context) {
         super(context);
@@ -65,7 +65,6 @@ public class TextEditor extends FreeScrollingTextField{
         setAutoComplete(false);
         setAutoIndent(true);
         setUseGboard(true);
-		mTypeInput |= InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD;
         setNavigationMethod(new YoyoNavigationMethod(this));
     }
 
@@ -78,7 +77,7 @@ public class TextEditor extends FreeScrollingTextField{
         }
     }
 
-    public static void setLanguage(Language language){
+    public static void setLanguage(Language language) {
         AutoCompletePanel.setLanguage(language);
         Tokenizer.setLanguage(language);
     }
@@ -93,6 +92,11 @@ public class TextEditor extends FreeScrollingTextField{
         }
         int i = getText().getLineOffset(line - 1);
         setSelection(i);
+    }
+
+    @Override
+    public void setSuggestion(boolean enable) {
+        mTypeInput = enable ? InputType.TYPE_CLASS_TEXT : InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS|InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD;
     }
 
     @Override
@@ -113,10 +117,10 @@ public class TextEditor extends FreeScrollingTextField{
                     paste();
                     return true;
 				case KeyEvent.KEYCODE_EQUALS:
-					setTextSize((int)(getTextSize()+HelperUtils.getDpi(mContext)));
+					setTextSize((int)(getTextSize() + HelperUtils.getDpi(mContext)));
 					return true;
 				case KeyEvent.KEYCODE_MINUS:
-					setTextSize((int)(getTextSize()-HelperUtils.getDpi(mContext)));
+					setTextSize((int)(getTextSize() - HelperUtils.getDpi(mContext)));
 					return true;
             }
         }
@@ -131,15 +135,15 @@ public class TextEditor extends FreeScrollingTextField{
 
 	@Override
 	public void format() {
-		if (mFormatter!=null) {
+		if (mFormatter != null) {
 			mFormatter.format(hDoc, mAutoIndentWidth);
 		} else
 			super.format();
 	}
 
-	public void setFormatter(Formatter fmt) {
-		mFormatter = fmt;
-	}
+    public void setFormatter(Formatter fmt) {
+        mFormatter = fmt;
+    }
 
     public void setText(CharSequence c) {
         Document doc = new Document(this);
@@ -148,9 +152,9 @@ public class TextEditor extends FreeScrollingTextField{
         setDocument(doc);
     }
 
-	public AutoCompletePanel getAutoCompletePanel() {
-		return mAutoCompletePanel;
-	}
+    public AutoCompletePanel getAutoCompletePanel() {
+        return mAutoCompletePanel;
+    }
 
     public File getOpenedFile() {
         if (_lastSelectFile != null)
@@ -201,25 +205,25 @@ public class TextEditor extends FreeScrollingTextField{
         }
     }
 
-/*
-    public void open(String filename) {
-        _lastSelectFile = filename;
+    /*
+     public void open(String filename) {
+     _lastSelectFile = filename;
 
-        File inputFile = new File(filename);
-        _inputtingDoc = new Document(this);
-        _inputtingDoc.setWordWrap(this.isWordWrap());
-        ReadThread readThread = new ReadThread(inputFile.getAbsolutePath(), handler);
-        readThread.start();
-    }
+     File inputFile = new File(filename);
+     _inputtingDoc = new Document(this);
+     _inputtingDoc.setWordWrap(this.isWordWrap());
+     ReadThread readThread = new ReadThread(inputFile.getAbsolutePath(), handler);
+     readThread.start();
+     }
 
-    /**
+     /**
      * 保存文件
      * * @param file
      */
-/*
-    public void save(String file) {
-        WriteThread writeThread = new WriteThread(getText().toString(), file, handler);
-        writeThread.start();
-    }*/
+    /*
+     public void save(String file) {
+     WriteThread writeThread = new WriteThread(getText().toString(), file, handler);
+     writeThread.start();
+     }*/
 }
 

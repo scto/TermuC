@@ -2,7 +2,6 @@ package cn.rbc.termuc;
 import java.io.*;
 import android.util.*;
 import java.util.*;
-import org.json.*;
 
 public class Project
 {

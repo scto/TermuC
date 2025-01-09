@@ -47,6 +47,11 @@
 			android:entryValues="@array/tabsizes"
 			android:defaultValue="4"
 			/>
+        <CheckBoxPreference
+            android:key="suggestion"
+            android:title="@string/keyboard_suggestion"
+            android:defaultValue="false"
+            />
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/file_browser">

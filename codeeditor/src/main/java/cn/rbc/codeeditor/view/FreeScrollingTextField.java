@@ -64,7 +64,6 @@ import cn.rbc.codeeditor.view.autocomplete.AutoCompletePanel;
 import cn.rbc.codeeditor.view.ColorScheme.Colorable;
 
 import java.util.*;
-import cn.rbc.termuc.*;
 
 /**
  * A custom text view that uses a solid shaded caret (aka cursor) instead of a
