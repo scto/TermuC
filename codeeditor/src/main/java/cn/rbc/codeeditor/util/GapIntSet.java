@@ -97,7 +97,7 @@ public class GapIntSet {
 
 	public int get(int i) {
 		if (i>=size||i<0)
-			throw new ArrayIndexOutOfBoundsException(String.format(
+			throw new IndexOutOfBoundsException(String.format(
 				"Index %d out of bounds for length %d", i, size));
 		int r = mData[i];
 		return r>=gapSt?r+gapSz:r;

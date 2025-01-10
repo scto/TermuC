@@ -204,9 +204,12 @@ public class ClipboardPanel implements ActionMode.Callback {
             @Override
             public void onGetContentRect(ActionMode mode, View view, Rect outRect) {
                 caret = _textField.getBoundingBox(_textField.getCaretPosition());
-				caret.top -= _textField.getScrollY();
-				caret.left += _textField.getScrollX();
-				outRect.set(caret);
+                int x = _textField.getScrollX(), y = _textField.getScrollY();
+				caret.top -= y;
+                caret.bottom -= y;
+				caret.left -= x;
+                caret.right -= x;
+                outRect.set(caret);
             }
         };
 
@@ -220,4 +223,8 @@ public class ClipboardPanel implements ActionMode.Callback {
         }
     }
 
+    public void invalidateContentRect() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && _clipboardActionMode != null)
+            _clipboardActionMode.invalidateContentRect();
+    }
 }

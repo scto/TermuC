@@ -397,9 +397,8 @@ public class TextBuffer implements CharSequence
 			_contents[_gapStartIndex++] = c[i];
 		}
 		_lineCount += lines;
-		if (lines>0) {
+		if (lines != 0)
 			_marks.shift(findLineNumber(charOffset)+1, lines);
-		}
 		_cache.invalidateCache(charOffset);
 	}
 
@@ -428,7 +427,6 @@ public class TextBuffer implements CharSequence
 			else
 				shiftGapRight(newGapStart + gapSize());
 		}
-		newGapStart = findLineNumber(newGapStart)+1;
 		// increase gap size
 		int lines = 0;
 		for(int i = 0; i < totalChars; ++i){
@@ -436,7 +434,8 @@ public class TextBuffer implements CharSequence
 				lines--;
 		}
 		_lineCount += lines;
-		_marks.shift(newGapStart, lines);
+        if (lines != 0)
+            _marks.shift(findLineNumber(newGapStart)+1, lines);
 		_cache.invalidateCache(charOffset);
 	}
 
@@ -448,11 +447,15 @@ public class TextBuffer implements CharSequence
 	 * of insertions/deletions. No error checking is done.
 	 */
 	synchronized void shiftGapStart(int displacement){
+        int lines;
 		if(displacement >= 0)
-			_lineCount += countNewlines(_gapStartIndex, displacement);
+			lines = countNewlines(_gapStartIndex, displacement);
 		else
-			_lineCount -= countNewlines(_gapStartIndex + displacement, -displacement);
+			lines = -countNewlines(_gapStartIndex + displacement, -displacement);
 
+        if (lines != 0)
+            _marks.shift(findLineNumber(_gapStartIndex)+1, lines);
+        _lineCount += lines;
 		_gapStartIndex += displacement;
 		_cache.invalidateCache(realToLogicalIndex(_gapStartIndex - 1) + 1);
 	}

@@ -5,7 +5,6 @@ android {
     compileSdk 34
 
     defaultConfig {
-		applicationId 'cn.rbc.codeeditor'
         minSdkVersion 21
         targetSdkVersion 30
         versionCode 1

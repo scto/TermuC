@@ -99,8 +99,8 @@ import java.util.*;
  * detail is hidden from client classes.
  */
 public abstract class FreeScrollingTextField extends View
-	implements Document.TextFieldMetrics, OnRowChangedListener, OnSelectionChangedListener,
-	DialogInterface.OnDismissListener, Runnable {
+implements Document.TextFieldMetrics, OnRowChangedListener, OnSelectionChangedListener,
+DialogInterface.OnDismissListener, Runnable {
 
     //---------------------------------------------------------------------
     //--------------------------  Caret Scroll  ---------------------------
@@ -142,66 +142,67 @@ public abstract class FreeScrollingTextField extends View
     private final static SparseArray<String> PICKER_SETS = new SparseArray<>();
 
     static {
-        PICKER_SETS.put('A', "\u00C0\u00C1\u00C2\u00C4\u00C6\u00C3\u00C5\u0104\u0100");
-        PICKER_SETS.put('C', "\u00C7\u0106\u010C");
-        PICKER_SETS.put('D', "\u010E");
-        PICKER_SETS.put('E', "\u00C8\u00C9\u00CA\u00CB\u0118\u011A\u0112");
-        PICKER_SETS.put('G', "\u011E");
-        PICKER_SETS.put('L', "\u0141");
-        PICKER_SETS.put('I', "\u00CC\u00CD\u00CE\u00CF\u012A\u0130");
-        PICKER_SETS.put('N', "\u00D1\u0143\u0147");
-        PICKER_SETS.put('O', "\u00D8\u0152\u00D5\u00D2\u00D3\u00D4\u00D6\u014C");
-        PICKER_SETS.put('R', "\u0158");
-        PICKER_SETS.put('S', "\u015A\u0160\u015E");
-        PICKER_SETS.put('T', "\u0164");
-        PICKER_SETS.put('U', "\u00D9\u00DA\u00DB\u00DC\u016E\u016A");
-        PICKER_SETS.put('Y', "\u00DD\u0178");
-        PICKER_SETS.put('Z', "\u0179\u017B\u017D");
-        PICKER_SETS.put('a', "\u00E0\u00E1\u00E2\u00E4\u00E6\u00E3\u00E5\u0105\u0101");
-        PICKER_SETS.put('c', "\u00E7\u0107\u010D");
-        PICKER_SETS.put('d', "\u010F");
-        PICKER_SETS.put('e', "\u00E8\u00E9\u00EA\u00EB\u0119\u011B\u0113");
-        PICKER_SETS.put('g', "\u011F");
-        PICKER_SETS.put('i', "\u00EC\u00ED\u00EE\u00EF\u012B\u0131");
-        PICKER_SETS.put('l', "\u0142");
-        PICKER_SETS.put('n', "\u00F1\u0144\u0148");
-        PICKER_SETS.put('o', "\u00F8\u0153\u00F5\u00F2\u00F3\u00F4\u00F6\u014D");
-        PICKER_SETS.put('r', "\u0159");
-        PICKER_SETS.put('s', "\u00A7\u00DF\u015B\u0161\u015F");
-        PICKER_SETS.put('t', "\u0165");
-        PICKER_SETS.put('u', "\u00F9\u00FA\u00FB\u00FC\u016F\u016B");
-        PICKER_SETS.put('y', "\u00FD\u00FF");
-        PICKER_SETS.put('z', "\u017A\u017C\u017E");
-        PICKER_SETS.put(KeyCharacterMap.PICKER_DIALOG_INPUT,
-						"\u2026\u00A5\u2022\u00AE\u00A9\u00B1[]{}\\|");
-        PICKER_SETS.put('/', "\\");
+        SparseArray<String> psets = PICKER_SETS;
+        psets.put('A', "\u00C0\u00C1\u00C2\u00C4\u00C6\u00C3\u00C5\u0104\u0100");
+        psets.put('C', "\u00C7\u0106\u010C");
+        psets.put('D', "\u010E");
+        psets.put('E', "\u00C8\u00C9\u00CA\u00CB\u0118\u011A\u0112");
+        psets.put('G', "\u011E");
+        psets.put('L', "\u0141");
+        psets.put('I', "\u00CC\u00CD\u00CE\u00CF\u012A\u0130");
+        psets.put('N', "\u00D1\u0143\u0147");
+        psets.put('O', "\u00D8\u0152\u00D5\u00D2\u00D3\u00D4\u00D6\u014C");
+        psets.put('R', "\u0158");
+        psets.put('S', "\u015A\u0160\u015E");
+        psets.put('T', "\u0164");
+        psets.put('U', "\u00D9\u00DA\u00DB\u00DC\u016E\u016A");
+        psets.put('Y', "\u00DD\u0178");
+        psets.put('Z', "\u0179\u017B\u017D");
+        psets.put('a', "\u00E0\u00E1\u00E2\u00E4\u00E6\u00E3\u00E5\u0105\u0101");
+        psets.put('c', "\u00E7\u0107\u010D");
+        psets.put('d', "\u010F");
+        psets.put('e', "\u00E8\u00E9\u00EA\u00EB\u0119\u011B\u0113");
+        psets.put('g', "\u011F");
+        psets.put('i', "\u00EC\u00ED\u00EE\u00EF\u012B\u0131");
+        psets.put('l', "\u0142");
+        psets.put('n', "\u00F1\u0144\u0148");
+        psets.put('o', "\u00F8\u0153\u00F5\u00F2\u00F3\u00F4\u00F6\u014D");
+        psets.put('r', "\u0159");
+        psets.put('s', "\u00A7\u00DF\u015B\u0161\u015F");
+        psets.put('t', "\u0165");
+        psets.put('u', "\u00F9\u00FA\u00FB\u00FC\u016F\u016B");
+        psets.put('y', "\u00FD\u00FF");
+        psets.put('z', "\u017A\u017C\u017E");
+        psets.put(KeyCharacterMap.PICKER_DIALOG_INPUT,
+                  "\u2026\u00A5\u2022\u00AE\u00A9\u00B1[]{}\\|");
+        psets.put('/', "\\");
 
         // From packages/inputmethods/LatinIME/res/xml/kbd_symbols.xml
 
-        PICKER_SETS.put('1', "\u00b9\u00bd\u2153\u00bc\u215b");
-        PICKER_SETS.put('2', "\u00b2\u2154");
-        PICKER_SETS.put('3', "\u00b3\u00be\u215c");
-        PICKER_SETS.put('4', "\u2074");
-        PICKER_SETS.put('5', "\u215d");
-        PICKER_SETS.put('7', "\u215e");
-        PICKER_SETS.put('0', "\u207f\u2205");
-        PICKER_SETS.put('$', "\u00a2\u00a3\u20ac\u00a5\u20a3\u20a4\u20b1");
-        PICKER_SETS.put('%', "\u2030");
-        PICKER_SETS.put('*', "\u2020\u2021");
-        PICKER_SETS.put('-', "\u2013\u2014");
-        PICKER_SETS.put('+', "\u00b1");
-        PICKER_SETS.put('(', "[{<");
-        PICKER_SETS.put(')', "]}>");
-        PICKER_SETS.put('!', "\u00a1");
-        PICKER_SETS.put('"', "\u201c\u201d\u00ab\u00bb\u02dd");
-        PICKER_SETS.put('?', "\u00bf");
-        PICKER_SETS.put(',', "\u201a\u201e");
+        psets.put('1', "\u00b9\u00bd\u2153\u00bc\u215b");
+        psets.put('2', "\u00b2\u2154");
+        psets.put('3', "\u00b3\u00be\u215c");
+        psets.put('4', "\u2074");
+        psets.put('5', "\u215d");
+        psets.put('7', "\u215e");
+        psets.put('0', "\u207f\u2205");
+        psets.put('$', "\u00a2\u00a3\u20ac\u00a5\u20a3\u20a4\u20b1");
+        psets.put('%', "\u2030");
+        psets.put('*', "\u2020\u2021");
+        psets.put('-', "\u2013\u2014");
+        psets.put('+', "\u00b1");
+        psets.put('(', "[{<");
+        psets.put(')', "]}>");
+        psets.put('!', "\u00a1");
+        psets.put('"', "\u201c\u201d\u00ab\u00bb\u02dd");
+        psets.put('?', "\u00bf");
+        psets.put(',', "\u201a\u201e");
 
         // From packages/inputmethods/LatinIME/res/xml/kbd_symbols_shift.xml
 
-        PICKER_SETS.put('=', "\u2260\u2248\u221e");
-        PICKER_SETS.put('<', "\u2264\u00ab\u2039");
-        PICKER_SETS.put('>', "\u2265\u00bb\u203a");
+        psets.put('=', "\u2260\u2248\u221e");
+        psets.put('<', "\u2264\u00ab\u2039");
+        psets.put('>', "\u2265\u00bb\u203a");
     }
 
     //光标宽度
@@ -276,7 +277,7 @@ public abstract class FreeScrollingTextField extends View
     private RectF mRect;
     private EdgeEffect mTopEdge;
     private EdgeEffect mBottomEdge;
-    private ClipboardPanel mClipboardPanel;
+    ClipboardPanel mClipboardPanel;
     private ClipboardManager mClipboardManager;
     private float mZoomFactor = 1;
     private int mCaretX, mCaretY;
@@ -379,13 +380,13 @@ public abstract class FreeScrollingTextField extends View
 
 	@Override
 	public void scrollTo(int x, int y) {
-		x = Math.max(Math.min(x, getMaxScrollX()),0);
-		y = Math.max(Math.min(y, getMaxScrollY()),0);
+		x = Math.max(Math.min(x, getMaxScrollX()), 0);
+		y = Math.max(Math.min(y, getMaxScrollY()), 0);
 		super.scrollTo(x, y);
 	}
 
     public boolean setTextSize(int pix, float cx, float cy) {
-        if (pix<mSizeMin || pix>mSizeMax || pix == (int)mTextPaint.getTextSize())
+        if (pix < mSizeMin || pix > mSizeMax || pix == (int)mTextPaint.getTextSize())
             return false;
 		//pix = Math.max(mSizeMin, Math.min(mSizeMax, pix));
         float oldHeight = rowHeight();
@@ -399,7 +400,7 @@ public abstract class FreeScrollingTextField extends View
 		if (hDoc.isWordWrap())
             hDoc.analyzeWordWrap();
         mCtrlr.updateCaretRow();
-		mLineBrush.setStrokeWidth(mAlphaWidth*.15f);
+		mLineBrush.setStrokeWidth(mAlphaWidth * .15f);
         float x = (getScrollX() + cx) * mAlphaWidth / oldWidth - cx;
         float y = (getScrollY() + cy) * rowHeight() / oldHeight - cy;
         scrollTo((int)x, (int)y);
@@ -447,7 +448,7 @@ public abstract class FreeScrollingTextField extends View
         setHapticFeedbackEnabled(true);
         mColorScheme = new ColorSchemeLight();
 		mSpaceWidth = (int)mTextPaint.measureText(" ");
-		mCursorWidth = (int)(HelperUtils.getDpi(mContext)*1.5f);
+		mCursorWidth = (int)(HelperUtils.getDpi(mContext) * 1.5f);
 		android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
 		mSizeMin = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 8.f, dm);
 		mSizeMax = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 32.f, dm);
@@ -513,7 +514,7 @@ public abstract class FreeScrollingTextField extends View
 			// log("subSequence:"+hDoc.subSequence(curr, caretPosition - curr));
 			// if (isAutoCompeted) {
 			// Log.i("AutoCompete", text+" "+cursorPosition+" "+curr);
-			mAutoCompletePanel.update(hDoc.subSequence(curr, cursorPosition - curr));
+                mAutoCompletePanel.update(hDoc.subSequence(curr, cursorPosition - curr));
 			// }
 			else
 				mAutoCompletePanel.dismiss();
@@ -732,7 +733,7 @@ public abstract class FreeScrollingTextField extends View
             return;
         int currLineNum = 1 + (isWordWrap() ? hDoc.findLineNumber(currIndex) : currRowNum);
         int lastLineNum = 0;
-        mLeftOffset = isShowLineNumbers ? (int) mTextPaint.measureText("  "+hDoc.getLineCount()) : 0;
+        mLeftOffset = isShowLineNumbers ? (int) mTextPaint.measureText("  " + hDoc.getLineCount()) : 0;
 
         int paintX = 0;
         int paintY = getPaintBaseline(currRowNum);
@@ -744,14 +745,14 @@ public abstract class FreeScrollingTextField extends View
         if (spans.isEmpty()) return;
 
 		int spanSize = spans.size();
-		int spanIndex = 0, r = spanSize-1, m;
+		int spanIndex = 0, r = spanSize - 1, m;
 
 		while (spanIndex < r) {
-			m = (spanIndex+r+1) >> 1;
+			m = (spanIndex + r + 1) >> 1;
 			if (spans.get(m).first <= currIndex)
 				spanIndex = m;
 			else
-				r = m-1;
+				r = m - 1;
 		}
 		Pair currSpan = spans.get(spanIndex++);
 		Pair nextSpan = spanIndex < spanSize ? spans.get(spanIndex++) : null;
@@ -759,7 +760,7 @@ public abstract class FreeScrollingTextField extends View
 		int currType = currSpan.second;
         int lastType = currType;
 
-        mTextPaint.setTypeface(currSpan.second==Tokenizer.KEYWORD ? boldTypeface : defTypeface);
+        mTextPaint.setTypeface(currSpan.second == Tokenizer.KEYWORD ? boldTypeface : defTypeface);
 
         int spanColor = mColorScheme.getTokenColor(currSpan.second);
         mTextPaint.setColor(spanColor);
@@ -776,7 +777,7 @@ public abstract class FreeScrollingTextField extends View
 		int idx, diagLen;
 		List<ErrSpan> diagList = hDoc.getDiag();
 		ErrSpan diag;
-		if (diagList==null || diagList.isEmpty()) {
+		if (diagList == null || diagList.isEmpty()) {
 			diag = null;
 			diagLen = 0;
 			idx = 1;
@@ -785,42 +786,42 @@ public abstract class FreeScrollingTextField extends View
 			r = 0;
 			idx = diagLen - 1;
 			while (r < idx) {
-				m = (idx+r)>>1;
+				m = (idx + r) >> 1;
 				if (diagList.get(m).stl >= currLineNum)
 					idx = m;
 				else
-					r = m+1;
+					r = m + 1;
 			}
 			diag = diagList.get(idx++);
 		}
 		int mHt = 1 + hDoc.findLineNumber(mCaretPosition);
 		int mI = hDoc.findMark(currLineNum);
-		if (mI<0)
+		if (mI < 0)
 			mI = ~mI;
 		// row by row
 		int rowEnd = 0;
-        for (m=-1; currRowNum <= endRowNum && currIndex < mL; currRowNum++) {
+        for (m = -1; currRowNum <= endRowNum && currIndex < mL; currRowNum++) {
 			if (currLineNum != lastLineNum) {
 				if (showLN) {
-				ColorScheme.Colorable ca;
-				if (mI<hDoc.getMarksCount()&&hDoc.getMark(mI)==currLineNum) {
-					mLineBrush.setColor(0xffa00000);
-					canvas.drawRect(0, rowheight*currRowNum, mLeftOffset-(mSpaceWidth>>1), rowheight*(currRowNum+1), mLineBrush);
-					ca = ColorScheme.Colorable.SELECTION_FOREGROUND;
-					mI++;
-				} /*else if (BuildConfig.DEBUG && hDoc.isInMarkGap(currLineNum))
-					ca = ColorScheme.Colorable.STRING;
-				*/else
-					ca = ColorScheme.Colorable.NON_PRINTING_GLYPH;
-				mLineBrush.setColor(mColorScheme.getColor(ca));
-                String num = String.valueOf(currLineNum);
-				int padx = (int) (mLeftOffset - mTextPaint.measureText(num) - mSpaceWidth);
-				lastLineNum = currLineNum;
-                canvas.drawText(num, padx, paintY, mLineBrush);
-			}
+                    ColorScheme.Colorable ca;
+                    if (mI < hDoc.getMarksCount() && hDoc.getMark(mI) == currLineNum) {
+                        mLineBrush.setColor(0xffa00000);
+                        canvas.drawRect(0, rowheight * currRowNum, mLeftOffset - (mSpaceWidth >> 1), rowheight * (currRowNum + 1), mLineBrush);
+                        ca = ColorScheme.Colorable.SELECTION_FOREGROUND;
+                        mI++;
+                    } else if (hDoc.isInMarkGap(currLineNum))
+                        ca = ColorScheme.Colorable.STRING;
+                    else
+                        ca = ColorScheme.Colorable.NON_PRINTING_GLYPH;
+                    mLineBrush.setColor(mColorScheme.getColor(ca));
+                    String num = String.valueOf(currLineNum);
+                    int padx = (int) (mLeftOffset - mTextPaint.measureText(num) - mSpaceWidth);
+                    lastLineNum = currLineNum;
+                    canvas.drawText(num, padx, paintY, mLineBrush);
+                }
 				if (currLineNum == mHt && isHighlightRow && !mCtrlr.isSelectText()) {
 					int eRow = currRowNum + 1, rows = hDoc.getRowCount();
-					while (eRow <= endRowNum && (eRow!=rows && hDoc.charAt(hDoc.getRowOffset(eRow)-1)!=Language.NEWLINE))
+					while (eRow <= endRowNum && (eRow != rows && hDoc.charAt(hDoc.getRowOffset(eRow) - 1) != Language.NEWLINE))
 						eRow++;
 					int orc = mTextPaint.getColor();
 					mTextPaint.setColor(mColorScheme.getColor(ColorScheme.Colorable.LINE_HIGHLIGHT));
@@ -837,7 +838,7 @@ public abstract class FreeScrollingTextField extends View
 			int i = rowEnd;
 			// char by char
 			// TODO rendering span by span
-            for (rowEnd+=hDoc.getRowSize(currRowNum); i < rowEnd; i++) {
+            for (rowEnd += hDoc.getRowSize(currRowNum); i < rowEnd; i++) {
                 // check if formatting changes are needed
                 if (reachedNextSpan(currIndex, nextSpan)) {
                     currSpan = nextSpan;
@@ -846,13 +847,13 @@ public abstract class FreeScrollingTextField extends View
                     spanColor = mColorScheme.getTokenColor(currSpan.second);
                     mTextPaint.setColor(spanColor);
 					if (lastType != currType) {
-                        Typeface currTypeface = currType==Tokenizer.KEYWORD ? boldTypeface : defTypeface;
+                        Typeface currTypeface = currType == Tokenizer.KEYWORD ? boldTypeface : defTypeface;
                         if (mTextPaint.getTypeface() != currTypeface)
                             mTextPaint.setTypeface(currTypeface);
                         spanColor = mColorScheme.getTokenColor(currType);
                         mTextPaint.setColor(spanColor);
                     }
-					nextSpan = spanIndex<spanSize ? spans.get(spanIndex++) : null;
+					nextSpan = spanIndex < spanSize ? spans.get(spanIndex++) : null;
                 }
 
 				if (paintX < width) {
@@ -866,20 +867,20 @@ public abstract class FreeScrollingTextField extends View
 						paintX += r;
 					}
 					if (currIndex == mCaretPosition && isCursorVisiable)
-                        //draw cursor
+                    //draw cursor
 						drawCaret(canvas, x, paintY);
 					else if (currIndex + 1 == mCaretPosition)
 						mCaretSpan = currSpan;
 					// draw err line
 					if (idx <= diagLen) {
 						if (m < 0
-							// start position
+                        // start position
 							&& (diag.stl == currLineNum && diag.stc == i
-							// following position
-							|| diag.stl < currLineNum && diag.enl >= currLineNum && x==mLeftOffset))
+                        // following position
+							|| diag.stl < currLineNum && diag.enl >= currLineNum && x == mLeftOffset))
 							m = x;
 						boolean end, flow = false;
-						if (m >= 0 && ((end = diag.enl==currLineNum && diag.enc==i+1)|| (flow = i+1==rowEnd) || paintX >= width)) {
+						if (m >= 0 && ((end = diag.enl == currLineNum && diag.enc == i + 1) || (flow = i + 1 == rowEnd) || paintX >= width)) {
 							mLineBrush.setColor(ColorScheme.DIAG[diag.severity]);
 							canvas.drawLine(m, paintY, paintX, paintY, mLineBrush);
 							m = flow ? mLeftOffset : -1;
@@ -904,7 +905,7 @@ public abstract class FreeScrollingTextField extends View
 			paintX += mTextPaint.measureText(hDoc, r, currIndex);
 
             if (paintX > xExtent)
-                // record widest line seen so far
+            // record widest line seen so far
                 xExtent = paintX;
             if (paintX > mLineMaxWidth)
                 mLineMaxWidth = paintX;
@@ -1145,8 +1146,8 @@ public abstract class FreeScrollingTextField extends View
     protected int getSpaceAdvance() {
         return isShowNonPrinting
             ? (int) mTextPaint.measureText(Language.GLYPH_SPACE,
-												0, Language.GLYPH_SPACE.length())
-            :mSpaceWidth;
+                                           0, Language.GLYPH_SPACE.length())
+            : mSpaceWidth;
     }
 
     protected int getEOLAdvance() {
@@ -1160,16 +1161,16 @@ public abstract class FreeScrollingTextField extends View
 
     protected int getTabAdvance() {
         return mTabLength * /* (isShowNonPrinting
-            ? (int) mTextPaint.measureText(Language.GLYPH_SPACE,
-											0, Language.GLYPH_SPACE.length())
-            :*/ mSpaceWidth;
+             ? (int) mTextPaint.measureText(Language.GLYPH_SPACE,
+             0, Language.GLYPH_SPACE.length())
+             :*/ mSpaceWidth;
     }
 
     protected int getTabAdvance(int x) {
         /*if (isShowNonPrinting)
-            return mTabLength * (int) mTextPaint.measureText(Language.GLYPH_SPACE,
-															 0, Language.GLYPH_SPACE.length());
-        else {*/
+         return mTabLength * (int) mTextPaint.measureText(Language.GLYPH_SPACE,
+         0, Language.GLYPH_SPACE.length());
+         else {*/
         int i = (x - mLeftOffset) / mSpaceWidth % mTabLength;
         return (mTabLength - i) * mSpaceWidth;
     }
@@ -1274,11 +1275,11 @@ public abstract class FreeScrollingTextField extends View
             else if (charBottom + SCROLL_EDGE_SLOP > (getScrollY() + getContentHeight()))
                 scrollBy = charBottom + SCROLL_EDGE_SLOP - getScrollY() - getContentHeight();
         } else
-            // 默认情况在水滴移动到屏幕上下边缘时才开始滚动
-            if (charTop < getScrollY())
-                scrollBy = charTop - getScrollY();
-            else if (charBottom > (getScrollY() + getContentHeight()))
-                scrollBy = charBottom - getScrollY() - getContentHeight();
+        // 默认情况在水滴移动到屏幕上下边缘时才开始滚动
+        if (charTop < getScrollY())
+            scrollBy = charTop - getScrollY();
+        else if (charBottom > (getScrollY() + getContentHeight()))
+            scrollBy = charBottom - getScrollY() - getContentHeight();
 
         return scrollBy;
     }
@@ -1307,11 +1308,11 @@ public abstract class FreeScrollingTextField extends View
                     scrollBy = 0;
             }
         } else
-            // 默认情况在水滴移动到屏幕左右边缘时才开始滚动
-            if (charRight > (getScrollX() + getContentWidth()))
-                scrollBy = charRight - getScrollX() - getContentWidth();
-            else if (charLeft < getScrollX() + mAlphaWidth)
-                scrollBy = charLeft - getScrollX() - mAlphaWidth;
+        // 默认情况在水滴移动到屏幕左右边缘时才开始滚动
+        if (charRight > (getScrollX() + getContentWidth()))
+            scrollBy = charRight - getScrollX() - getContentWidth();
+        else if (charLeft < getScrollX() + mAlphaWidth)
+            scrollBy = charLeft - getScrollX() - mAlphaWidth;
 
         return scrollBy;
     }
@@ -1417,7 +1418,7 @@ public abstract class FreeScrollingTextField extends View
 
         int charIndex = hDoc.getRowOffset(row);
         if (charIndex < 0)
-            //non-existent row
+        //non-existent row
             return -1;
 
         if (x < 0)
@@ -1921,7 +1922,7 @@ public abstract class FreeScrollingTextField extends View
     }
 
 	public void format() {
-		replaceText(0, hDoc.length()-1, Tokenizer.getLanguage().getFormatter().format(hDoc, mAutoIndentWidth).toString());
+		replaceText(0, hDoc.length() - 1, Tokenizer.getLanguage().getFormatter().format(hDoc, mAutoIndentWidth).toString());
 	}
 
     private boolean reachedNextSpan(int charIndex, Pair span) {
@@ -1953,8 +1954,8 @@ public abstract class FreeScrollingTextField extends View
     }
 
     /*public void setItalicTypeface(Typeface typeface) {
-        italicTypeface = typeface;
-    }*/
+     italicTypeface = typeface;
+     }*/
 
     public void setBoldTypeface(Typeface typeface) {
         boldTypeface = typeface;
@@ -2246,21 +2247,21 @@ public abstract class FreeScrollingTextField extends View
         if (isFocused())
             mNavMethod.onTouchEvent(event);
         else if ((event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP
-				&& isPointInView((int) event.getX(), (int) event.getY()))
-            // somehow, the framework does not automatically change the focus
-            // to this view when it is touched
+                 && isPointInView((int) event.getX(), (int) event.getY()))
+        // somehow, the framework does not automatically change the focus
+        // to this view when it is touched
             requestFocus();
         return true;
     }
 
 	@Override
 	public boolean onGenericMotionEvent(MotionEvent event) {
-		if (event.isFromSource(InputDevice.SOURCE_CLASS_POINTER) && event.getAction()==MotionEvent.ACTION_SCROLL) {
+		if (event.isFromSource(InputDevice.SOURCE_CLASS_POINTER) && event.getAction() == MotionEvent.ACTION_SCROLL) {
 			// if (!isDragging)
 			final float vscroll = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
 			if (vscroll != 0) {
-				if ((event.getMetaState()&KeyEvent.META_CTRL_ON)!=0
-					&& setTextSize((int)(getTextSize()+vscroll*HelperUtils.getDpi(mContext)))) {
+				if ((event.getMetaState() & KeyEvent.META_CTRL_ON) != 0
+					&& setTextSize((int)(getTextSize() + vscroll * HelperUtils.getDpi(mContext)))) {
 					return true;
 				} else {
 					final int delta = (int) (vscroll * rowHeight());

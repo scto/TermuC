@@ -137,6 +137,7 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
      */
     public boolean onUp(MotionEvent e) {
         mTextField.stopAutoScrollCaret();
+        mTextField.mClipboardPanel.invalidateContentRect();
         isCaretTouched = false;
         lastDist = 0;
         fling = 0;
