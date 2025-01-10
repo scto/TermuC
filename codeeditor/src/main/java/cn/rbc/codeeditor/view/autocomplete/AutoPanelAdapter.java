@@ -18,7 +18,7 @@ import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import cn.rbc.codeeditor.R;
+import cn.rbc.termuc.R;
 import cn.rbc.codeeditor.util.Flag;
 import cn.rbc.codeeditor.view.FreeScrollingTextField;
 
