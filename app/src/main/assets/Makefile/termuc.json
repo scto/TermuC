@@ -1,0 +1,1 @@
+{"buildCmd":"make -j8 O=$o","compileCmd":"make -j8 O=$o"}

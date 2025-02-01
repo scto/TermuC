@@ -6,6 +6,10 @@
         <!--item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item-->
+        <item name="android:actionButtonStyle">@style/actionButton</item>
+    </style>
+    <style name="AppThemeDark" parent="@android:style/Theme.Holo">
+        <item name="android:actionButtonStyle">@style/actionButton</item>
     </style>
 
 	<style name="keyBar">
@@ -24,4 +28,7 @@
 		<item name="android:background">?android:attr/selectableItemBackground</item>
 	</style>
 
+    <style name="actionButton" parent="@android:style/Widget.Holo.ActionButton">
+        <item name="android:minWidth">48dp</item>
+    </style>
 </resources>

@@ -18,7 +18,7 @@ implements ListView.OnItemClickListener, FileFilter
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		if (Application.dark_mode)
-			setTheme(android.R.style.Theme_Holo);
+			setTheme(R.style.AppThemeDark);
 		super.onCreate(savedInstanceState);
 		ActionBar ab = getActionBar();
 		ab.setHomeButtonEnabled(true);

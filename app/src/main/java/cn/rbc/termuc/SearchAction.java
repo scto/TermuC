@@ -6,23 +6,25 @@ import android.app.*;
 import android.widget.*;
 import android.text.*;
 import cn.rbc.codeeditor.util.*;
+import android.app.AlertDialog.*;
 
-public class SearchAction implements ActionMode.Callback, TextWatcher, TextView.OnEditorActionListener {
+public class SearchAction implements
+ActionMode.Callback, TextWatcher, TextView.OnEditorActionListener, DialogInterface.OnClickListener {
 	private MainActivity ma;
 	private EditText e;
 	private Document dp;
 	private int idx = 0;
+    private View transV;
 
 	public SearchAction(MainActivity ma) {
 		this.ma = ma;
 	}
 
 	public void onDestroyActionMode(ActionMode p1) {
-		// TODO: Implement this method
+		transV = null;
 	}
 
 	public boolean onPrepareActionMode(ActionMode p1, Menu p2) {
-		// TODO: Implement this method
 		return false;
 	}
 
@@ -46,7 +48,20 @@ public class SearchAction implements ActionMode.Callback, TextWatcher, TextView.
 	}
 
 	public boolean onActionItemClicked(ActionMode p1, MenuItem p2) {
-		search(p2.getItemId());
+        int id = p2.getItemId();
+        if (id!=R.id.menu_replace)
+		    search(p2.getItemId());
+        else {
+            Builder bd = new Builder(ma);
+            bd.setTitle(R.string.replace);
+            View v = View.inflate(ma, R.layout.replace, null);
+            ((TextView)v.findViewById(R.id.replace_find)).setText(e.getText());
+            transV = v;
+            bd.setView(v);
+            bd.setPositiveButton(android.R.string.ok, this);
+            bd.setNegativeButton(android.R.string.cancel, null);
+            bd.create().show();
+        }
 		return false;
 	}
 
@@ -99,10 +114,11 @@ public class SearchAction implements ActionMode.Callback, TextWatcher, TextView.
 
 	private int indexDoc(CharSequence cs, int idx) {
 		int len = cs.length();
-		int i, ldp = dp.length()-len;
+        Document doc = dp;
+		int i, ldp = doc.length()-len;
 		D: for (i=idx; i<ldp; i++) {
 			for (int k=0;k<len;k++)
-				if (cs.charAt(k)!=dp.charAt(i+k))
+				if (cs.charAt(k)!=doc.charAt(i+k))
 					continue D;
 			return i;
 		}
@@ -111,12 +127,33 @@ public class SearchAction implements ActionMode.Callback, TextWatcher, TextView.
 
 	private int rindexDoc(CharSequence cs, int idx) {
 		int len = cs.length();
+        Document doc = dp;
 		D: for (int i=idx; i>=0; i--) {
 			for (int k=0;k<len;k++)
-				if (cs.charAt(k)!=dp.charAt(i+k))
+				if (cs.charAt(k)!=doc.charAt(i+k))
 					continue D;
 			return i;
 		}
 		return -1;
 	}
+
+    @Override
+    public void onClick(DialogInterface p1, int p2) {
+        Document doc = dp;
+        CharSequence s = ((EditText)transV.findViewById(R.id.replace_find)).getText();
+        final int slen = s.length();
+        if (slen == 0) return;
+        final char[] replacement = ((EditText)transV.findViewById(R.id.replace_with)).getText().toString().toCharArray();
+        int i = -1;
+        doc.setTyping(false);
+        doc.beginBatchEdit();
+        long t = System.nanoTime();
+        while ((i=TextUtils.indexOf(doc, s, i+1)) != -1) {
+            doc.deleteAt(i, slen, t);
+            doc.insertBefore(replacement, i, t);
+            i += replacement.length - slen;
+        }
+        doc.endBatchEdit();
+        ma.getEditor().mCtrlr.determineSpans();
+    }
 }

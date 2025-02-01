@@ -12,6 +12,8 @@ import android.net.*;
 import android.content.pm.*;
 import cn.rbc.codeeditor.util.*;
 import android.app.AlertDialog.Builder;
+import android.content.res.*;
+import java.nio.channels.*;
 
 public class Utils {
 	public final static File ROOT = Environment.getExternalStorageDirectory();
@@ -194,4 +196,32 @@ public class Utils {
 			}
 		}
 	}
+
+    public static boolean extractTemplate(Context ctx, String type, File des) {
+        if ("Clang".equals(type))
+            return Project.create(des);
+        if (!des.isDirectory())
+            des.mkdir();
+        AssetManager am = ctx.getAssets();
+        try {
+            String[] temps = am.list(type);
+            if (temps == null)
+                return false;
+            for (String s:temps)
+                dumpFile(am.open(new File(type, s).getPath()), new File(des, s));
+            Project.load(new File(des, Project.PROJ), null);
+            return true;
+        } catch(IOException ioe) {
+            ioe.printStackTrace();
+            return false;
+        }
+    }
+
+    public static void dumpFile(InputStream is, File f) throws IOException {
+        FileChannel os = new FileOutputStream(f).getChannel();
+        ReadableByteChannel rbc = Channels.newChannel(is);
+        os.transferFrom(rbc, 0, is.available());
+        os.close();
+        is.close();
+    }
 }

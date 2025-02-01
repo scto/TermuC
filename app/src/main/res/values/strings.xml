@@ -75,6 +75,11 @@
 	<string name="request_failed">Request permissions failed</string>
 	<string name="parse_failed">Configuration parse failed!</string>
 	<string name="select_font">Select font file</string>
+    <string name="template">Template</string>
+    <string name="with_clangd">With .clangd</string>
+    <string name="with_format">With .clang-format</string>
+    <string name="empty_name">Empty name!</string>
+    <string name="replace">Replace</string>
 	<string-array name="runs">
 		<item>@string/run</item>
 		<item>@string/debug</item>
@@ -133,4 +138,10 @@
 		<item>4</item>
 		<item>8</item>
 	</string-array>
+    <string-array name="templates">
+        <item>Clang</item>
+        <item>Clang++</item>
+        <item>Makefile</item>
+        <item>CMake</item>
+    </string-array>
 </resources>

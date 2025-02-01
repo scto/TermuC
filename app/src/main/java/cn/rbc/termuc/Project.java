@@ -19,7 +19,7 @@ public class Project
 	private static void setDefault() {
 		buildCmd = "clang $d/$f -o $o/$e -lm -Wall";
 		compileCmd = "clang -c $d/$f -o $o/$e.o -lm -Wall";
-		runCmd = "$e";
+		runCmd = "$x/$e";
 		outputDir = "build";
 	}
 

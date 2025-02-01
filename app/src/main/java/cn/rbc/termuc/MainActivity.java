@@ -22,6 +22,7 @@ import android.graphics.*;
 import android.database.*;
 import static android.Manifest.permission.*;
 import cn.rbc.codeeditor.lang.*;
+import java.nio.channels.*;
 
 public class MainActivity extends Activity implements
 ActionBar.OnNavigationListener, OnGlobalLayoutListener,
@@ -35,7 +36,7 @@ Runnable {
 	private FileAdapter adp;
 	private EditFragment lastFrag = null;
 	private boolean byhand = true, keyboardShown = false, transZ;
-    private View keys, showlist;
+    private View keys, showlist, transV;
     private File pwd, prj;
     private TextView pwdpth, msgEmpty, transTxV;
     private LinearLayout subc;
@@ -87,7 +88,7 @@ Runnable {
 		SharedPreferences pref = getPreferences(MODE_PRIVATE);
 		envInit(pref);
 		if (Application.dark_mode)
-			setTheme(android.R.style.Theme_Holo);
+			setTheme(R.style.AppThemeDark);
         Configuration conf = getResources().getConfiguration();
         if (conf.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             getWindow().getDecorView().setSystemUiVisibility(
@@ -259,7 +260,7 @@ Runnable {
 				String pth;
 				File f = lastFrag==null?null:lastFrag.getFile();
 				if (Project.rootPath == null) {
-					sb = new StringBuilder("exec=$TMPDIR/m;");
+					sb = new StringBuilder("x=$TMPDIR/m;");
 					sb.append(lastFrag.getC());
 					sb.append(" \"");
 					sb.append(Utils.escape(f.getAbsolutePath()));
@@ -267,17 +268,17 @@ Runnable {
 					sb.append(Application.cflags);
 					if (id != 0 && Application.cflags.indexOf("-g") == -1)
 						sb.append(" -g");
-					sb.append(" -o $exec && ");
+					sb.append(" -o $x && ");
 					pth = pwd.getAbsolutePath();
 				} else {
 					sb = Project.buildEnvironment(f);
-					sb.append("exec=$TMPDIR/termuc;mkdir $exec 2>/dev/null;find $o -maxdepth 1 -type f \\( -iname '*.so' -o ! -name '*.*' \\) -exec cp {} $exec \\;;exec=($exec/");
+					sb.append("x=$TMPDIR/termuc;mkdir $x 2>/dev/null;find $o -maxdepth 1 -type f \\( -iname '*.so' -o ! -name '*.*' \\) -exec cp {} $x \\;;x=(");
 					sb.append(Project.runCmd);
-					sb.append(") && chmod +x $exec && ");
+					sb.append(") && chmod +x $x && ");
 					pth = Project.rootPath;
 				}
 				if (id == R.id.run)
-					sb.append("${exec[@]} && echo -n \"\nPress any key to exit...\" && read");
+					sb.append("${x[@]} && echo -n \"\nPress any key to exit...\" && read");
 				else {
 					sb.append("gdb -q ");
 					String fn = f.getName();
@@ -332,22 +333,24 @@ Runnable {
 			transZ = false;
 		} else {
 			bd.setTitle(R.string.new_);
-			EditText ed = new EditText(this);
-			bd.setView(ed);
-			transTxV = ed;
-			ed.setLayoutParams(
+            if (id == R.id.newfile) {
+			    EditText ed = new EditText(this);
+			    bd.setView(ed);
+			    transTxV = ed;
+			    ed.setLayoutParams(
 				new ViewGroup.LayoutParams(
 					ViewGroup.LayoutParams.FILL_PARENT,
 					ViewGroup.LayoutParams.FILL_PARENT
 				));
-			if (id == R.id.newfile) {
 				ed.setId(R.id.newfile);
 				ed.setHint(R.string.hint_filename);
 				bd.setPositiveButton(R.string.file, onc);
 				bd.setNeutralButton(R.string.folder, onc);
 			} else {
-				ed.setId(R.id.newprj);
-				ed.setHint(R.string.prj_name);
+                View v = View.inflate(this, R.layout.new_project, null);
+                bd.setView(v);
+                transV = v;
+                transTxV = v.findViewById(R.id.newprj);
 				bd.setPositiveButton(android.R.string.ok, onc);
 			}
 		}
@@ -613,6 +616,7 @@ Runnable {
 					Project.load(c, opens);
 					appMenu.findItem(R.id.prj).setEnabled(true);
 					openProjFiles(opens);
+                    setFileRunnable(true);
 					return;
 				} catch (IOException e) {
                     e.printStackTrace();
@@ -697,8 +701,13 @@ Runnable {
 	private final DialogInterface.OnClickListener onc = new DialogInterface.OnClickListener(){
 		public void onClick(DialogInterface p1, int p2) {
 			TextView tv = transTxV;
-			File f = new File(pwd, tv.getText().toString());
-			if (tv.getId() == R.id.newfile)
+            String name = tv.getText().toString();
+            if (name.isEmpty()) {
+                toast(getText(R.string.empty_name));
+                return;
+            }
+			File f = new File(pwd, name);
+			if (tv.getId() == R.id.newfile) {
 				try {
 					if (p2 == DialogInterface.BUTTON_POSITIVE)
 						f.createNewFile();
@@ -709,12 +718,29 @@ Runnable {
 					e.printStackTrace();
 					toast(e.getMessage());
 				}
-			else if (Project.create(f)) {
+                return;
+			}
+            View v = transV;
+            String s = ((Spinner)v.findViewById(R.id.prj_temp)).getSelectedItem().toString();
+            if (Utils.extractTemplate(MainActivity.this, s, f)) {
+                AssetManager am = getAssets();
+                try {
+                    if (((CompoundButton)v.findViewById(R.id.prj_cld)).isChecked()) {
+                        Utils.dumpFile(am.open("cld"), new File(f, ".clangd"));
+                    }
+                    if (((CompoundButton)v.findViewById(R.id.prj_fmt)).isChecked()) {
+                        Utils.dumpFile(am.open("fmt"), new File(f, ".clang-format"));
+                    }
+                } catch (IOException ioe) {
+                   ioe.printStackTrace();
+                }
 				appMenu.findItem(R.id.prj).setEnabled(true);
+                setFileRunnable(true);
 				pwd = f;
 				prj = f;
 				refresh();
 			}
+            transV = null;
 		}
 	};
 

@@ -1,0 +1,1 @@
+{"buildCmd":"c++ $d/$f -o $o/$e -lm -Wall","compileCmd":"c++ -c $d/$f -o $o/$e.o -lm -Wall"}

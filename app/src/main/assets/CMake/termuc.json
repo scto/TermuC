@@ -1,0 +1,1 @@
+{"buildCmd":"make -j8","compileCmd":"cmake . -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=$o"}

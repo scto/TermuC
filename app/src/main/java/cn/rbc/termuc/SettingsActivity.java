@@ -24,7 +24,7 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		if (Application.dark_mode)
-			setTheme(android.R.style.Theme_Holo);
+			setTheme(R.style.AppThemeDark);
 		super.onCreate(savedInstanceState);
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		addPreferencesFromResource(R.xml.settings);
