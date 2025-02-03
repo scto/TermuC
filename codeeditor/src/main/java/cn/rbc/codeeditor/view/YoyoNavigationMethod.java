@@ -153,7 +153,7 @@ public class YoyoNavigationMethod extends TouchNavigationMethod implements OnCar
 
                 yoyo.attachYoyo(newX, newY);
             }
-        } 
+        }
 	}
     
     // 拖yoyo滴球滚动时，保证水滴球的坐标与光标一致

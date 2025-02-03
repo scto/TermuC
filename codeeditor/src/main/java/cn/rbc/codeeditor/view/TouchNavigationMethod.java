@@ -103,22 +103,19 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 			tf.invalidate();
 			return true;
 		}
-        if (tf.isSelectText()) {
+        boolean b = tf.isSelectText();
+        if (b) {
             int strictCharOffset = tf.coordToCharIndexStrict(x, y);
             if (tf.inSelectionRange(strictCharOffset) ||
 				isNearChar(x, y, tf.getSelectionStart()) ||
 				isNearChar(x, y, tf.getSelectionEnd())) {
-                // do nothing
             } else {
-                tf.selectText(false);
-                if (charOffset >= 0) {
-                    tf.moveCaret(charOffset);
-                }
+                tf.selectText(b = false);
             }
-        } else {
-            if (charOffset >= 0) {
-                tf.moveCaret(charOffset);
-            }
+        }
+        if ((!b) && charOffset >= 0 && charOffset != tf.mCaretPosition) {
+            tf.moveCaret(charOffset);
+            tf.mSigHelpPanel.hide();
         }
         tf.showIME(true);
         return true;

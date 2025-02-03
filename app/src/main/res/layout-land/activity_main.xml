@@ -8,11 +8,10 @@
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		android:layout_toRightOf="@id/subcontainer"/>
-	
 
 	<ImageButton
 		android:src="@android:drawable/ic_menu_more"
-		android:tooltipText="浏览文件"
+		android:tooltipText="@string/browse_files"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_alignParentRight="true"
@@ -43,7 +42,10 @@
 			android:layout_height="match_parent"/>
 	</LinearLayout>
 
-	<include layout="@layout/key_panel"/>
+	<include layout="@layout/key_panel"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_alignParentBottom="true"/>
 
 </RelativeLayout>
 

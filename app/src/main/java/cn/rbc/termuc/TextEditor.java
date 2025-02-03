@@ -156,6 +156,10 @@ public class TextEditor extends FreeScrollingTextField {
         return mAutoCompletePanel;
     }
 
+    public SignatureHelpPanel getSigHelpPanel() {
+        return mSigHelpPanel;
+    }
+
     public File getOpenedFile() {
         if (_lastSelectFile != null)
             return new File(_lastSelectFile);

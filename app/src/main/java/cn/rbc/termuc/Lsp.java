@@ -16,14 +16,14 @@ import java.util.concurrent.locks.*;
 public class Lsp implements Runnable {
 	final static int INITIALIZE = 0, INITIALIZED = 1,
 	OPEN = 2, CLOSE = 3,
-	COMPLETION = 4, FIX = 5, CHANGE = 6, SAVE = 7, NOTI = 8,
+	COMPLETION = 4, FIX = 5, CHANGE = 6, SAVE = 7, NOTI = 8, SIGN_HELP = 9,
 	ERROR = -1, UNLOCK = -2;
 	private final static String TAG = "LSP";
 	private final static byte[] CONTENTLEN = "Content-Length: ".getBytes(StandardCharsets.UTF_8);
 	private int tp;
 	private Socket sk = new Socket();
 	private ExecutorService mExecutor = Executors.newSingleThreadExecutor();
-	private char[] compTrigs = {};
+	private char[] compTrigs = {}, sigTrigs = {};
 	private long mLastReceivedTime;
 	private Handler mRead;
 	Lock lock = new ReentrantLock();
@@ -143,6 +143,18 @@ public class Lsp implements Runnable {
 		return 0;
 	}
 
+    public void setSigTrigs(char[] c) {
+        sigTrigs = c;
+    }
+
+    public boolean isSigTrig(char c) {
+        char[] sigs = sigTrigs;
+        for (int i=0,l=sigs.length; i<l; i++)
+            if (sigs[i] == c)
+                return true;
+        return false;
+    }
+
 	public void initialized() {
 		tp = INITIALIZED;
 		mExecutor.execute(new Send("initialized", new HashMap<>(), false));
@@ -237,6 +249,24 @@ public class Lsp implements Runnable {
 		mExecutor.execute(new Send("textDocument/completion", sb.toString(), true));
 		return true;
 	}
+
+    public boolean signatureHelpTry(File f, int l, int c, char tgc, boolean retrig) {
+        if (!isSigTrig(tgc)) return false;
+        StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":");
+        sb.append(JSONObject.quote(Uri.fromFile(f).toString()));
+        sb.append("},\"position\":{\"line\":");
+        sb.append(l);
+        sb.append(",\"character\":");
+        sb.append(c);
+        sb.append("},\"context\":{\"triggerKind\":2,\"triggerCharacter\":\"");
+        sb.append(tgc);
+        sb.append("\",\"isRetrigger\":");
+        sb.append(retrig);
+        sb.append("}}");
+        tp = SIGN_HELP;
+        mExecutor.execute(new Send("textDocument/signatureHelp", sb.toString(), true));
+        return true;
+    }
 
 	public void formatting(File fl, int tabSize, boolean useSpace) {
 		StringBuilder sb = new StringBuilder("{\"textDocument\":{\"uri\":");

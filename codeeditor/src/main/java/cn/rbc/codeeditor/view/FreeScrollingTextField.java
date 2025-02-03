@@ -227,6 +227,7 @@ DialogInterface.OnDismissListener, Runnable {
     protected int mAutoIndentWidth = 4;
     protected boolean isLongPressCaps = false;
     protected AutoCompletePanel mAutoCompletePanel;
+    protected SignatureHelpPanel mSigHelpPanel;
     private OverScroller mScroller;
     private Paint mTextPaint, mLineBrush;
     /**
@@ -378,11 +379,25 @@ DialogInterface.OnDismissListener, Runnable {
 		return setTextSize(pix, 0.f, 0.f);
 	}
 
+    //private boolean showed = false;
+
 	@Override
 	public void scrollTo(int x, int y) {
 		x = Math.max(Math.min(x, getMaxScrollX()), 0);
 		y = Math.max(Math.min(y, getMaxScrollY()), 0);
 		super.scrollTo(x, y);
+        /*if (mSigHelpPanel != null && mSigHelpPanel.isShowing()) {
+            int cy = getCaretY();
+            if (y <= cy && cy <= y + getHeight()) {
+               //  if (showed) mSigHelpPanel.show();
+               int[] pos = SignatureHelpPanel.updatePosition(this);
+               mSigHelpPanel.update(pos[0], pos[1]);
+             /*  showed = false;
+            } else {
+               mSigHelpPanel.hide();
+               showed = true;*
+            }
+        }*/
 	}
 
     public boolean setTextSize(int pix, float cx, float cy) {
@@ -406,6 +421,11 @@ DialogInterface.OnDismissListener, Runnable {
         scrollTo((int)x, (int)y);
 		xExtent = 0;
 		invalidate();
+        /*if (mSigHelpPanel.isShowing()) {
+            int[] pos = SignatureHelpPanel.updatePosition(this);
+            mSigHelpPanel.update(pos[0], pos[1]);
+        }*/
+        mSigHelpPanel.setTextSize(pix);
 		return true;
     }
 
@@ -460,6 +480,8 @@ DialogInterface.OnDismissListener, Runnable {
         resetView();
         mClipboardPanel = new ClipboardPanel(this);
         mAutoCompletePanel = new AutoCompletePanel(this);
+        mSigHelpPanel = new SignatureHelpPanel(this);
+        mSigHelpPanel.setTextSize(BASE_TEXT_SIZE_PIXELS);
         //TODO find out if this function works
         setScrollContainer(true);
         invalidate();
@@ -487,12 +509,14 @@ DialogInterface.OnDismissListener, Runnable {
 		if (delCount <= mCaretSpan.first)
 			mCaretSpan.first--;
 		mAutoCompletePanel.dismiss();
+        mSigHelpPanel.hide();
 	}
 
 	public void onNewLine(CharSequence adds) {
 		isTextChanged = true;
 		mCaretSpan.first++;
 		mAutoCompletePanel.dismiss();
+        mSigHelpPanel.hide();
 	}
 
 	public void onAdd(CharSequence text, int cursorPosition, int addCount) {
@@ -809,8 +833,8 @@ DialogInterface.OnDismissListener, Runnable {
                         canvas.drawRect(0, rowheight * currRowNum, mLeftOffset - (mSpaceWidth >> 1), rowheight * (currRowNum + 1), mLineBrush);
                         ca = ColorScheme.Colorable.SELECTION_FOREGROUND;
                         mI++;
-                    } else if (hDoc.isInMarkGap(currLineNum))
-                        ca = ColorScheme.Colorable.STRING;
+                    } /*else if (hDoc.isInMarkGap(currLineNum))
+                        ca = ColorScheme.Colorable.STRING;*/
                     else
                         ca = ColorScheme.Colorable.NON_PRINTING_GLYPH;
                     mLineBrush.setColor(mColorScheme.getColor(ca));
@@ -2298,6 +2322,20 @@ DialogInterface.OnDismissListener, Runnable {
 	public PointerIcon onResolvePointerIcon(MotionEvent event, int pointerIndex) {
 		return PointerIcon.getSystemIcon(mContext, PointerIcon.TYPE_TEXT);
 	}
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mSigHelpPanel.hide();
+    }
+
+    @Override
+    protected void onVisibilityChanged(View changedView, int visibility) {
+        // TODO: Implement this method
+        super.onVisibilityChanged(changedView, visibility);
+        if (visibility != VISIBLE)
+            mSigHelpPanel.hide();
+    }
 
     /**
      * Not public to allow access by {@link TouchNavigationMethod}

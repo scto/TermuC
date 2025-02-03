@@ -4,9 +4,9 @@
 	android:layout_alignParentTop="true"
 	android:layout_alignParentRight="true"
 	android:id="@id/editFrag"
-	android:layout_above="@id/keys"
 	android:layout_height="match_parent"
-	android:layout_width="match_parent">
+	android:layout_width="match_parent"
+    android:layout_above="@id/keys">
 
 	<TextView
 		android:id="@id/msg_empty"

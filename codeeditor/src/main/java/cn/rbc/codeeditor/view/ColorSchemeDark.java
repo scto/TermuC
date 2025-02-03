@@ -1,26 +1,27 @@
 package cn.rbc.codeeditor.view;
 import android.graphics.*;
+import static cn.rbc.codeeditor.view.ColorScheme.Colorable.*;
 
 public class ColorSchemeDark extends ColorScheme
 {
 	private static ColorScheme mColorScheme;
 
 	private ColorSchemeDark() {
-		setColor(Colorable.FOREGROUND, 0xFFF0F0F0);
-		setColor(Colorable.BACKGROUND, 0xFF2B2B2B);
-		setColor(Colorable.TYPE, 0xFF99CCEE);
-		setColor(Colorable.KEYWORD, 0xFF6AB0E2);
-		setColor(Colorable.NOTE, 0xFF8AB0E2);
-		setColor(Colorable.OPERATOR, 0xFF8AB0E2);
-		setColor(Colorable.SECONDARY, 0xFFAAAAAA);
-		setColor(Colorable.COMMENT, 0xFF50BB50);
-		setColor(Colorable.STRING, 0xFFFF8E8E);
-		setColor(Colorable.NUMBER, 0xFFFF8E8E);
-		setColor(Colorable.CARET_DISABLED, 0xFFF0F0F0);
-		setColor(Colorable.CARET_BACKGROUND, 0xFF42A5F5);
-		setColor(Colorable.NON_PRINTING_GLYPH, 0xFF686868);
-		setColor(Colorable.LINE_HIGHLIGHT, 0x1E888888);
-		setColor(Colorable.SELECTION_BACKGROUND, 0xFF505050);
+		setColor(FOREGROUND, 0xFFF0F0F0);
+		setColor(BACKGROUND, 0xFF202020);
+		setColor(TYPE, 0xFF99CCEE);
+		setColor(KEYWORD, 0xFF6AB0E2);
+		setColor(NOTE, 0xFF8AB0E2);
+		setColor(OPERATOR, 0xFF8AB0E2);
+		setColor(SECONDARY, 0xFFAAAAAA);
+		setColor(COMMENT, 0xFF50BB50);
+		setColor(STRING, 0xFFFF8E8E);
+		setColor(NUMBER, 0xFFFF8E8E);
+		setColor(CARET_DISABLED, 0xFFF0F0F0);
+		setColor(CARET_BACKGROUND, 0xFF42A5F5);
+		setColor(NON_PRINTING_GLYPH, 0xFF686868);
+		setColor(LINE_HIGHLIGHT, 0x1E888888);
+		setColor(SELECTION_BACKGROUND, 0xFF505050);
 	}
 
 	public static ColorScheme getInstance() {

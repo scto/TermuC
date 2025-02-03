@@ -8,10 +8,12 @@ import java.io.*;
 import cn.rbc.codeeditor.view.autocomplete.*;
 import static android.util.JsonToken.*;
 import android.net.*;
+import cn.rbc.codeeditor.view.*;
 
 public class MainHandler extends Handler implements Comparator<ErrSpan> {
 	private MainActivity ma;
 	private static final String
+    ACTSIG = "activeSignature",
 	ADDEDIT = "additionalTextEdits",
 	CAPA = "capabilities",
 	COMPLE = "completionProvider",
@@ -27,6 +29,8 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 	RNG = "range",
 	RESU = "result",
 	SEVE = "severity",
+    SGNHELP = "signatureHelpProvider",
+    SIGS = "signatures",
 	TEDIT = "textEdit",
 	TG = "triggerCharacters",
 	URI = "uri";
@@ -81,8 +85,11 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								//else tmp3 = n;
 								break;
 							case LABEL:
+                                n = jr.nextString();
 								if (tmp2 instanceof ListItem)
-									((ListItem)tmp2).label = jr.nextString();
+									((ListItem)tmp2).label = n;
+                                else if (SIGS.equals(stack.peek()))
+                                    ((List)tmp1).add(n);
 								break;
 							case KIND:
 								if (tmp2 instanceof ListItem)
@@ -98,6 +105,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								break;
 							case IT:
 							case DG:
+                            case SIGS:
 								tmp1 = new ArrayList();
 							case ADDEDIT:
 								jr.beginArray();
@@ -108,17 +116,24 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								StringBuilder sb = new StringBuilder();
 								while (jr.hasNext())
 									sb.append(jr.nextString());
-								jr.close();
-								MainActivity.lsp.setCompTrigs(sb.toString().toCharArray());
-								// what == Lsp.INITIALIZE
-								FragmentManager fm = ma.getFragmentManager();
-								for (int i=ma.getActionBar().getNavigationItemCount()-1;i>=0;i--) {
-									EditFragment ef = (EditFragment)fm.findFragmentByTag(ma.getTag(i));
-									int tp = ef.type&EditFragment.TYPE_MASK;
-									if (tp != EditFragment.TYPE_TXT)
-										MainActivity.lsp.didOpen(ef.getFile(), tp==EditFragment.TYPE_CPP?"cpp":"c", ((TextEditor)ef.getView()).getText().toString());
-								}
-								return;
+                                jr.endArray();
+                                char[] trigs = sb.toString().toCharArray();
+                                if (COMPLE.equals(stack.peek())) {
+								    MainActivity.lsp.setCompTrigs(trigs);
+                                    break;
+                                } else {
+                                    jr.close();
+                                    MainActivity.lsp.setSigTrigs(trigs);
+                                    // what == Lsp.INITIALIZE
+                                    FragmentManager fm = ma.getFragmentManager();
+                                    for (int i=ma.getActionBar().getNavigationItemCount()-1;i>=0;i--) {
+                                        EditFragment ef = (EditFragment)fm.findFragmentByTag(ma.getTag(i));
+                                        int tp = ef.type&EditFragment.TYPE_MASK;
+                                        if (tp != EditFragment.TYPE_TXT)
+                                            MainActivity.lsp.didOpen(ef.getFile(), tp==EditFragment.TYPE_CPP?"cpp":"c", ((TextEditor)ef.getView()).getText().toString());
+								    }
+                                    return;
+                                }
 							case RNG:
 								jr.beginObject();
 								while (jr.hasNext()) {
@@ -168,11 +183,15 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 							case TEDIT:
 								tmp3 = new Edit();
 							case COMPLE:
+                            case SGNHELP:
 							case CAPA:
 							case PARA:
 								jr.beginObject();
 								stack.push(n);
 								break;
+                            case ACTSIG:
+                                sl = jr.nextInt();
+                                break;
 							default:
 								jr.skipValue();
 								break;
@@ -199,8 +218,16 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 						jr.endObject();
 						if (!stack.isEmpty())
 						switch (stack.peek()) {
-							case ADDEDIT:
 							case RESU:
+                                if (sc == -1) { // signature flag
+                                    List<String> ls = (List<String>)tmp1;
+                                    SignatureHelpPanel sp = ma.getEditor().getSigHelpPanel();
+                                    if (ls.size() > sl)
+                                        sp.show(ls, sl);
+                                    else sp.hide();
+                                    return;
+                                }
+                            case ADDEDIT:
 								if (!(tmp3 instanceof Edit))
 									break;
 								Edit _p = (Edit)tmp3;
@@ -221,7 +248,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 								stack.pop();
 								break;
 							case IT:
-								((ArrayList)tmp1).add(tmp2);
+								((List)tmp1).add(tmp2);
 								break;
 							case DG:
 								if (sc != ec || sl != el) {
@@ -233,6 +260,8 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 									((ArrayList<ErrSpan>)tmp1).add(e);
 								}
 								break;
+                            case SIGS:
+                                break;
 							default:
 								stack.pop();
 						}
@@ -241,6 +270,8 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 						jr.endArray();
 						if (!stack.isEmpty())
 						switch (stack.peek()) {
+                            case SIGS:
+                                sc = -1; // signature flag
 							case ADDEDIT:
 								stack.pop();
 								break;

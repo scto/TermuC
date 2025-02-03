@@ -305,6 +305,7 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
 
         fld.mCaretPosition = i;
         updateAfterCaretJump();
+        
     }
 
     private void updateAfterCaretJump() {
