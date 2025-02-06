@@ -1,0 +1,3 @@
+• Implement textDocument/signatureHelp of LSP
+• Introduce some project templates
+• Add 'replace' function

@@ -15,6 +15,7 @@ To support the full functions as an IDE, please follow the setup instruction.
 
 ✅ Highlighting
 ✅ Autocompletion
+✅ Signature help
 ✅ Formatting
 ✅ Diagnose
 ✅ Compile flags
