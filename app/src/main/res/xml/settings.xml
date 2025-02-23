@@ -3,9 +3,16 @@
     android:title="@string/settings">
 	<PreferenceCategory
 		android:title="@string/global">
+        <ListPreference
+            android:key="theme"
+            android:title="@string/theme"
+            android:entries="@array/themes"
+            android:entryValues="@array/v_themes"
+            android:defaultValue="@string/def_thm"
+            />
 		<CheckBoxPreference
-			android:key="darkmode"
-			android:title="@string/dark_mode"
+			android:key="puremode"
+			android:title="@string/pure_mode"
 			android:defaultValue="false"
 			/>
 	</PreferenceCategory>

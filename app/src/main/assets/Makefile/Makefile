@@ -1,9 +1,12 @@
-O := build
-CFLAGS := -g -Wall -lm
+CFLAGS := -g -Wall
+LFLAGS := -lm
 
 all: main
-main: main.cpp
-	$(CXX) $^ -o $(O)/$@ $(CFLAGS)
+$(O)/%: $(O)/%.o
+	$(CXX) $^ -o $@ $(LFLAGS)
+
+$(O)/%.o: %.cpp
+	$(CXX) -c $^ -o $@ $(CFLAGS)
 
 .PHONY: clean
 clean:

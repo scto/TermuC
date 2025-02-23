@@ -2,7 +2,11 @@
 <resources>
     <string name="settings">设置</string>
     <string name="global">通用</string>
-    <string name="dark_mode">暗主题</string>
+    <string name="theme">主题</string>
+    <string name="light">亮主题</string>
+    <string name="dark">暗主题</string>
+    <string name="sys">跟随系统</string>
+    <string name="pure_mode">纯色模式</string>
     <string name="editor">编辑器</string>
 	<string name="font">字体</string>
 	<string name="sans">无衬线</string>

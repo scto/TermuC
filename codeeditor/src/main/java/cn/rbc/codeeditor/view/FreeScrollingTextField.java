@@ -226,6 +226,7 @@ DialogInterface.OnDismissListener, Runnable {
     protected boolean isAutoIndent = true;
     protected int mAutoIndentWidth = 4;
     protected boolean isLongPressCaps = false;
+    protected boolean isPureMode = false;
     protected AutoCompletePanel mAutoCompletePanel;
     protected SignatureHelpPanel mSigHelpPanel;
     private OverScroller mScroller;
@@ -466,7 +467,7 @@ DialogInterface.OnDismissListener, Runnable {
         setLongClickable(true);
         setFocusableInTouchMode(true);
         setHapticFeedbackEnabled(true);
-        mColorScheme = new ColorSchemeLight();
+        setColorScheme(ColorSchemeLight.getInstance());
 		mSpaceWidth = (int)mTextPaint.measureText(" ");
 		mCursorWidth = (int)(HelperUtils.getDpi(mContext) * 1.5f);
 		android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
@@ -1420,9 +1421,17 @@ DialogInterface.OnDismissListener, Runnable {
     public void setColorScheme(ColorScheme colorScheme) {
         mColorScheme = colorScheme;
         mNavMethod.onColorSchemeChanged(colorScheme);
-        setBackgroundColor(colorScheme.getColor(Colorable.BACKGROUND));
+        setBackgroundColor(colorScheme.getColor(isPureMode?Colorable.BACKGROUND_PURE:Colorable.BACKGROUND));
     }
 
+    public boolean isPureMode() {
+        return isPureMode;
+    }
+
+    public void setPureMode(boolean pureMode) {
+        isPureMode = pureMode;
+        setBackgroundColor(mColorScheme.getColor(pureMode?Colorable.BACKGROUND_PURE:Colorable.BACKGROUND));
+    }
     /**
      * Maps a coordinate to the character that it is on. If the coordinate is
      * on empty space, the nearest character on the corresponding row is returned.

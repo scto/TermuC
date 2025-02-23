@@ -5,7 +5,8 @@ import android.graphics.*;
 
 public class Application extends android.app.Application {
 	final static String
-	KEY_DARKMODE = "darkmode",
+    KEY_THEME = "theme",
+	KEY_PUREMODE = "puremode",
 	KEY_FONT = "font",
 	KEY_MYFONT = "myfont",
 	KEY_WORDWRAP = "wordwrap",
@@ -22,8 +23,8 @@ public class Application extends android.app.Application {
 	KEY_LSP_HOST = "lsphost",
 	KEY_LSP_PORT = "lspport";
 
-	public static boolean dark_mode, wordwrap, whitespace, show_hidden, usespace, suggestion;
-	public static String font, cflags, completion, lsp_host;
+	public static boolean pure_mode, wordwrap, whitespace, show_hidden, usespace, suggestion;
+	public static String theme, font, cflags, completion, lsp_host;
 	public static int lsp_port, textsize, tabsize;
 
 	@Override
@@ -35,7 +36,8 @@ public class Application extends android.app.Application {
 
     private void initConfs() {
 		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        dark_mode = sp.getBoolean(KEY_DARKMODE, false);
+        theme = sp.getString(KEY_THEME, getResources().getString(R.string.def_thm));
+        pure_mode = sp.getBoolean(KEY_PUREMODE, false);
 		String f = sp.getString(KEY_FONT, "m");
 		if ("c".equals(f))
 			f = sp.getString(KEY_MYFONT, "");

@@ -224,4 +224,10 @@ public class Utils {
         os.close();
         is.close();
     }
+
+    public static void setNightMode(Context ctx, String thm) {
+        ctx.setTheme("s".equals(thm)?R.style.AppThemeDayNight:
+            "l".equals(thm)?R.style.AppTheme:
+            R.style.AppThemeDark);
+    }
 }

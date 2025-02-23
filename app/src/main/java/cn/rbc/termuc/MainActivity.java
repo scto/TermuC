@@ -87,8 +87,7 @@ Runnable {
     protected void onCreate(Bundle savedInstanceState) {
 		SharedPreferences pref = getPreferences(MODE_PRIVATE);
 		envInit(pref);
-		if (Application.dark_mode)
-			setTheme(R.style.AppThemeDark);
+		Utils.setNightMode(this, Application.theme);
         Configuration conf = getResources().getConfiguration();
         if (conf.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             getWindow().getDecorView().setSystemUiVisibility(
@@ -286,7 +285,7 @@ Runnable {
 					id = dc.getMarksCount();
 					for (int i=0;i < id;i++)
 						sb.append(String.format("-ex 'b %s:%d' ", fn, dc.getMark(i)));
-					sb.append("-ex r --args ${exec[@]}");
+					sb.append("-ex r --args ${x[@]}");
 				}
 				Utils.run(this, Utils.PREF.concat("/usr/bin/bash"), new String[]{"-c",
 							  sb.toString()},
@@ -674,6 +673,7 @@ Runnable {
 					for (int i=hda.getCount() - 1;i >= 0;i--) {
 						EditFragment f = (EditFragment)fm.findFragmentByTag(hda.getItem(i));
 						TextEditor ed = (TextEditor)f.getView();
+                        ed.setPureMode(Application.pure_mode);
 						ed.setFormatter(s ? f : null);
 						ed.setAutoComplete("l".equals(Application.completion));
 						ed.setTypeface(tf);

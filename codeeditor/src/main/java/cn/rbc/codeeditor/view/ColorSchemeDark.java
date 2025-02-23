@@ -9,6 +9,7 @@ public class ColorSchemeDark extends ColorScheme
 	private ColorSchemeDark() {
 		setColor(FOREGROUND, 0xFFF0F0F0);
 		setColor(BACKGROUND, 0xFF202020);
+        setColor(BACKGROUND_PURE, 0xFF000000);
 		setColor(TYPE, 0xFF99CCEE);
 		setColor(KEYWORD, 0xFF6AB0E2);
 		setColor(NOTE, 0xFF8AB0E2);

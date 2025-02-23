@@ -12,24 +12,26 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 {
 	private final static String TAG = "SettingsActivity", FT = "f";
 
-    private CheckBoxPreference mDarkModePref, mWordWrapPref, mWhitespacePref, mUseSpacePref,
+    private CheckBoxPreference mPureModePref, mWordWrapPref, mWhitespacePref, mUseSpacePref,
             mShowHidden, mSuggestionPref;
 	private EditTextPreference mCFlagsPref, mHost, mPort;
-	private ListPreference mFontPref, mSizePref, mTabSizePref, mEngine;
+	private ListPreference mThemePref, mFontPref, mSizePref, mTabSizePref, mEngine;
 
-	private boolean mDark, mWrap, mSpace, mUseSpace, mSuggestion;
-	private String mComp, mFont, tpFont;
+	private boolean mPure, mWrap, mSpace, mUseSpace, mSuggestion;
+	private String mTheme, mComp, mFont, tpFont;
 	private int mTabSize;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		if (Application.dark_mode)
-			setTheme(R.style.AppThemeDark);
+		/*if ("d".equals(Application.theme))
+			setTheme(R.style.AppThemeDark);*/
+        Utils.setNightMode(this, Application.theme);
 		super.onCreate(savedInstanceState);
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		addPreferencesFromResource(R.xml.settings);
 
-		mDarkModePref = (CheckBoxPreference)findPreference(Application.KEY_DARKMODE);
+		mThemePref = (ListPreference)findPreference(Application.KEY_THEME);
+        mPureModePref = (CheckBoxPreference)findPreference(Application.KEY_PUREMODE);
 		mFontPref = (ListPreference)findPreference(Application.KEY_FONT);
 		mFontPref.setOnPreferenceChangeListener(this);
 		mSizePref = (ListPreference)findPreference(Application.KEY_TEXTSIZE);
@@ -48,7 +50,9 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 		findPreference(Application.KEY_INITAPP).setOnPreferenceClickListener(this);
 		onPreferenceChange(mEngine, mEngine.getValue());
 
-		mDark = Application.dark_mode;
+		//mDark = Application.dark_mode;
+        mTheme = Application.theme;
+        mPure = Application.pure_mode;
 		mWrap = Application.wordwrap;
 		mSpace = Application.whitespace;
 		mUseSpace = Application.usespace;
@@ -109,9 +113,10 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 
 	@Override
 	public void onBackPressed() {
-		setResult(mDark != mDarkModePref.isChecked()
+		setResult(mTheme != mThemePref.getValue()
 				  ? RESULT_FIRST_USER : 
-				  (mFont == tpFont
+				  (mPure == mPureModePref.isChecked()
+                  && mFont == tpFont
 				  && mWrap == mWordWrapPref.isChecked()
 				  && mSpace == mWhitespacePref.isChecked()
 				  && mUseSpace == mUseSpacePref.isChecked()
@@ -136,7 +141,8 @@ implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickLi
 
 	@Override
 	protected void onPause() {
-		Application.dark_mode = mDarkModePref.isChecked();
+		Application.theme = mThemePref.getValue();
+        Application.pure_mode = mPureModePref.isChecked();
 		Application.wordwrap = mWordWrapPref.isChecked();
 		Application.whitespace = mWhitespacePref.isChecked();
 		Application.usespace = mUseSpacePref.isChecked();

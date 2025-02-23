@@ -15,11 +15,14 @@ package cn.rbc.codeeditor.view;
  */
 public class ColorSchemeLight extends ColorScheme {
 
-	public ColorSchemeLight(){
+    private static ColorScheme mColorScheme;
+
+	private ColorSchemeLight(){
 		//文字
 		setColor(Colorable.FOREGROUND, OFF_BLACK);
 		//背景
 		setColor(Colorable.BACKGROUND, OFF_WHITE);
+        setColor(Colorable.BACKGROUND_PURE, 0xFFFFFFFF);
 		//选取文字
 		setColor(Colorable.SELECTION_FOREGROUND, OFF_WHITE);
 		//选取背景
@@ -65,6 +68,12 @@ public class ColorSchemeLight extends ColorScheme {
 	//private static final int GREEN_DARK = 0xFF3F7F5F;
 	private static final int BLUE_LIGHT = 0xFF0F9CFF;
 	private static final int BLUE_DARK = 0xFF2C82C8;
+
+    public static ColorScheme getInstance() {
+        if (mColorScheme==null)
+            mColorScheme = new ColorSchemeLight();
+        return mColorScheme;
+	}
 
 	@Override
 	public boolean isDark() {

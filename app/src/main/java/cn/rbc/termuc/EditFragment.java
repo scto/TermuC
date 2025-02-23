@@ -50,8 +50,11 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		final MainActivity ma = (MainActivity)getActivity();
 		TextEditor editor = new TextEditor(ma);
 		ed = editor;
-		if (Application.dark_mode)
+		if ("d".equals(Application.theme)
+          ||"s".equals(Application.theme)
+            &&((getResources().getConfiguration().uiMode&Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES))
 			editor.setColorScheme(ColorSchemeDark.getInstance());
+        editor.setPureMode(Application.pure_mode);
 		DisplayMetrics dm = getResources().getDisplayMetrics();
 		editor.setTypeface(Application.typeface());
 		editor.setTextSize((int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, Application.textsize, dm));

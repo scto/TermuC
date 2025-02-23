@@ -12,6 +12,8 @@
         <item name="android:actionButtonStyle">@style/actionButton</item>
     </style>
 
+    <style name="AppThemeDayNight" parent="AppTheme"/>
+
 	<style name="keyBar">
 		<item name="android:textViewStyle">@style/keyText</item>
 	</style>
