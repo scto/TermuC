@@ -78,7 +78,6 @@ public class SignatureHelpPanel implements View.OnClickListener {
         pw.setOutsideTouchable(true);
         tv.setTextColor(textColor);
         g.setStroke(1, textColor);
-        g.setPadding(2,2,2,2);
     }
 
     public void show(List<String> data, int idx) {
