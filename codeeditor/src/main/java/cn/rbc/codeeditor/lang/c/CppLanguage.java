@@ -89,9 +89,13 @@ public class CppLanguage extends Language{
 		return true;
 	}
 
+    private static Lexer lx = null;
 	@Override
 	public Lexer newLexer(CharSeqReader reader) {
-		return new CppLexer(reader);
+        if (lx==null) {
+            lx = new CppLexer(reader);
+        } else lx.yyreset(reader);
+		return lx;
 	}
 }
 

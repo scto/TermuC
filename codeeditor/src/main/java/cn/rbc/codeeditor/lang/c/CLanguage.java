@@ -64,14 +64,14 @@ public class CLanguage extends Language{
 		return true;
 	}
 
-	@Override
-	public Lexer newLexer(CharSeqReader reader) {
-		return new CLexer(reader);
-	}
+    private CLexer lx = null;
 
 	@Override
-	public Formatter getFormatter() {
-		return super.getFormatter();
+	public Lexer newLexer(CharSeqReader reader) {
+        if (lx == null)
+		    lx = new CLexer(reader);
+        else lx.yyreset(reader);
+        return lx;
 	}
 }
 

@@ -1499,7 +1499,7 @@ public class CppLexer implements Lexer {
 						// fall through
 					case 30: break;
 					case 2:
-						{ return WHITE_CHAR;
+						{ return WHITE_SPACE;
 						}
 						// fall through
 					case 31: break;

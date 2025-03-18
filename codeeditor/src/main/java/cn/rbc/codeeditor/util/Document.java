@@ -89,12 +89,12 @@ public class Document extends TextBuffer implements Parcelable {
 	}
 
 	@Override
-	public synchronized void insert(char[] c, int charOffset, long timestamp, boolean undoable) {
-		super.insert(c, charOffset, timestamp, undoable);
+	public synchronized void insert(char[] c, int start, int count, int charOffset, long timestamp, boolean undoable) {
+		super.insert(c, start, count, charOffset, timestamp, undoable);
 
 		int startRow = findRowNumber(charOffset);
-		int analyzeEnd = findNextLineFrom(charOffset + c.length);
-		updateWordWrapAfterEdit(startRow, analyzeEnd, c.length);
+		int analyzeEnd = findNextLineFrom(charOffset + count);
+		updateWordWrapAfterEdit(startRow, analyzeEnd, count);
 	}
 
 	public void insertBefore(char[] cArray, int insertionPoint, long timestamp) {

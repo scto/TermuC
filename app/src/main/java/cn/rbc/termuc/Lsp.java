@@ -13,7 +13,7 @@ import android.util.JsonReader;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 
-public class Lsp implements Runnable {
+public class Lsp extends ReentrantLock implements Runnable {
 	final static int INITIALIZE = 0, INITIALIZED = 1,
 	OPEN = 2, CLOSE = 3,
 	COMPLETION = 4, FIX = 5, CHANGE = 6, SAVE = 7, NOTI = 8, SIGN_HELP = 9,
@@ -26,18 +26,17 @@ public class Lsp implements Runnable {
 	private char[] compTrigs = {}, sigTrigs = {};
 	private long mLastReceivedTime;
 	private Handler mRead;
-	Lock lock = new ReentrantLock();
 
 	// In main thread
 	public void start(Context mC, Handler read) {
 		Utils.run(mC, "/system/bin/nc", new String[]{"-l", "-s", Application.lsp_host, "-p", Integer.toString(Application.lsp_port), "-w", "6", "nice", "-n", "-20", "clangd", "--header-insertion-decorators=0"}, Utils.ROOT.getAbsolutePath(), true);
 		mRead = read;
-		lock.lock();
+		lock();
 		new Thread(this).start();
 		mExecutor.execute(new Runnable(){
 			public void run() {
-				lock.lock();
-				lock.unlock();
+			    lock();
+				unlock();
 			}
 		});
 	}

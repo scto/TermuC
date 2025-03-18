@@ -1,7 +1,8 @@
 package cn.rbc.codeeditor.lang;
+import cn.rbc.codeeditor.util.*;
 
 public interface Formatter
 {
 	//public int createAutoIndent(CharSequence text);
-	public CharSequence format(CharSequence text, int width);
+	public void format(Document text, int width);
 }

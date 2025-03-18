@@ -2,6 +2,10 @@ package cn.rbc.termuc;
 import android.content.*;
 import android.preference.*;
 import android.graphics.*;
+import cn.rbc.codeeditor.util.*;
+import java.util.*;
+import java.util.concurrent.locks.*;
+import android.util.*;
 
 public class Application extends android.app.Application {
 	final static String
@@ -27,12 +31,40 @@ public class Application extends android.app.Application {
 	public static String theme, font, cflags, completion, lsp_host;
 	public static int lsp_port, textsize, tabsize;
 
+    MainHandler hand;
+    Lsp lsp;
+    private Map<String,Document> ls;
+    private static Application app;
+
 	@Override
 	public void onCreate() {
 		super.onCreate();
 		PreferenceManager.setDefaultValues(this, R.xml.settings, false);
 		initConfs();
+        ls = new ArrayMap<>();
+        app = this;
 	}
+
+    @Override
+    public void onTerminate() {
+        lsp.end();
+        ls.clear();
+        super.onTerminate();
+        app = null;
+    }
+
+    void store(String key, Document obj) {
+        obj.setMetrics(null);
+        ls.put(key, obj);
+    }
+
+    Document load(String key) {
+        return ls.remove(key);
+    }
+
+    public static Application getInstance() {
+        return app;
+    }
 
     private void initConfs() {
 		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);

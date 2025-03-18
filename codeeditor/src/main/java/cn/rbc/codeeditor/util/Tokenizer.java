@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.util.*;
+import cn.rbc.codeeditor.view.*;
 
 /**
  * Does lexical analysis of a text for C-like languages.
@@ -74,9 +75,11 @@ public class Tokenizer {
     public final static int SINGLE_SYMBOL_DELIMITED_B = 51;
    // public final static int MAX_KEYWORD_LENGTH = 63;
     private static Language _globalLanguage = LanguageNonProg.getInstance();
+
     LexCallback _callback = null;
     private Document _hDoc;
     private LexThread _workerThread = null;
+
     public Tokenizer(LexCallback callback) {
         _callback = callback;
     }
@@ -100,7 +103,7 @@ public class Tokenizer {
         //tokenize will modify the state of hDoc; make a copy
         setDocument(hDoc);
         if (_workerThread == null) {
-            _workerThread = new LexThread(this);
+            _workerThread = new LexThread();
             _workerThread.start();
         } else
             _workerThread.restart();
@@ -127,13 +130,14 @@ public class Tokenizer {
         _hDoc = hDoc;
     }
 
+    
 
     public interface LexCallback {
         public void lexDone(List<Pair> results);
     }
 
     private class LexThread extends Thread {
-        private final Tokenizer _lexManager;
+        //private final Tokenizer _lexManager;
         /**
          * can be set by another thread to stop the scan immediately
          */
@@ -145,8 +149,8 @@ public class Tokenizer {
          */
         private ArrayList<Pair> _tokens;
 
-        public LexThread(Tokenizer p) {
-            _lexManager = p;
+        public LexThread() {
+           // _lexManager = p;
             _abort = new Flag();
         }
 
@@ -161,7 +165,7 @@ public class Tokenizer {
 
             if (!_abort.isSet())
                 // lex complete
-                _lexManager.tokenizeDone(_tokens);
+                tokenizeDone(_tokens);
         }
 
         public void restart() {
@@ -185,43 +189,43 @@ public class Tokenizer {
 			}
 			ArrayList<Pair> tokens = new ArrayList<>();
 			Lexer lexer=language.newLexer(new CharSeqReader(_hDoc));
-			int type=-1, lastCtype=-1;
+			int type=-1, ltype=-1, ttype=-1, ltp=-1;
 			int idx=0;
 			String identifier=null;//存储标识符
 			language.clearUserWord();
 			while (type!=Lexer.EOF && !_abort.isSet()){
 				try {
 					type=lexer.yylex();
-					if (type!=lastCtype)
+					if (type!=ltp) {
 						switch (type)
 						{
 							case Lexer.KEYWORD:
-								tokens.add(new Pair(idx, KEYWORD));
+                                ltype = KEYWORD;
 								break;
 							case Lexer.TYPE:
-								tokens.add(new Pair(idx, TYPE));
+                                ltype = TYPE;
 								break;
 							case Lexer.COMMENT:
-								tokens.add(new Pair(idx, DOUBLE_SYMBOL_DELIMITED_MULTILINE));
+                                ltype = DOUBLE_SYMBOL_DELIMITED_MULTILINE;
 								break;
 								// macro
 							case Lexer.PRETREATMENT_LINE:
 							case Lexer.DEFINE_LINE:
-								tokens.add(new Pair(idx, SINGLE_SYMBOL_LINE_A));
+                                ltype = SINGLE_SYMBOL_LINE_A;
 								break;
 								// string, char
 							case Lexer.STRING_LITERAL:
 							case Lexer.CHARACTER_LITERAL:
-								tokens.add(new Pair(idx, SINGLE_SYMBOL_DELIMITED_A));
+                                ltype = SINGLE_SYMBOL_DELIMITED_A;
 								break;
 								// number
 							case Lexer.INTEGER_LITERAL:
 							case Lexer.FLOATING_POINT_LITERAL:
-								tokens.add(new Pair(idx, NUMBER));
+                                ltype = NUMBER;
 								break;
 							case Lexer.IDENTIFIER:
 								identifier=lexer.yytext();
-								tokens.add(new Pair(idx, NORMAL));
+                                ltype = NORMAL;
 								break;
 								// symbols
 							case Lexer.LPAREN:// (
@@ -232,20 +236,26 @@ public class Tokenizer {
 							case Lexer.RBRACE:// }
 							case Lexer.DOT: // .
 							case Lexer.COMMA:// ,
-							case Lexer.WHITE_CHAR:// ' '
+							case Lexer.WHITE_SPACE:// ' '
 							case Lexer.SEMICOLON:// ;
 							case Lexer.OPERATOR:
 								if (identifier!=null) {
 									language.addUserWord(identifier);
 									language.updateUserWord();
 									identifier=null;
-								}
-								tokens.add(new Pair(idx, type==Lexer.OPERATOR ? OPERATOR : NOTE));
+							    }
+                            case Lexer.NEW_LINE:// '\n'
+                                ltype = type==Lexer.OPERATOR ? OPERATOR : NOTE;
 								break;
 							default:
-								tokens.add(new Pair(idx, NORMAL));
+                                ltype = NORMAL;
 						}
-					lastCtype = type;
+                        if (ltype != ttype) {
+                            tokens.add(new Pair(idx, ltype));
+                            ttype = ltype;
+                        }
+                        ltp = type;
+                    }
 					idx += lexer.yylength();
 				} catch (Exception e) {
 					e.printStackTrace();

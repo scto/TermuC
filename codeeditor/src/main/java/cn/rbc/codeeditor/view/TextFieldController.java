@@ -47,6 +47,7 @@ public class TextFieldController implements Tokenizer.LexCallback, Runnable {
 
     public void cancelSpanning() {
 		lexing = false;
+        field.hDoc.edit0();
         _lexer.cancelTokenize();
     }
 

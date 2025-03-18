@@ -46,9 +46,10 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 
 	@Override
 	public void handleMessage(Message msg) {
+        Lsp lsp = ma.getApp().lsp;
 		switch (msg.what) {
 			case Lsp.INITIALIZE:
-				MainActivity.lsp.initialized();
+				lsp.initialized();
 				break;
 			case Lsp.ERROR:
 				synchronized(this) {
@@ -63,7 +64,7 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
 				}
 				return;
 			case Lsp.UNLOCK:
-				MainActivity.lsp.lock.unlock();
+				lsp.unlock();
 			case Lsp.CLOSE:
 				return;
 		}
@@ -119,18 +120,18 @@ public class MainHandler extends Handler implements Comparator<ErrSpan> {
                                 jr.endArray();
                                 char[] trigs = sb.toString().toCharArray();
                                 if (COMPLE.equals(stack.peek())) {
-								    MainActivity.lsp.setCompTrigs(trigs);
+								    lsp.setCompTrigs(trigs);
                                     break;
                                 } else {
                                     jr.close();
-                                    MainActivity.lsp.setSigTrigs(trigs);
+                                    lsp.setSigTrigs(trigs);
                                     // what == Lsp.INITIALIZE
                                     FragmentManager fm = ma.getFragmentManager();
                                     for (int i=ma.getActionBar().getNavigationItemCount()-1;i>=0;i--) {
                                         EditFragment ef = (EditFragment)fm.findFragmentByTag(ma.getTag(i));
                                         int tp = ef.type&EditFragment.TYPE_MASK;
                                         if (tp != EditFragment.TYPE_TXT)
-                                            MainActivity.lsp.didOpen(ef.getFile(), tp==EditFragment.TYPE_CPP?"cpp":"c", ((TextEditor)ef.getView()).getText().toString());
+                                            lsp.didOpen(ef.getFile(), tp==EditFragment.TYPE_CPP?"cpp":"c", ((TextEditor)ef.getView()).getText().toString());
 								    }
                                     return;
                                 }

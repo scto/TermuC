@@ -22,6 +22,9 @@ ActionMode.Callback, TextWatcher, TextView.OnEditorActionListener, DialogInterfa
 
 	public void onDestroyActionMode(ActionMode p1) {
 		transV = null;
+        TextEditor te = ma.getEditor();
+        te.setSelection(te.getCaretPosition());
+        te.requestFocus();
 	}
 
 	public boolean onPrepareActionMode(ActionMode p1, Menu p2) {

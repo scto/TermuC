@@ -66,16 +66,16 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		editor.setLayoutParams(new FrameLayout.LayoutParams(
 								   FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 		if (savedInstanceState!=null) {
-			fl = new File((String)savedInstanceState.getCharSequence(FL));
+			String pth = (String)savedInstanceState.getCharSequence(FL);
+            fl = new File(pth);
 			type = savedInstanceState.getInt(TP, type);
 			mVer = savedInstanceState.getInt(VS, mVer);
-			Document doc = savedInstanceState.getParcelable(CS);
+			Document doc = Application.getInstance().load(pth); // savedInstanceState.getParcelable(CS);
 			doc.setMetrics(editor);
 			doc.resetRowTable();
 			editor.setDocument(doc);
 			editor.setTextSize(savedInstanceState.getInt(TS));
 		} else try {
-			String s = load();
 			int tp = type&TYPE_MASK;
 			if (tp == TYPE_C) {
 				C = "clang";
@@ -88,8 +88,9 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 				TextEditor.setLanguage(LanguageNonProg.getInstance());
 			}
 			ma.setEditor(editor);
+            Document s = load();
 			if (tp != TYPE_TXT && "s".equals(Application.completion))
-				MainActivity.lsp.didOpen(fl, tp==TYPE_CPP?"cpp":"c", s);
+				Application.getInstance().lsp.didOpen(fl, tp==TYPE_CPP?"cpp":"c", s.toString());
 		} catch(IOException fnf) {
 			fnf.printStackTrace();
 			HelperUtils.show(Toast.makeText(ma, R.string.open_failed+fnf.getMessage(), Toast.LENGTH_SHORT));
@@ -108,10 +109,11 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 	}
 
 	@Override
-	public CharSequence format(CharSequence txt, int width) {
+	public void format(Document txt, int width) {
 		int start = ed.getSelectionStart(), end = ed.getSelectionEnd();
-		if (start==end)
-			MainActivity.lsp.formatting(fl, width, ed.isUseSpace());
+		Lsp lsp = Application.getInstance().lsp;
+        if (start==end)
+			lsp.formatting(fl, width, ed.isUseSpace());
 		else {
 			Range range = new Range();
 			Document text = ed.getText();
@@ -128,12 +130,11 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 			}
 			range.stc = start - range.stc;
 			range.enc = end - range.enc;
-			MainActivity.lsp.rangeFormatting(fl, range, width, ed.isUseSpace());
-		}
-		return null;
+			lsp.rangeFormatting(fl, range, width, ed.isUseSpace());
+	    }
 	}
 
-	private int mVer = 0;
+	private volatile int mVer = 0;
 
 	public void onChanged(CharSequence c, int start, boolean ins, boolean typ) {
 		TextEditor editor = ed;
@@ -165,7 +166,7 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 		}
 		range.msg = (String)c;
 		changes.add(range);
-		Lsp lsp = MainActivity.lsp;
+		Lsp lsp = Application.getInstance().lsp;
 		lsp.didChange(fl, ++mVer, changes);
 		// when inserting text and typing, call for completion
 		if (ins && typ && c.length()==1) {
@@ -198,8 +199,8 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 	@Override
 	public void onClick(DialogInterface diag, int id) {
 		try {
-			String s = load();
-			((MainActivity)getActivity()).lsp.didChange(fl, 0, s);
+			String s = load().toString();
+			Application.getInstance().lsp.didChange(fl, 0, s);
 		} catch(IOException ioe) {
 			ioe.printStackTrace();
 		}
@@ -230,33 +231,40 @@ implements OnTextChangeListener, DialogInterface.OnClickListener, Formatter
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putParcelable(CS, ed.getText());
-		outState.putCharSequence(FL, fl.getAbsolutePath());
+        String pth = fl.getAbsolutePath();
+        Application.getInstance().store(pth, ed.getText());
+		outState.putCharSequence(FL, pth);
 		outState.putInt(TP, type);
 		outState.putInt(TS, (int)ed.getTextSize());
 		outState.putInt(VS, mVer);
 	}
 
 	public void save() throws IOException {
-        FileWriter fileWriter = new FileWriter(fl);
-        fileWriter.write(ed.getText().toString());
-        fileWriter.close();
+        Writer writer = new FileWriter(fl);
+        Reader rd = new CharSeqReader(ed.getText());
+        char[] buf = new char[1024];
+        int i;
+        while ((i=rd.read(buf)) > 0) {
+            writer.write(buf, 0, i);
+        }
+        rd.close();
+        writer.close();
         lastModified = fl.lastModified();
     }
 
-	public String load() throws IOException {
-		FileReader fr = new FileReader(fl);
+	public Document load() throws IOException {
+		Reader fr = new FileReader(fl);
 		char[] buf = new char[1024];
-		int i;
-		StringBuilder sb = new StringBuilder();
-		while ((i=fr.read(buf))!=-1)
-			sb.append(buf, 0, i);
+        int i;
+        Document doc = ed.getText();
+        doc.delete(0, doc.length()-1, 0L, false);
+		while ((i=fr.read(buf))!=-1) {
+			doc.insert(buf, 0, i, doc.length()-1, 0L, false);
+        }
 		fr.close();
-		String s = sb.toString();
-		ed.setText(s);
 		if ((type&TYPE_MASK)!=TYPE_TXT && "s".equals(Application.completion))
-			ed.getText().setOnTextChangeListener(this);
-		return s;
+			doc.setOnTextChangeListener(this);
+		return doc;
 	}
 
 	public File getFile() {

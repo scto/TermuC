@@ -45,8 +45,8 @@ Runnable {
 	private SearchAction mSearchAction;
 	private String transStr;
 	private Dialog transDlg;
-	private static MainHandler hand;
-	static Lsp lsp;
+	//private static MainHandler hand;
+	//static Lsp lsp;
 
 	private void envInit(SharedPreferences pref) {
 		pwd = new File(pref.getString(PWD, Utils.ROOT.getPath()));
@@ -56,11 +56,12 @@ Runnable {
 				break;
 			}
 		}
-		if (lsp == null) {
-			hand = new MainHandler(this);
-			lsp = new Lsp();
+        Application app = getApp();
+		if (app.lsp == null) {
+            app.lsp = new Lsp();
+			app.hand = new MainHandler(this);
 		} else
-			hand.updateActivity(this);
+			app.hand.updateActivity(this);
 	}
 
 	private void showFrag(Fragment frag) {
@@ -173,6 +174,10 @@ Runnable {
 		}
 	}
 
+    public Application getApp() {
+        return (Application)getApplication();
+    }
+
     private void refresh() {
 		pwdpth.setText(pwd.getPath());
 		adp.setPath(pwd);
@@ -252,7 +257,7 @@ Runnable {
 				if (lastFrag!=null) {
 					lastFrag.save();
 					if ((lastFrag.type & EditFragment.TYPE_MASK) != EditFragment.TYPE_TXT)
-						lsp.didSave(lastFrag.getFile());
+						getApp().lsp.didSave(lastFrag.getFile());
 				}
 				Project.reload();
 				StringBuilder sb;
@@ -303,7 +308,7 @@ Runnable {
 					lastFrag.save();
 					f = lastFrag.getFile();
 					if ((lastFrag.type & EditFragment.TYPE_MASK) != EditFragment.TYPE_TXT)
-						lsp.didSave(f);
+						getApp().lsp.didSave(f);
 				} else f = null;
 				Project.reload();
 				File out = new File(Project.rootPath, Project.outputDir);
@@ -369,9 +374,10 @@ Runnable {
 		if (getFragmentManager().findFragmentByTag(_it) != null) {
 			for (_i = hda.getCount() - 1; _i >= 0 && !_it.equals(hda.getItem(_i)); _i--);
 		} else if ((_i = EditFragment.fileType(f)) >= 0) {
-			if (hda.isEmpty() && "s".equals(Application.completion) && lsp.isEnded()) {
+            Lsp lsp;
+			if (hda.isEmpty() && "s".equals(Application.completion) && (lsp=getApp().lsp).isEnded()) {
 				lsp.end();
-				lsp.start(this, hand);
+				lsp.start(this, getApp().hand);
 				lsp.initialize(Project.rootPath);
 			}
 			EditFragment ef = new EditFragment(f, _i);
@@ -408,6 +414,7 @@ Runnable {
 		String pth = transStr;
 		FragmentManager fm = getFragmentManager();
 		FragmentTransaction fts = fm.beginTransaction();
+        Lsp lsp = getApp().lsp;
 		for (int i=0;i < hda.getCount();) {
 			String str = hda.getItem(i);
 			if (str.equals(pth)) {
@@ -421,7 +428,7 @@ Runnable {
 		lsp.end();
 		boolean s = "s".equals(Application.completion);
 		if (s) {
-			lsp.start(this, hand);
+			lsp.start(this, getApp().hand);
 			lsp.initialize(Project.rootPath);
 		}
 		int tp;
@@ -490,7 +497,7 @@ Runnable {
 				try {
 					lastFrag.save();
 					if ((lastFrag.type & EditFragment.TYPE_MASK) != EditFragment.TYPE_TXT)
-						lsp.didSave(lastFrag.getFile());
+						getApp().lsp.didSave(lastFrag.getFile());
 					toast(getText(R.string.saved));
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -515,7 +522,9 @@ Runnable {
 					mTans.show(lastFrag);
 				} else lastFrag = null;
 				mTans.commit();
-				lsp.didClose(new File(_t));
+				Application app = getApp();
+                app.lsp.didClose(new File(_t));
+                app.load(_t);
 				break;
 			case R.id.prj_attr:
 				openFile(new File(Project.rootPath, Project.PROJ));
@@ -529,13 +538,13 @@ Runnable {
 					String s = hda.getItem(0);
 					hda.remove(s);
 					mTans.remove(fm.findFragmentByTag(s));
-					lsp.didClose(new File(s));
+					getApp().lsp.didClose(new File(s));
 				}
 				mTans.commit();
 				lastFrag = null;
 				appMenu.findItem(R.id.prj).setEnabled(false);
 				setFileRunnable(false);
-				lsp.end();
+				getApp().lsp.end();
 				break;
 			case R.id.settings:
 				Intent it = new Intent(this, SettingsActivity.class);
@@ -659,11 +668,12 @@ Runnable {
 			case SETTING:
 				if (resultCode == RESULT_OK) {
 					boolean s = "s".equals(Application.completion);
+                    Lsp lsp = getApp().lsp;
 					boolean chg = s==lsp.isEnded();
 					if (chg) {
 						lsp.end();
 						if (s) {
-							lsp.start(this, hand);
+							lsp.start(this, getApp().hand);
 							lsp.initialize(Project.rootPath);
 						}
 						chg = s;

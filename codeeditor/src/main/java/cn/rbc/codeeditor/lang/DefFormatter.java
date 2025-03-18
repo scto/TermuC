@@ -1,4 +1,5 @@
 package cn.rbc.codeeditor.lang;
+import cn.rbc.codeeditor.util.*;
 
 public class DefFormatter implements Formatter
 {
@@ -14,8 +15,8 @@ public class DefFormatter implements Formatter
 	public int createAutoIndent(CharSequence text){
 		return 1;
 	}
-	public CharSequence format(CharSequence text, int width){
-		return text;
+	public void format(Document text, int width){
+		
 	}
 }
 

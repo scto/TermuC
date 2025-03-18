@@ -225,9 +225,7 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
         } else if (newY < 0) {
             newY = 0;
         }
-        //field.scrollTo(newX, newY);
-        field.smoothScrollTo(newX, newY);
-
+        field.scrollTo(newX, newY);
     }
 
     @Override

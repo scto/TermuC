@@ -35,6 +35,7 @@ public class TextBuffer implements CharSequence
 	/** Continuous seq of chars that have the same format (color, font, etc.) */
 	protected List<Pair> _spans;
 	protected List<ErrSpan> _diag;
+    private int _editOff;
 	protected GapIntSet _marks;
 
 	OnTextChangeListener _txLis;
@@ -144,6 +145,13 @@ public class TextBuffer implements CharSequence
 		return null;
 	}
 
+    public void edit0() {
+        _editOff = 0;
+    }
+
+    public int editOff() {
+        return _editOff;
+    }
 	/*
 	 * Precondition: startOffset is the offset of startLine
 	 */
@@ -364,22 +372,32 @@ public class TextBuffer implements CharSequence
 	public boolean isInMarkGap(int l) {
 		return _marks.isInGap(l);
 	}
+    public void insert(char[] c, int offset, long ts, boolean undoable) {
+        insert(c, 0, c.length, offset, ts, undoable);
+    }
 	/**
 	 * Insert all characters in c into position charOffset.
 	 *
 	 * No error checking is done
 	 */
-	public synchronized void insert(char[] c, int charOffset, long timestamp,
+	public synchronized void insert(char[] c, int start, int count, int charOffset, long timestamp,
 			boolean undoable){
 		if (undoable) {
-			_undoStack.captureInsert(charOffset, c.length, timestamp);
+			_undoStack.captureInsert(charOffset, count, timestamp);
 			if (_txLis != null) {
-				_txLis.onChanged(new String(c), charOffset, true, _typ);
+				_txLis.onChanged(new String(c, start, count), charOffset, true, _typ);
 				_typ = false;
 			}
 		}
 
 		int insertIndex = logicalToRealIndex(charOffset);
+        /*if (_editPos + _editOff == charOffset) {
+            _editOff += c.length;
+        } else {
+            _editPos = charOffset;
+            _editOff = c.length;
+        }*/
+        _editOff += c.length;
 
 		// shift gap to insertion point
 		if (insertIndex<_gapStartIndex)
@@ -391,7 +409,8 @@ public class TextBuffer implements CharSequence
 			growBufferBy(c.length - gapSize());
 
 		int lines = 0;
-		for (int i = 0; i < c.length; ++i){
+        count += start;
+		for (int i = start; i < count; ++i){
 			if(c[i] == Language.NEWLINE)
 				lines++;
 			_contents[_gapStartIndex++] = c[i];
@@ -419,6 +438,7 @@ public class TextBuffer implements CharSequence
 		}
 
 		int newGapStart = charOffset + totalChars;
+        _editOff -= totalChars;
 
 		// shift gap to deletion point
 		if (newGapStart != _gapStartIndex){
@@ -456,6 +476,8 @@ public class TextBuffer implements CharSequence
         if (lines != 0)
             _marks.shift(findLineNumber(_gapStartIndex)+1, lines);
         _lineCount += lines;
+        //_editPos = _gapStartIndex;
+        _editOff += displacement;
 		_gapStartIndex += displacement;
 		_cache.invalidateCache(realToLogicalIndex(_gapStartIndex - 1) + 1);
 	}
@@ -570,6 +592,7 @@ public class TextBuffer implements CharSequence
 	public void clearSpans(){
 		_spans = new Vector<Pair>();
 	    _spans.add(new Pair(0, Tokenizer.NORMAL));
+        _diag = null;
 	}
 
 	public List<Pair> getSpans(){
@@ -586,6 +609,7 @@ public class TextBuffer implements CharSequence
 	 */
 	public void setSpans(List<Pair> spans){
 		_spans = spans;
+        edit0();
 	}
 
 	public List<ErrSpan> getDiag(){

@@ -1,6 +1,7 @@
 package cn.rbc.codeeditor.util;
 
 import java.io.*;
+import cn.rbc.codeeditor.lang.*;
 
 public class CharSeqReader extends Reader {
 	int offset = 0;
@@ -22,6 +23,7 @@ public class CharSeqReader extends Reader {
 		for (int n = 0; n < len; n++) {
 			try {
 				char c = src.charAt(offset++);
+                if (c == Language.EOF) len = n;
 				chars[i++] = c;
 			} catch (Exception e) {
 			}

@@ -26,10 +26,10 @@ public interface Lexer
 	WHITE_SPACE=20,//空白符
 	DEFINE_LINE=21,//define
 	NEW_LINE=22,
-	WHITE_CHAR=23,
-	ERROR=24;
+	ERROR=23;
 
 	public int yylex() throws IOException;
 	public int yylength();
 	public String yytext();
+    public void yyreset(Reader rd);
 }

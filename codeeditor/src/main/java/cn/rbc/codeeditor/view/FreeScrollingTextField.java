@@ -64,6 +64,8 @@ import cn.rbc.codeeditor.view.autocomplete.AutoCompletePanel;
 import cn.rbc.codeeditor.view.ColorScheme.Colorable;
 
 import java.util.*;
+import java.util.stream.*;
+import android.widget.*;
 
 /**
  * A custom text view that uses a solid shaded caret (aka cursor) instead of a
@@ -240,7 +242,6 @@ DialogInterface.OnDismissListener, Runnable {
     private int mLineMaxWidth, xExtent;
     private int mAlphaWidth, mSpaceWidth;
 	private int mSizeMax, mSizeMin;
-    private long mLastScroll;
     private boolean isAutoCompeted = true; //代码提示
     private boolean isShowLineNumbers = true;
     private boolean isCursorVisiable = true;
@@ -254,7 +255,7 @@ DialogInterface.OnDismissListener, Runnable {
         public void run() {
             mCtrlr.moveCaretUp();
             if (!caretOnFirstRowOfFile())
-                postDelayed(mScrollCaretUpTask, SCROLL_PERIOD);
+                postDelayed(this, SCROLL_PERIOD);
         }
     };
     private final Runnable mScrollCaretLeftTask = new Runnable() {
@@ -263,7 +264,7 @@ DialogInterface.OnDismissListener, Runnable {
             mCtrlr.moveCaretLeft(false);
             if (mCaretPosition > 0 &&
 				mCaretRow == hDoc.findRowNumber(mCaretPosition - 1))
-                postDelayed(mScrollCaretLeftTask, SCROLL_PERIOD);
+                postDelayed(this, SCROLL_PERIOD);
         }
     };
     private final Runnable mScrollCaretRightTask = new Runnable() {
@@ -272,7 +273,7 @@ DialogInterface.OnDismissListener, Runnable {
             mCtrlr.moveCaretRight(false);
             if (!caretOnEOF() &&
 				mCaretRow == hDoc.findRowNumber(mCaretPosition + 1))
-                postDelayed(mScrollCaretRightTask, SCROLL_PERIOD);
+                postDelayed(this, SCROLL_PERIOD);
         }
     };
     private boolean isUseGboard = false;
@@ -284,7 +285,7 @@ DialogInterface.OnDismissListener, Runnable {
     private float mZoomFactor = 1;
     private int mCaretX, mCaretY;
     private char mCharEmoji = '\0';
-    private Pair mCaretSpan = new Pair(0, 0);
+    //private Pair mCaretSpan = new Pair(0, 0);
     private Typeface defTypeface = Typeface.DEFAULT;
     private Typeface boldTypeface = Typeface.DEFAULT_BOLD;
     protected int mTypeInput = InputType.TYPE_CLASS_TEXT;
@@ -413,15 +414,20 @@ DialogInterface.OnDismissListener, Runnable {
 		chrAdvs.clear();
         mSpaceWidth = (int) mTextPaint.measureText(" ");
 		mAlphaWidth = getCharAdvance('a');
-		if (hDoc.isWordWrap())
+        int dp = 0;
+		if (hDoc.isWordWrap()) {
+            int r = (int)((getScrollY()+cy)/oldHeight);
+            int i = hDoc.getRowOffset(r);
             hDoc.analyzeWordWrap();
+            i = hDoc.findRowNumber(i);
+            dp = rowHeight()*(i-r);
+        }
         mCtrlr.updateCaretRow();
 		mLineBrush.setStrokeWidth(mAlphaWidth * .15f);
         float x = (getScrollX() + cx) * mAlphaWidth / oldWidth - cx;
         float y = (getScrollY() + cy) * rowHeight() / oldHeight - cy;
-        scrollTo((int)x, (int)y);
-		xExtent = 0;
-		invalidate();
+        xExtent = 0;
+        scrollTo((int)x, dp + (int)y);
         /*if (mSigHelpPanel.isShowing()) {
             int[] pos = SignatureHelpPanel.updatePosition(this);
             mSigHelpPanel.update(pos[0], pos[1]);
@@ -456,6 +462,7 @@ DialogInterface.OnDismissListener, Runnable {
         mTextPaint = new Paint();
         mTextPaint.setAntiAlias(true);
         mTextPaint.setTextSize(BASE_TEXT_SIZE_PIXELS);
+        mTextPaint.setFontFeatureSettings("'liga' on");
         mLineBrush = new Paint();
 		mLineBrush.setAntiAlias(true);
 		mLineBrush.setTextSize(BASE_TEXT_SIZE_PIXELS);
@@ -463,7 +470,6 @@ DialogInterface.OnDismissListener, Runnable {
         mBottomEdge = new EdgeEffect(mContext);
         mRect = new RectF();
         //mVerticalScrollBar = new RectF();
-        //setBackgroundColor(mColorScheme.getColor(Colorable.BACKGROUND));
         setLongClickable(true);
         setFocusableInTouchMode(true);
         setHapticFeedbackEnabled(true);
@@ -507,22 +513,26 @@ DialogInterface.OnDismissListener, Runnable {
 
 	public void onDel(CharSequence text, int cursorPosition, int delCount) {
 		isTextChanged = true;
-		if (delCount <= mCaretSpan.first)
+		/*if (delCount <= mCaretSpan.first) {
 			mCaretSpan.first--;
-		mAutoCompletePanel.dismiss();
+            //editOff--;
+        }*/
+		mAutoCompletePanel.dismiss(); 
+        mScroller.abortAnimation();
         mSigHelpPanel.hide();
 	}
 
 	public void onNewLine(CharSequence adds) {
 		isTextChanged = true;
-		mCaretSpan.first++;
+		//mCaretSpan.first++;
 		mAutoCompletePanel.dismiss();
+        mScroller.abortAnimation();
         mSigHelpPanel.hide();
 	}
 
 	public void onAdd(CharSequence text, int cursorPosition, int addCount) {
 		isTextChanged = true;
-		mCaretSpan.first += addCount;
+		//mCaretSpan.first += addCount;
 		if (addCount == 0) return;
 		//找到空格或者其他
 		int curr = cursorPosition;
@@ -533,6 +543,7 @@ DialogInterface.OnDismissListener, Runnable {
 		}
 		mAutoCompletePanel._off = cursorPosition - curr;
 		char ch = text.charAt(0);
+        mScroller.abortAnimation();
 		if (isAutoCompeted) {
 			if (cursorPosition - curr > 0 && Character.isLetterOrDigit(ch))
 			//是否开启代码提示
@@ -750,6 +761,16 @@ DialogInterface.OnDismissListener, Runnable {
         mNavMethod.onTextDrawComplete(canvas);
     }
 
+    //protected int editOff = 0;
+    //private int sidx = 0, lidx = 0;
+    //private float estp = Float.MAX_VALUE;
+    /*private final int addr(int x) {
+        int i=x+hDoc.editOff();
+        if (i>=mCaretPosition)
+            return i;
+        return x;
+    }*/
+
     private void realDraw(Canvas canvas) {
         int currRowNum = getBeginPaintRow(canvas);
         int currIndex = hDoc.getRowOffset(currRowNum);
@@ -770,22 +791,40 @@ DialogInterface.OnDismissListener, Runnable {
         if (spans.isEmpty()) return;
 
 		int spanSize = spans.size();
-		int spanIndex = 0, r = spanSize - 1, m;
-
+		int spanIndex=0, r=spanSize-1, m;
+        /*int k = 0;
+        float j = estp;
+        if (hDoc.charAt(0)==' ') {*
+            spanIndex = 0; r = spanSize-1;*/
 		while (spanIndex < r) {
 			m = (spanIndex + r + 1) >> 1;
 			if (spans.get(m).first <= currIndex)
 				spanIndex = m;
 			else
 				r = m - 1;
-		}
+		}/*
+        } else {
+            spanIndex = hDoc.charAt(0)=='&'?sidx:Math.max(0, Math.min(spanSize-1, sidx + (int)((currIndex-lidx)/estp)));
+            //if (spanIndex<spanSize && spanIndex>=0)
+            m = spanIndex;
+        while ((r=spanIndex+1)<spanSize && spans.get(r).first <= currIndex) {
+            spanIndex = r;k++;
+        }
+        while (spanIndex>0 && spans.get(spanIndex).first > currIndex) {
+            spanIndex--;k++;
+        }
+        lidx = spans.get(spanIndex).first;
+        if (spanIndex!=m&&m>=0)
+            estp = (lidx-spans.get(m).first)/(float)(spanIndex-m);
+        }*
+        mTextPaint.setColor(0xff000000);
+        canvas.drawText(paintY+"", getScrollX(), getScrollY()+rowHeight(), mTextPaint);
+       // sidx = spanIndex;
+        //soff = spans.get(spanIndex).first;*/
 		Pair currSpan = spans.get(spanIndex++);
 		Pair nextSpan = spanIndex < spanSize ? spans.get(spanIndex++) : null;
 
-		int currType = currSpan.second;
-        int lastType = currType;
-
-        mTextPaint.setTypeface(currSpan.second == Tokenizer.KEYWORD ? boldTypeface : defTypeface);
+        //mTextPaint.setTypeface(currSpan.second == Tokenizer.KEYWORD ? boldTypeface : defTypeface);
 
         int spanColor = mColorScheme.getTokenColor(currSpan.second);
         mTextPaint.setColor(spanColor);
@@ -794,7 +833,6 @@ DialogInterface.OnDismissListener, Runnable {
         // start painting!
         //----------------------------------------------
 		boolean showLN = isShowLineNumbers && mLeftOffset >= getScrollX();
-		int endRowNum = Math.min(hDoc.getRowCount(), getEndPaintRow(canvas));
 		int width = canvas.getClipBounds().right;
 		int mL = hDoc.length();
 		int rowheight = rowHeight();
@@ -825,6 +863,7 @@ DialogInterface.OnDismissListener, Runnable {
 			mI = ~mI;
 		// row by row
 		int rowEnd = 0;
+        int endRowNum = Math.min(hDoc.getRowCount(), getEndPaintRow(canvas));
         for (m = -1; currRowNum <= endRowNum && currIndex < mL; currRowNum++) {
 			if (currLineNum != lastLineNum) {
 				if (showLN) {
@@ -861,73 +900,83 @@ DialogInterface.OnDismissListener, Runnable {
             paintX = mLeftOffset;
 
 			int i = rowEnd;
-			// char by char
-			// TODO rendering span by span
-            for (rowEnd += hDoc.getRowSize(currRowNum); i < rowEnd; i++) {
-                // check if formatting changes are needed
-                if (reachedNextSpan(currIndex, nextSpan)) {
+            r = paintX;
+            byte currState = -1; // invalid initial state
+            int drawStart = currIndex, tp = currSpan.second;
+            for (rowEnd += hDoc.getRowSize(currRowNum); i < rowEnd; i++,currIndex++) {
+                // calculate new state
+                byte newState = 0;
+                if (mCtrlr.inSelectionRange(currIndex))
+                    newState |= 4;
+                // test state change
+                boolean reachSpanEnd = nextSpan != null && currIndex >= nextSpan.first;
+                tp = currSpan.second;
+                if (reachSpanEnd) {
                     currSpan = nextSpan;
-					lastType = currType;
-					currType = currSpan.second;
-                    spanColor = mColorScheme.getTokenColor(currSpan.second);
-                    mTextPaint.setColor(spanColor);
-					if (lastType != currType) {
-                        Typeface currTypeface = currType == Tokenizer.KEYWORD ? boldTypeface : defTypeface;
-                        if (mTextPaint.getTypeface() != currTypeface)
-                            mTextPaint.setTypeface(currTypeface);
-                        spanColor = mColorScheme.getTokenColor(currType);
-                        mTextPaint.setColor(spanColor);
-                    }
-					nextSpan = spanIndex < spanSize ? spans.get(spanIndex++) : null;
+                    nextSpan = spanIndex<spanSize ? spans.get(spanIndex++) : null;
                 }
-
-				if (paintX < width) {
-					int x = paintX;
-					char c = hDoc.charAt(currIndex);
-					if (mCtrlr.inSelectionRange(currIndex))
-						paintX += drawSelectedText(canvas, c, paintX, paintY);
-					else {
-						r = getAdvance(c, paintX);
-						drawChar(canvas, c, paintX, paintY);
-						paintX += r;
-					}
-					if (currIndex == mCaretPosition && isCursorVisiable)
-                    //draw cursor
-						drawCaret(canvas, x, paintY);
-					else if (currIndex + 1 == mCaretPosition)
-						mCaretSpan = currSpan;
-					// draw err line
-					if (idx <= diagLen) {
-						if (m < 0
-                        // start position
-							&& (diag.stl == currLineNum && diag.stc == i
-                        // following position
-							|| diag.stl < currLineNum && diag.enl >= currLineNum && x == mLeftOffset))
-							m = x;
-						boolean end, flow = false;
-						if (m >= 0 && ((end = diag.enl == currLineNum && diag.enc == i + 1) || (flow = i + 1 == rowEnd) || paintX >= width)) {
-							mLineBrush.setColor(ColorScheme.DIAG[diag.severity]);
-							canvas.drawLine(m, paintY, paintX, paintY, mLineBrush);
-							m = flow ? mLeftOffset : -1;
-							if (idx < diagLen && end)
-								diag = diagList.get(idx++);
-						}
-					}
-					r = currIndex;
-				}
-                ++currIndex;
+                if (currSpan.second == Tokenizer.KEYWORD)
+                    newState |= 1;
+                char c = hDoc.charAt(currIndex);
+                if (Character.isWhitespace(c))
+                    newState |= 2;
+                // err line status
+                boolean flow = false;
+                if (idx <= diagLen) {
+                    if (m < 0
+                    // start position
+                        && (diag.stl == currLineNum && diag.stc == i
+                    // following position
+                        || diag.stl < currLineNum && diag.enl >= currLineNum && r == mLeftOffset))
+                        m = r;
+                    boolean end;
+                    if (m >= 0 && m < width && ((end = diag.enl == currLineNum && diag.enc == i) || (flow = i + 1 == rowEnd))) {
+                        newState |= 8;
+                        if (idx < diagLen && end)
+                            diag = diagList.get(idx++);
+                    }
+                }
+                if (newState != currState || reachSpanEnd && (newState&4)==0 || i+1==rowEnd) {
+                    // draw the last text
+                    if (drawStart < currIndex) {
+                       if (r >= getScrollX() && paintX < width) {
+                           drawTextBlock(canvas, drawStart, currIndex, tp, paintX, paintY, Math.min(r, width), currState);
+                       }
+                       paintX = r;
+                    }
+                    // draw err line
+                    if ((newState&8)!=0) {
+                        mLineBrush.setColor(ColorScheme.DIAG[diag.severity]);
+                        canvas.drawLine(m, paintY, Math.min(r, width), paintY, mLineBrush);
+                        m = flow ? mLeftOffset : -1;
+                        newState &= 7;
+                    }
+                    drawStart = currIndex;
+                    currState = newState;
+                }
+                if (currIndex == mCaretPosition && isCursorVisiable)
+                //draw cursor
+                    drawCaret(canvas, r, paintY);
+                //else if (currIndex + 1 == mCaretPosition)
+                //    mCaretSpan = currSpan;
+                
+                r += getAdvance(c, r);
             }
-
-            if (hDoc.charAt(currIndex - 1) == Language.NEWLINE) {
+            char c = hDoc.charAt(--currIndex);
+            if ((buf[0]=mapSpace(c)) == Language.GLYPH_NEWLINE) {
 				while (idx < diagLen && diag.enl == currLineNum)
 					diag = diagList.get(idx++);
 				++currLineNum;
 				rowEnd = 0;
 				m = -1;
+                byte b = 2;
+                if (mCtrlr.inSelectionRange(currIndex))
+                    b |= 4;
+                drawTextBlock(canvas, currIndex, 1+currIndex, 0, r-getEOLAdvance(), paintY, r, b);
 			}
-
+            currIndex++;
             paintY += rowheight;
-			paintX += mTextPaint.measureText(hDoc, r, currIndex);
+            paintX = r;
 
             if (paintX > xExtent)
             // record widest line seen so far
@@ -944,75 +993,58 @@ DialogInterface.OnDismissListener, Runnable {
         //drawScrollBars(canvas);
     }
 
-    // 绘制文本
-    //draw smiles, tab, whitespace
-    private void drawChar(Canvas canvas, char c, int paintX, int paintY) {
+    // map spacing
+    private char[] buf = new char[2];
 
-        //int originalColor = mTextPaint.getColor();
+    private char mapSpace(char c) {
+        switch (c) {
+            case ' ':
+                return Language.GLYPH_SPACE;
+            case Language.EOF: //fall-through
+            case Language.NEWLINE:
+                return Language.GLYPH_NEWLINE;
+            case Language.TAB:
+                return Language.GLYPH_TAB;
+            default:
+                return 0;
+        }
+    }
 
-        if (paintX > getScrollX() || paintX < (getScrollX() + getContentWidth()))
-            switch (c) {
-                case 0xd83c:
-                case 0xd83d:
-                    mCharEmoji = c;
-                    break;
-                case ' ':
-                    if (isShowNonPrinting) {
-                        mLineBrush.setColor(mColorScheme.getColor(Colorable.NON_PRINTING_GLYPH));
-                        canvas.drawText(Language.GLYPH_SPACE, 0, 1, paintX, paintY, mLineBrush);
-                    }
-                    break;
-                case Language.EOF: //fall-through
-                case Language.NEWLINE:
-                    if (isShowNonPrinting) {
-                        mLineBrush.setColor(mColorScheme.getColor(Colorable.NON_PRINTING_GLYPH));
-                        canvas.drawText(Language.GLYPH_NEWLINE, 0, 1, paintX, paintY, mLineBrush);
-                    }
-                    break;
-
-                case Language.TAB:
-                    if (isShowNonPrinting) {
-                        mLineBrush.setColor(mColorScheme.getColor(Colorable.NON_PRINTING_GLYPH));
-                        canvas.drawText(Language.GLYPH_TAB, 0, 1, paintX, paintY, mLineBrush);
-                    }
-                    break;
-
-                default:
-                    if (mCharEmoji != 0) {
-                        canvas.drawText(new char[]{mCharEmoji, c}, 0, 2, paintX, paintY, mTextPaint);
-                        mCharEmoji = 0;
-                    } else
-                        canvas.drawText(new char[]{c}, 0, 1, paintX, paintY, mTextPaint);
-                    break;
+    // draw text block: a word or continuing spacing
+    private void drawTextBlock(Canvas canvas, int start, int end, int token, int x, int y, int w, byte flags) {
+        Paint paint = mTextPaint;
+        paint.setTypeface(token == Tokenizer.KEYWORD ? boldTypeface : defTypeface);
+        ColorScheme cs = mColorScheme;
+        if ((flags&4) != 0) { // selected text
+            paint.setColor(cs.getColor(Colorable.SELECTION_BACKGROUND));
+            drawTextBackground(canvas, x, y, w);
+            paint.setColor(cs.getColor(Colorable.SELECTION_FOREGROUND));
+        } else // normal
+            paint.setColor(cs.getTokenColor(token));
+        if ((flags & 2) == 0) // not spaces
+            canvas.drawText(hDoc, start, end, x, y, paint);
+        else if (isShowNonPrinting) { // spaces & showNonPrinting
+            paint = mLineBrush;
+            paint.setColor(cs.getColor(Colorable.NON_PRINTING_GLYPH));
+            while (start < end) {
+                char c = hDoc.charAt(start);
+                buf[0] = mapSpace(c);
+                if (buf[0]!=0)
+                    canvas.drawText(buf, 0, 1, x, y, paint);
+                x += getAdvance(c, x);
+                start++;
             }
-
-        //return charWidth;
+        }
     }
 
     // paintY is the baseline for text, NOT the top extent
-    private void drawTextBackground(Canvas canvas, int paintX, int paintY, int advance) {
+    private void drawTextBackground(Canvas canvas, float paintX, float paintY, float endX) {
         Paint.FontMetricsInt metrics = mTextPaint.getFontMetricsInt();
         canvas.drawRect(paintX,
 						paintY + metrics.ascent,
-						paintX + advance,
+						endX,
 						paintY + metrics.descent,
 						mTextPaint);
-    }
-
-    private int drawSelectedText(Canvas canvas, char c, int paintX, int paintY) {
-        int oldColor = mTextPaint.getColor();
-        int advance = getAdvance(c, paintX);
-
-		//选中背景色
-        mTextPaint.setColor(mColorScheme.getColor(Colorable.SELECTION_BACKGROUND));
-        drawTextBackground(canvas, paintX, paintY, advance);
-
-		//选中文本色
-        mTextPaint.setColor(mColorScheme.getColor(Colorable.SELECTION_FOREGROUND));
-        drawChar(canvas, c, paintX, paintY);
-
-        mTextPaint.setColor(oldColor);
-        return advance;
     }
 
     private void drawCaret(Canvas canvas, int paintX, int paintY) {
@@ -1022,7 +1054,7 @@ DialogInterface.OnDismissListener, Runnable {
         int caretColor = mColorScheme.getColor(Colorable.CARET_DISABLED);
         mTextPaint.setColor(caretColor);
         // draw full caret
-        drawTextBackground(canvas, mCaretX, paintY, mCursorWidth);
+        drawTextBackground(canvas, mCaretX, paintY, mCaretX + mCursorWidth);
         mTextPaint.setColor(originalColor);
     }
     /**
@@ -1132,6 +1164,7 @@ DialogInterface.OnDismissListener, Runnable {
             case 0xd83c:
             case 0xd83d:
                 advance = 0;
+                mCharEmoji = c;
                 break;
             case ' ':
                 advance = getSpaceAdvance();
@@ -1145,8 +1178,10 @@ DialogInterface.OnDismissListener, Runnable {
                 break;
             default:
                 if (mCharEmoji != 0) {
-                    char[] ca = {mCharEmoji, c};
-                    advance = (int) mTextPaint.measureText(ca, 0, 2);
+                    buf[0] = mCharEmoji;
+                    buf[1] = c;
+                    mCharEmoji = 0;
+                    advance = (int) mTextPaint.measureText(buf, 0, 2);
                 } else
                     advance = getCharAdvance(c);
                 break;
@@ -1161,8 +1196,8 @@ DialogInterface.OnDismissListener, Runnable {
     public int getCharAdvance(char c) {
 		int advance;
 		if ((advance = chrAdvs.get(c, -1)) == -1) {
-			char[] ca = {c};
-			advance = (int) mTextPaint.measureText(ca, 0, 1);
+			buf[0] = c;
+			advance = (int) mTextPaint.measureText(buf, 0, 1);
 			chrAdvs.append(c, advance);
 		}
         return advance;
@@ -1170,15 +1205,15 @@ DialogInterface.OnDismissListener, Runnable {
 
     protected int getSpaceAdvance() {
         return isShowNonPrinting
-            ? (int) mTextPaint.measureText(Language.GLYPH_SPACE,
-                                           0, Language.GLYPH_SPACE.length())
+            ? getCharAdvance(Language.GLYPH_SPACE) //(int) mTextPaint.measureText(Language.GLYPH_SPACE,
+               //                            0, Language.GLYPH_SPACE.length())
             : mSpaceWidth;
     }
 
     protected int getEOLAdvance() {
         if (isShowNonPrinting) {
-            return (int) mTextPaint.measureText(Language.GLYPH_NEWLINE,
-												0, Language.GLYPH_NEWLINE.length());
+            return getCharAdvance(Language.GLYPH_NEWLINE); //mTextPaint.measureText(Language.GLYPH_NEWLINE,
+					//							0, Language.GLYPH_NEWLINE.length());
         } else {
             return (int) (EMPTY_CARET_WIDTH_SCALE * mTextPaint.measureText(" ", 0, 1));
         }
@@ -1365,8 +1400,9 @@ DialogInterface.OnDismissListener, Runnable {
                 case 0xd83c:
                 case 0xd83d:
                     isEmoji = true;
-                    char[] ca = {c, rowText.charAt(i + 1)};
-                    right += (int) mTextPaint.measureText(ca, 0, 2);
+                    buf[0] = c;
+                    buf[1] = rowText.charAt(i+1);
+                    right += (int) mTextPaint.measureText(buf, 0, 2);
                     break;
                 case Language.NEWLINE:
                 case Language.EOF:
@@ -1471,8 +1507,9 @@ DialogInterface.OnDismissListener, Runnable {
                 case 0xd83c:
                 case 0xd83d:
                     isEmoji = true;
-                    char[] ca = {c, rowText.charAt(i + 1)};
-                    extent += (int) mTextPaint.measureText(ca, 0, 2);
+                    buf[0] = c;
+                    buf[1] = rowText.charAt(i + 1);
+                    extent += (int) mTextPaint.measureText(buf, 0, 2);
                     break;
                 case Language.NEWLINE:
                 case Language.EOF:
@@ -1538,8 +1575,9 @@ DialogInterface.OnDismissListener, Runnable {
                 case 0xd83c:
                 case 0xd83d:
                     isEmoji = true;
-                    char[] ca = {c, rowText.charAt(i + 1)};
-                    extent += (int) mTextPaint.measureText(ca, 0, 2);
+                    buf[0] = c;
+                    buf[1] = rowText.charAt(i + 1);
+                    extent += (int) mTextPaint.measureText(buf, 0, 2);
                     break;
                 case Language.NEWLINE:
                 case Language.EOF:
@@ -1615,46 +1653,12 @@ DialogInterface.OnDismissListener, Runnable {
             if (oldX != x || oldY != y) {
                 scrollTo(x, y);
             }
+            
 			/* ViewCompat */
             if (!awakenScrollBars())
                 postInvalidateOnAnimation();
         }
     }
-
-    public final void smoothScrollBy(int dx, int dy) {
-        if (getHeight() == 0) {
-            // Nothing to do.
-            return;
-        }
-        long duration = AnimationUtils.currentAnimationTimeMillis() - mLastScroll;
-        if (duration > 250) {
-            //final int maxY = getMaxScrollX();
-            final int scrollY = getScrollY();
-            final int scrollX = getScrollX();
-
-            //dy = Math.max(0, Math.min(scrollY + dy, maxY)) - scrollY;
-
-            mScroller.startScroll(scrollX, scrollY, dx, dy);
-            postInvalidate();
-        } else {
-            if (!mScroller.isFinished()) {
-                mScroller.abortAnimation();
-            }
-            scrollBy(dx, dy);
-        }
-        mLastScroll = AnimationUtils.currentAnimationTimeMillis();
-    }
-
-    /**
-     * Like {@link #scrollTo}, but scroll smoothly instead of immediately.
-     *
-     * @param x the position where to scroll on the X axis
-     * @param y the position where to scroll on the Y axis
-     */
-    public final void smoothScrollTo(int x, int y) {
-        smoothScrollBy(x - getScrollX(), y - getScrollY());
-    }
-
 
     //---------------------------------------------------------------------
     //------------------------- Caret methods -----------------------------
@@ -1955,12 +1959,9 @@ DialogInterface.OnDismissListener, Runnable {
     }
 
 	public void format() {
-		replaceText(0, hDoc.length() - 1, Tokenizer.getLanguage().getFormatter().format(hDoc, mAutoIndentWidth).toString());
+        mCtrlr.setSelectText(false);
+		Tokenizer.getLanguage().getFormatter().format(hDoc, mAutoIndentWidth);
 	}
-
-    private boolean reachedNextSpan(int charIndex, Pair span) {
-        return span != null && (charIndex == span.first);
-    }
 
     public void cancelSpanning() {
         mCtrlr.cancelSpanning();

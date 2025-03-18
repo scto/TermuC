@@ -26,9 +26,9 @@ public abstract class Language
 	public final static char BACKSPACE = '\b';
 	public final static char TAB = '\t';
     public final static char DELETE = '\177';
-	public final static String GLYPH_NEWLINE = "\u21b5";
-	public final static String GLYPH_SPACE = "\u00b7";
-	public final static String GLYPH_TAB = "\u00bb";
+	public final static char GLYPH_NEWLINE = '\u21b5';
+	public final static char GLYPH_SPACE = '\u00b7';
+	public final static char GLYPH_TAB = '\u00bb';
 
 
 	private final static char[] BASIC_C_OPERATORS = {

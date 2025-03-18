@@ -7,12 +7,14 @@
  * This software is provided "as is". Use at your own risk.
  */
 package cn.rbc.codeeditor.lang;
+import cn.rbc.codeeditor.util.*;
+import java.io.*;
 
 /**
  * Singleton class that represents a non-programming language without keywords, 
  * operators etc.
  */
-public class LanguageNonProg extends Language{
+public class LanguageNonProg extends Language {
 	private static Language _theOne = null;
 	
 	private final static String[] keywords = {};
